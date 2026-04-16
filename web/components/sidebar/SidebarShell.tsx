@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SessionList from "@/components/SessionList";
+import SidebarUserMenu from "@/components/auth/SidebarUserMenu";
 import { TutorBotRecent } from "@/components/sidebar/TutorBotRecent";
 import type { SessionSummary } from "@/lib/session-api";
 
@@ -123,6 +124,7 @@ export function SidebarShell({
         <div className="flex-1" />
 
         <div className="flex flex-col items-center gap-px pb-1">
+          <SidebarUserMenu compact />
           {SECONDARY_NAV.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
@@ -156,13 +158,16 @@ export function SidebarShell({
             DeepTutor
           </span>
         </Link>
-        <button
-          onClick={() => setCollapsed(true)}
-          className="rounded-md p-1 text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
-          aria-label={t("Collapse sidebar")}
-        >
-          <PanelLeftClose size={15} />
-        </button>
+        <div className="flex items-center gap-2">
+          <SidebarUserMenu />
+          <button
+            onClick={() => setCollapsed(true)}
+            className="rounded-md p-1 text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+            aria-label={t("Collapse sidebar")}
+          >
+            <PanelLeftClose size={15} />
+          </button>
+        </div>
       </div>
 
       {/* Primary nav */}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Plus_Jakarta_Sans, Lora } from "next/font/google";
 import "./globals.css";
 import ThemeScript from "@/components/ThemeScript";
@@ -33,11 +34,13 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="font-sans bg-[var(--background)] text-[var(--foreground)]">
-        <AppShellProvider>
-          <I18nClientBridge>
-            {children}
-          </I18nClientBridge>
-        </AppShellProvider>
+        <ClerkProvider>
+          <AppShellProvider>
+            <I18nClientBridge>
+              {children}
+            </I18nClientBridge>
+          </AppShellProvider>
+        </ClerkProvider>
       </body>
     </html>
   );
