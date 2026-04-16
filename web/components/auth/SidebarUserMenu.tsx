@@ -1,6 +1,6 @@
 "use client";
 
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 interface SidebarUserMenuProps {
@@ -11,29 +11,29 @@ export default function SidebarUserMenu({ compact = false }: SidebarUserMenuProp
   if (compact) {
     return (
       <>
-        <SignedIn>
+        <Show when="signed-in">
           <div className="flex items-center justify-center">
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </div>
-        </SignedIn>
-        <SignedOut>
+        </Show>
+        <Show when="signed-out">
           <Link
             href="/sign-in"
             className="rounded-lg border border-[var(--border)]/60 px-2 py-1 text-[12px] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
           >
             Sign in
           </Link>
-        </SignedOut>
+        </Show>
       </>
     );
   }
 
   return (
     <>
-      <SignedIn>
-        <UserButton afterSignOutUrl="/" />
-      </SignedIn>
-      <SignedOut>
+      <Show when="signed-in">
+        <UserButton />
+      </Show>
+      <Show when="signed-out">
         <div className="flex items-center gap-2">
           <Link
             href="/sign-in"
@@ -48,7 +48,7 @@ export default function SidebarUserMenu({ compact = false }: SidebarUserMenuProp
             Sign up
           </Link>
         </div>
-      </SignedOut>
+      </Show>
     </>
   );
 }
