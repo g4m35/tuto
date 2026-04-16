@@ -1,8 +1,6 @@
 import { loadStripe, type Stripe as StripeJs } from "@stripe/stripe-js";
 import Stripe from "stripe";
 
-const STRIPE_API_VERSION = "2026-02-25.clover";
-
 let stripeServerClient: Stripe | null = null;
 let stripeClientPromise: Promise<StripeJs | null> | null = null;
 
@@ -29,7 +27,6 @@ export function getStripeServerClient(): Stripe {
   }
 
   stripeServerClient = new Stripe(getRequiredEnv("STRIPE_SECRET_KEY"), {
-    apiVersion: STRIPE_API_VERSION,
     typescript: true,
   });
 
@@ -44,5 +41,3 @@ export function getStripeClient(): Promise<StripeJs | null> {
   stripeClientPromise = loadStripe(getStripePublishableKey());
   return stripeClientPromise;
 }
-
-export { STRIPE_API_VERSION };

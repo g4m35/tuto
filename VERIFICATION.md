@@ -2,7 +2,7 @@
 
 ## Summary
 
-Verification stopped at the build step because `npm run build` failed. Per the task rules, work stopped once the failure was confirmed and documented.
+Verification now passes after removing the explicit Stripe `apiVersion` override from `web/lib/billing.ts` and rerunning the frontend build.
 
 ## Checklist
 
@@ -11,20 +11,12 @@ Verification stopped at the build step because `npm run build` failed. Per the t
   - Result: completed successfully
   - Notes: npm reported funding info and vulnerability warnings, but no install error
 
-- [ ] `npm run build` completes
+- [x] `npm run build` completes
   - Verified in `web/`
-  - Result: failed during TypeScript validation
-  - Current blocking error:
-
-    ```text
-    ./lib/billing.ts:32:5
-    Type error: Type '"2026-02-25.clover"' is not assignable to type '"2026-03-25.dahlia"'.
-    ```
-
-  - Context:
-    - The build first exposed two Clerk integration issues in `web/components/auth/SidebarUserMenu.tsx`
-    - Those were retried and corrected by switching from unsupported `SignedIn` and `SignedOut` imports to `Show`, then removing an unsupported `afterSignOutUrl` prop from `UserButton`
-    - After those fixes, the remaining blocker is the Stripe SDK API version mismatch in `web/lib/billing.ts`
+  - Result: completed successfully
+  - Fix applied:
+    - Removed the explicit `apiVersion` from the Stripe server client constructor in `web/lib/billing.ts`
+    - This allows `stripe@22.0.1` to use its SDK default API version and avoids the literal type mismatch
   - Additional build note:
     - Next.js 16 emits a deprecation warning that `middleware.ts` should move to `proxy.ts`
     - The requested task explicitly asked for `middleware.ts`, so the file remains in that location
@@ -59,4 +51,4 @@ Verification stopped at the build step because `npm run build` failed. Per the t
 - Phase 1 completed and committed as `docs: add architecture map`
 - Phase 2 completed and committed as `feat: add Clerk authentication`
 - Phase 3 completed and committed as `feat: add billing foundation`
-- Phase 4 stopped at the documented build blocker above
+- Phase 4 verification now passes after the Stripe typing fix
