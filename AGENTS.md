@@ -1,148 +1,97 @@
-# DeepTutor — Agent-Native Architecture
+# AGENTS.md - Tuto SaaS Wrapper
 
-## Overview
+## Project Overview
 
-DeepTutor is an **agent-native** intelligent learning companion built around
-a two-layer plugin model (Tools + Capabilities) with three entry points:
-CLI, WebSocket API, and Python SDK.
+This is a commercial SaaS wrapper around the open-source DeepTutor project (github.com/HKUDS/DeepTutor). We are adding authentication, billing, usage limits, and deploying as a hosted service.
 
-## Architecture
+**Goal:** Automated MRR business with minimal ongoing maintenance.
 
-```
-Entry Points:  CLI (Typer)  |  WebSocket /api/v1/ws  |  Python SDK
-                    ↓                   ↓                   ↓
-              ┌─────────────────────────────────────────────────┐
-              │              ChatOrchestrator                    │
-              │   routes to ChatCapability (default)             │
-              │   or a selected deep Capability                  │
-              └──────────┬──────────────┬───────────────────────┘
-                         │              │
-              ┌──────────▼──┐  ┌────────▼──────────┐
-              │ ToolRegistry │  │ CapabilityRegistry │
-              │  (Level 1)   │  │   (Level 2)        │
-              └──────────────┘  └────────────────────┘
-```
+**Target users:** Students, researchers, professionals who want AI tutoring without self-hosting.
 
-### Level 1 — Tools
+## Business Model
 
-Lightweight single-function tools the LLM calls on demand:
+| Tier | Price | Limits |
+|------|-------|--------|
+| Free | $0 | 50 messages/month, 1 document, no TutorBots |
+| Pro | $12/month | Unlimited messages, 10 documents, 1 TutorBot |
+| Team | $29/month | Multi-user, shared knowledge bases, 5 TutorBots |
 
-| Tool                | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `rag`               | Knowledge base retrieval (RAG)                 |
-| `web_search`        | Web search with citations                      |
-| `code_execution`    | Sandboxed Python execution                     |
-| `reason`            | Dedicated deep-reasoning LLM call              |
-| `brainstorm`        | Breadth-first idea exploration with rationale  |
-| `paper_search`      | arXiv academic paper search                    |
-| `geogebra_analysis` | Image → GeoGebra commands (4-stage vision pipeline) |
+BYOK (bring your own API key) option available at reduced price.
 
-### Level 2 — Capabilities
+## Tech Stack
 
-Multi-step agent pipelines that take over the conversation:
+- **Framework:** Next.js (already in DeepTutor)
+- **Auth:** Clerk (@clerk/nextjs)
+- **Payments:** Stripe (stripe, @stripe/stripe-js)
+- **Database:** Extend existing for user/subscription data
+- **Deployment:** Railway or Fly.io
+- **Monitoring:** Sentry for errors, Betterstack for uptime
 
-| Capability       | Stages                                         |
-| ---------------- | ---------------------------------------------- |
-| `chat`           | responding (default, tool-augmented)           |
-| `deep_solve`     | planning → reasoning → writing                 |
-| `deep_question`  | ideation → evaluation → generation → validation |
+## Current Status
 
-### Playground Plugins
+- [ ] Fork created
+- [ ] Local dev environment working
+- [x] Codebase mapped (ARCHITECTURE.md)
+- [x] Clerk auth added
+- [ ] Stripe billing added
+- [ ] Usage tracking added
+- [ ] Landing page created
+- [ ] Deployed to Railway
+- [ ] Custom domain configured
+- [ ] Soft launch
 
-Extended features in `deeptutor/plugins/`:
+## Code Style
 
-| Plugin            | Type       | Description                          |
-| ----------------- | ---------- | ------------------------------------ |
-| `deep_research`   | playground | Multi-agent research + reporting     |
+- TypeScript strict mode
+- Async/await over .then chains
+- Early returns for guard clauses
+- No em dashes in any copy
+- Comments explain "why", not "what"
 
-## CLI Usage
+## Owner
 
-```bash
-# Install CLI
-pip install -r requirements/cli.txt && pip install -e .
+Jake
 
-# Run any capability (agent-first entry point)
-deeptutor run chat "Explain Fourier transform"
-deeptutor run deep_solve "Solve x^2=4" -t rag --kb my-kb
-deeptutor run deep_question "Linear algebra" --config num_questions=5
+---
 
-# Interactive REPL
-deeptutor chat
+## Sub-Agent Definitions
 
-# Knowledge bases
-deeptutor kb list
-deeptutor kb create my-kb --doc textbook.pdf
+### Agent: Auth
+**Scope:** Everything in `/web/src/app/(auth)`, `/web/src/middleware.ts`, Clerk integration
+**Tasks:**
+- Add Clerk provider
+- Protect routes
+- Build sign-in/sign-up pages
+- Sync user to database on signup
 
-# Plugins & memory
-deeptutor plugin list
-deeptutor memory show
+### Agent: Billing
+**Scope:** `/web/src/app/api/webhooks/stripe`, `/web/src/lib/billing.ts`, `/web/src/app/pricing`
+**Tasks:**
+- Stripe checkout integration
+- Webhook handlers
+- Subscription tier logic
+- Pricing page UI
 
-# API server (requires server.txt)
-deeptutor serve --port 8001
-```
+### Agent: Usage
+**Scope:** `/web/src/lib/usage.ts`, `/web/src/lib/limits.ts`, database schema for tracking
+**Tasks:**
+- Message count tracking
+- Document upload limits
+- Tier-based enforcement
+- Usage dashboard component
 
-## Key Files
+### Agent: UI
+**Scope:** `/web/src/components`, `/web/src/app/(marketing)`
+**Tasks:**
+- Landing page
+- Dashboard layout
+- Match screenshot designs
+- Component library setup
 
-| Path                          | Purpose                              |
-| ----------------------------- | ------------------------------------ |
-| `deeptutor/runtime/orchestrator.py` | ChatOrchestrator — unified entry     |
-| `deeptutor/core/stream.py`          | StreamEvent protocol                 |
-| `deeptutor/core/stream_bus.py`      | Async event fan-out                  |
-| `deeptutor/core/tool_protocol.py`   | BaseTool abstract class              |
-| `deeptutor/core/capability_protocol.py` | BaseCapability abstract class    |
-| `deeptutor/core/context.py`         | UnifiedContext dataclass             |
-| `deeptutor/runtime/registry/tool_registry.py` | Tool discovery & registration |
-| `deeptutor/runtime/registry/capability_registry.py` | Capability discovery & registration |
-| `deeptutor/runtime/mode.py`         | RunMode (CLI vs SERVER)              |
-| `deeptutor/capabilities/`           | Built-in capability wrappers         |
-| `deeptutor/tools/builtin/`          | Built-in tool wrappers               |
-| `deeptutor/plugins/`                | Playground plugins                   |
-| `deeptutor/plugins/loader.py`       | Plugin discovery from manifest.yaml  |
-| `deeptutor_cli/main.py`             | Typer CLI entry point                |
-| `deeptutor/api/routers/unified_ws.py` | Unified WebSocket endpoint         |
-
-## Plugin Development
-
-Create a directory under `deeptutor/plugins/<name>/` with:
-
-```
-manifest.yaml     # name, version, type, description, stages
-capability.py     # class extending BaseCapability
-```
-
-Minimal `manifest.yaml`:
-```yaml
-name: my_plugin
-version: 0.1.0
-type: playground
-description: "My custom plugin"
-stages: [step1, step2]
-```
-
-Minimal `capability.py`:
-```python
-from deeptutor.core.capability_protocol import BaseCapability, CapabilityManifest
-from deeptutor.core.context import UnifiedContext
-from deeptutor.core.stream_bus import StreamBus
-
-class MyPlugin(BaseCapability):
-    manifest = CapabilityManifest(
-        name="my_plugin",
-        description="My custom plugin",
-        stages=["step1", "step2"],
-    )
-
-    async def run(self, context: UnifiedContext, stream: StreamBus) -> None:
-        async with stream.stage("step1", source=self.name):
-            await stream.content("Working on step 1...", source=self.name)
-        await stream.result({"response": "Done!"}, source=self.name)
-```
-
-## Dependency Layers
-
-```
-requirements/cli.txt            — CLI full (LLM + RAG + providers + tools)
-requirements/server.txt         — CLI + FastAPI/uvicorn (for Web/API)
-requirements/math-animator.txt  — Manim addon (for `deeptutor animate`)
-requirements/dev.txt            — Server + test/lint tools
-```
+### Agent: Infra
+**Scope:** `Dockerfile`, `docker-compose.yml`, `.github/workflows`, Railway config
+**Tasks:**
+- CI/CD pipeline
+- Auto-deploy on push
+- Environment management
+- Health checks

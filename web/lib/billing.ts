@@ -21,6 +21,14 @@ export function getStripeWebhookSecret(): string {
   return getRequiredEnv("STRIPE_WEBHOOK_SECRET");
 }
 
+export function getStripeProPriceId(): string {
+  return getRequiredEnv("STRIPE_PRO_PRICE_ID");
+}
+
+export function getStripeTeamPriceId(): string {
+  return getRequiredEnv("STRIPE_TEAM_PRICE_ID");
+}
+
 export function getStripeServerClient(): Stripe {
   if (stripeServerClient) {
     return stripeServerClient;

@@ -53,7 +53,7 @@ DeepTutor is split into a Next.js frontend in `web/` and a Python backend in `de
 
 Current route layout:
 
-- `web/app/layout.tsx` - root HTML shell, theme script, app shell provider, and i18n bridge
+- `web/app/layout.tsx` - root HTML shell, `ClerkProvider`, theme script, app shell provider, and i18n bridge
 - `web/app/(workspace)/layout.tsx` - workspace shell with `WorkspaceSidebar` and unified chat provider
 - `web/app/(utility)/layout.tsx` - utility shell with `UtilitySidebar`
 
@@ -103,6 +103,7 @@ Frontend API access is centralized in `web/lib/api.ts`, which requires `NEXT_PUB
 DeepTutor uses a mixed storage model:
 
 - SQLite for chat sessions, messages, turns, and notebook data
+- Postgres for SaaS wrapper user billing state in `web/migrations/001_users.sql`
 - JSON files for some settings and configuration state
 - File-system workspaces for generated artifacts, guide data, memory files, co-writer assets, and knowledge base contents
 
@@ -151,12 +152,30 @@ Key storage details:
 - `NEXT_PUBLIC_API_BASE_EXTERNAL`
 - `NEXT_PUBLIC_API_BASE`
 
+### Authentication
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL`
+- `NEXT_PUBLIC_CLERK_SIGN_UP_URL`
+- `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`
+- `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL`
+
+### Stripe Billing
+
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRO_PRICE_ID`
+- `STRIPE_TEAM_PRICE_ID`
+
 ### Security and Networking
 
 - `DISABLE_SSL_VERIFY`
 
 ## Notes for SaaS Wrapper Work
 
-- The current app has no auth provider, billing integration, or protected route middleware
+- Clerk auth is wired in `web/app/layout.tsx`, and `web/middleware.ts` protects every non-public route with `auth.protect()`
+- Stripe billing foundations live in `web/lib/billing.ts`, `web/lib/limits.ts`, `web/lib/db.ts`, and `web/app/api/webhooks/stripe/route.ts`
 - The existing shared shell is sidebar-driven, so auth controls will need to be introduced into a shared layout or sidebar component
 - The Python backend should remain untouched for this wrapper pass because the requested SaaS setup is isolated to `web/`
