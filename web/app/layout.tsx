@@ -1,21 +1,22 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Plus_Jakarta_Sans, Lora } from "next/font/google";
+import { Fraunces, Geist } from "next/font/google";
 import "./globals.css";
 import ThemeScript from "@/components/ThemeScript";
 import { AppShellProvider } from "@/context/AppShellContext";
 import { I18nClientBridge } from "@/i18n/I18nClientBridge";
+import { cn } from "@/lib/utils";
 
-const fontSans = Plus_Jakarta_Sans({
+const fontSans = Geist({
   subsets: ["latin"],
-  display: "swap",
   variable: "--font-sans",
 });
 
-const fontSerif = Lora({
+const fontSerif = Fraunces({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-serif",
+  style: ["italic", "normal"],
 });
 
 export const metadata: Metadata = {
@@ -29,11 +30,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${fontSans.variable} ${fontSerif.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn(fontSans.variable, fontSerif.variable, "font-sans")}
+    >
       <head>
         <ThemeScript />
       </head>
-      <body className="font-sans bg-[var(--background)] text-[var(--foreground)]">
+      <body className="bg-background text-foreground font-sans">
         <ClerkProvider>
           <AppShellProvider>
             <I18nClientBridge>
