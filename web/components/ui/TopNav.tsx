@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/courses/linear-algebra-foundations", label: "Courses" },
+  { href: "/dashboard", label: "Courses" },
   { href: "/create", label: "Create" },
 ]
 

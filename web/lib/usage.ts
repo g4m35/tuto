@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getTierLimits, hasUnlimitedAllowance, type BillingTier } from "@/lib/limits";
-import { query } from "@/lib/db";
+import { isDatabaseConfigured, query } from "@/lib/db";
 
 export type UsageEventType = "message" | "doc_upload" | "course_created";
 
@@ -40,6 +40,10 @@ function getLimitForEventType(tier: BillingTier, eventType: UsageEventType): num
 }
 
 async function ensureUserRow(clerkId: string) {
+  if (!isDatabaseConfigured()) {
+    return;
+  }
+
   await query(
     `
       insert into users (
@@ -77,6 +81,10 @@ export async function recordUsage(
   eventType: UsageEventType,
   metadata: Record<string, unknown> = {},
 ) {
+  if (!isDatabaseConfigured()) {
+    return;
+  }
+
   await ensureUserRow(clerkId);
 
   await query(
@@ -99,6 +107,16 @@ export async function checkLimit(clerkId: string, eventType: UsageEventType): Pr
   resetsAt: Date;
 }> {
   const { monthStart, resetsAt } = getMonthWindow();
+
+  if (!isDatabaseConfigured()) {
+    return {
+      allowed: true,
+      current: 0,
+      limit: Number.POSITIVE_INFINITY,
+      resetsAt,
+    };
+  }
+
   const tier = await getUserTier(clerkId);
   const tierLimit = getLimitForEventType(tier, eventType);
 

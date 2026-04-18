@@ -8,13 +8,12 @@ type GlobalWithPgPool = typeof globalThis & {
 
 let pool: Pool | null = null;
 
-function getDatabaseUrl(): string {
-  const value = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
-  if (!value) {
-    throw new Error("Missing required Postgres environment variable: DATABASE_URL or POSTGRES_URL");
-  }
+export function getDatabaseUrl(): string | null {
+  return process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? null;
+}
 
-  return value;
+export function isDatabaseConfigured(): boolean {
+  return Boolean(getDatabaseUrl());
 }
 
 function getPool(): Pool {
@@ -28,8 +27,13 @@ function getPool(): Pool {
     return pool;
   }
 
+  const connectionString = getDatabaseUrl();
+  if (!connectionString) {
+    throw new Error("Missing required Postgres environment variable: DATABASE_URL or POSTGRES_URL");
+  }
+
   pool = new Pool({
-    connectionString: getDatabaseUrl(),
+    connectionString,
   });
 
   if (process.env.NODE_ENV !== "production") {

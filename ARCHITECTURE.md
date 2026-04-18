@@ -98,6 +98,79 @@ Registered router modules in `deeptutor/api/main.py`:
 
 Frontend API access is centralized in `web/lib/api.ts`, which requires `NEXT_PUBLIC_API_BASE` and builds both HTTP and WebSocket URLs from that base.
 
+## DeepTutor API Surface
+
+The `/deeptutor` backend does not expose a first-class `courses` API. The integration work in `web/` maps the existing DeepTutor primitives into a course-oriented wrapper.
+
+### Running the backend locally
+
+- Python entry point: `python -m deeptutor.api.run_server`
+- Default backend port: `8001`
+- Manual install path from the root README:
+  - `pip install -e ".[server]"`
+  - configure `.env` with at least LLM and embedding settings
+- The FastAPI app is mounted in `deeptutor/api/main.py`, and CORS is already enabled for local frontend calls.
+
+### Document ingestion
+
+DeepTutor exposes knowledge-base ingestion, not a generic document API:
+
+- `POST /api/v1/knowledge/create`
+  - multipart form with `name` and one or more `files`
+  - creates a new knowledge base, saves the uploaded files, and starts background indexing
+  - returns a `task_id` for progress tracking
+- `POST /api/v1/knowledge/{kb_name}/upload`
+  - multipart form with `files`
+  - appends files to an existing knowledge base
+- `GET /api/v1/knowledge/list`
+  - lists known knowledge bases and their status/progress
+- `GET /api/v1/knowledge/tasks/{task_id}/stream`
+  - server-sent events stream for ingestion logs
+
+### Course or lesson generation
+
+DeepTutor’s closest course primitive is Guided Learning:
+
+- `POST /api/v1/guide/create_session`
+  - body includes `user_input`
+  - returns a `session_id` plus a flat `knowledge_points` array
+- `POST /api/v1/guide/start`
+  - body includes `session_id`
+  - starts page generation and returns the initial lesson index plus progress
+- `GET /api/v1/guide/session/{session_id}`
+  - fetches persisted guided-learning session state
+- `GET /api/v1/guide/session/{session_id}/pages`
+  - returns page generation status and ready HTML pages
+
+Important adaptation:
+
+- Guided Learning returns a flat list of `knowledge_points`, not a nested course/unit/lesson tree.
+- The web integration groups those points into UI “units” and persists them as course metadata on the frontend side.
+- Guided Learning also does not accept knowledge-base IDs as a first-class retrieval parameter, so uploaded source IDs are preserved in web metadata and passed into the prompt context rather than attached as a dedicated backend field.
+
+### Q&A
+
+DeepTutor does not expose a standalone course Q&A route. The closest equivalent is guided-learning chat:
+
+- `POST /api/v1/guide/chat`
+  - body includes `session_id`, `message`, and optional `knowledge_index`
+  - returns the reply for the current guided-learning session
+
+### Exercise or quiz generation
+
+There is no REST `generate exercise` endpoint. The relevant backend surface is the `deep_question` capability:
+
+- `POST /api/v1/plugins/capabilities/deep_question/execute-stream`
+  - server-sent events stream
+  - accepts `content`, optional `knowledge_bases`, and `config`
+  - for topic-driven generation, `config` can include `mode`, `topic`, `num_questions`, and `question_type`
+- Legacy direct question generation also exists on WebSocket endpoints under `/api/v1/question/*`, but the capability SSE wrapper is easier to consume from the Next.js server routes.
+
+Important adaptation:
+
+- Adaptive lesson exercise generation in `web/` is implemented by calling `deep_question` for one choice question tied to the lesson title and summary.
+- This is the closest existing backend equivalent to “generate next exercise”; it is not a dedicated lesson API in the Python service.
+
 ## Database and Storage Approach
 
 DeepTutor uses a mixed storage model:

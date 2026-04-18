@@ -149,6 +149,15 @@ EMBEDDING_HOST=https://api.openai.com/v1
 EMBEDDING_DIMENSION=3072
 ```
 
+For the SaaS-facing course flow in `web/`, also copy `web/.env.example` into your local web environment and point it at the Python backend:
+
+```dotenv
+DEEPTUTOR_URL=http://localhost:8001
+DEEPTUTOR_API_KEY=
+```
+
+`DEEPTUTOR_API_KEY` is optional. The open-source local FastAPI server does not require it by default, but the web wrapper forwards it when a proxy or gateway expects authentication.
+
 <details>
 <summary><b>Supported LLM Providers</b></summary>
 
@@ -357,6 +366,8 @@ These directories survive `docker compose down` and are reused on the next `dock
 | `BACKEND_PORT` | No | Backend port (default `8001`) |
 | `FRONTEND_PORT` | No | Frontend port (default `3782`) |
 | `NEXT_PUBLIC_API_BASE_EXTERNAL` | No | Public backend URL for cloud deployment |
+| `DEEPTUTOR_URL` | No | Backend URL consumed by the `web/` course wrapper (for example `http://localhost:8001`) |
+| `DEEPTUTOR_API_KEY` | No | Optional API key forwarded by the `web/` DeepTutor client |
 | `DISABLE_SSL_VERIFY` | No | Disable SSL verification (default `false`) |
 
 </details>

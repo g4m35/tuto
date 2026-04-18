@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Upload, WandSparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,12 +11,73 @@ import { cn } from "@/lib/utils"
 type CreateMode = "upload" | "topic"
 
 export default function CreateCoursePage() {
+  const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [mode, setMode] = useState<CreateMode>("upload")
   const [title, setTitle] = useState("")
   const [subject, setSubject] = useState("Mathematics")
   const [difficulty, setDifficulty] = useState("Intermediate")
   const [topicPrompt, setTopicPrompt] = useState("")
-  const [uploadState, setUploadState] = useState("Drop a PDF, deck, or notes bundle here.")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [status, setStatus] = useState("Drop a PDF, deck, or notes bundle here.")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit() {
+    setError(null)
+
+    if (!title.trim()) {
+      setError("Give the course a title first.")
+      return
+    }
+
+    if (mode === "topic" && !topicPrompt.trim()) {
+      setError("Add a topic prompt so DeepTutor knows what to generate.")
+      return
+    }
+
+    if (mode === "upload" && !selectedFile) {
+      setError("Upload a source document before generating the course.")
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      const formData = new FormData()
+      formData.set("mode", mode)
+      formData.set("title", title.trim())
+      formData.set("subject", subject)
+      formData.set("difficulty", difficulty)
+      formData.set("topicPrompt", topicPrompt.trim())
+
+      if (selectedFile) {
+        formData.set("file", selectedFile)
+      }
+
+      const response = await fetch("/api/courses", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Course generation failed.")
+      }
+
+      const courseId = data?.course?.id
+      if (!courseId) {
+        throw new Error("Course was created but no id came back from the API.")
+      }
+
+      router.push(`/courses/${courseId}`)
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Course generation failed.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -26,8 +88,8 @@ export default function CreateCoursePage() {
             Build the next learning path.
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
-            Start from source material or begin with a topic. We will shape the
-            structure later. For now, this is the shell where creation begins.
+            Start from source material or begin with a topic. This flow now calls the
+            DeepTutor backend instead of mock data.
           </p>
         </div>
 
@@ -39,7 +101,10 @@ export default function CreateCoursePage() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setMode(item.id as CreateMode)}
+                onClick={() => {
+                  setMode(item.id as CreateMode)
+                  setError(null)
+                }}
                 className={cn(
                   "rounded-[var(--radius)] border p-5 text-left",
                   active
@@ -75,25 +140,36 @@ export default function CreateCoursePage() {
           </CardHeader>
           <CardContent className="px-6 py-6">
             {mode === "upload" ? (
-              <button
-                type="button"
-                onClick={() =>
-                  setUploadState("Files will connect here when the backend lands.")
-                }
-                className="flex min-h-64 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius)] border border-dashed border-[var(--border-strong)] bg-[color:color-mix(in_srgb,var(--bg-soft)_78%,var(--bg))] px-6 text-center"
-              >
-                <div className="inline-flex size-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
-                  <Upload className="size-5 text-[var(--accent)]" />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-lg font-medium text-[var(--text)]">
-                    Drag your materials here
-                  </p>
-                  <p className="max-w-md text-sm leading-6 text-[var(--text-dim)]">
-                    {uploadState}
-                  </p>
-                </div>
-              </button>
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.txt,.md"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null
+                    setSelectedFile(file)
+                    setStatus(file ? `${file.name} is ready for ingestion.` : "Drop a PDF, deck, or notes bundle here.")
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex min-h-64 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius)] border border-dashed border-[var(--border-strong)] bg-[color:color-mix(in_srgb,var(--bg-soft)_78%,var(--bg))] px-6 text-center"
+                >
+                  <div className="inline-flex size-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
+                    <Upload className="size-5 text-[var(--accent)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-lg font-medium text-[var(--text)]">
+                      {selectedFile ? "Source ready" : "Choose your materials"}
+                    </p>
+                    <p className="max-w-md text-sm leading-6 text-[var(--text-dim)]">
+                      {status}
+                    </p>
+                  </div>
+                </button>
+              </>
             ) : (
               <div className="space-y-3">
                 <label
@@ -171,15 +247,18 @@ export default function CreateCoursePage() {
               </div>
             </div>
 
+            {error ? (
+              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 text-sm leading-6 text-[var(--text-dim)]">
+                {error}
+              </div>
+            ) : null}
+
             <Button
               size="lg"
-              onClick={() => {
-                if (mode === "upload") {
-                  setUploadState("We are ready to accept files as soon as upload wiring arrives.")
-                }
-              }}
+              onClick={() => void handleSubmit()}
+              disabled={submitting}
             >
-              Generate course
+              {submitting ? "Generating course..." : "Generate course"}
             </Button>
           </CardContent>
         </Card>
@@ -192,12 +271,10 @@ export default function CreateCoursePage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm leading-7 text-[var(--text-dim)]">
             <p>
-              Start with the clearest source you have. The structure is only as
-              strong as the signal in the material.
+              Upload mode creates a DeepTutor knowledge base first, then adapts the existing guided-learning API to produce the course shell.
             </p>
             <p>
-              Keep titles direct. Tuto handles warmth in the lesson flow, not in
-              the naming.
+              Topic mode goes straight into Guided Learning and returns a flat knowledge-point path, which this UI groups into units.
             </p>
           </CardContent>
         </Card>
