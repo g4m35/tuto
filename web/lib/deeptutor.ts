@@ -76,6 +76,14 @@ function isStubMode() {
   return !getDeepTutorUrl();
 }
 
+function logStubResponse(operation: string, detail: Record<string, unknown> = {}) {
+  console.warn("[DeepTutor][stub]", {
+    stub: true,
+    operation,
+    ...detail,
+  });
+}
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -222,6 +230,11 @@ export async function ingestDocument(
   userId: string,
 ): Promise<IngestDocumentResult> {
   if (isStubMode()) {
+    logStubResponse("ingestDocument", {
+      fileName: file.name,
+      userId,
+    });
+
     return {
       id: `stub-source-${randomUUID()}`,
       knowledgeBaseName: buildKnowledgeBaseName(file.name, userId),
@@ -259,7 +272,12 @@ export async function generateCourse(
   params: GenerateCourseParams,
 ): Promise<GenerateCourseResult> {
   if (isStubMode()) {
-    const sessionId = `stub-session-${randomUUID()}`
+    logStubResponse("generateCourse", {
+      title: params.title,
+      sourceMode: params.sourceMode,
+    });
+
+    const sessionId = `stub-session-${randomUUID()}`;
     const knowledgePoints = buildStubKnowledgePoints(params.title);
 
     return {
@@ -338,6 +356,12 @@ export async function askQuestion(
   context: AskQuestionContext = {},
 ) {
   if (isStubMode()) {
+    logStubResponse("askQuestion", {
+      courseId,
+      questionLength: question.length,
+      sessionId: context.sessionId ?? null,
+    });
+
     return {
       answer:
         "Stub mode is active, so this answer is synthetic. Connect DEEPTUTOR_URL to route course Q&A into Guided Learning chat.",
@@ -371,6 +395,12 @@ export async function generateExercise(
   userHistory: GenerateExerciseContext,
 ) {
   if (isStubMode()) {
+    logStubResponse("generateExercise", {
+      courseId: userHistory.courseId,
+      lessonId,
+      knowledgeBaseName: userHistory.knowledgeBaseName ?? null,
+    });
+
     return {
       exercise: buildStubExercise(lessonId, userHistory),
       backendMode: "stub" as const,

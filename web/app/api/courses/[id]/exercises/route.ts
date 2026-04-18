@@ -7,6 +7,17 @@ import { withUsageLimit } from "@/lib/withUsageLimit";
 
 export const runtime = "nodejs";
 
+function attachStubHeader(
+  response: NextResponse,
+  backendMode: "live" | "stub",
+) {
+  if (backendMode === "stub") {
+    response.headers.set("X-Tuto-Stub", "true");
+  }
+
+  return response;
+}
+
 export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
   "message",
   async (request, { clerkId, params }) => {
@@ -66,10 +77,13 @@ export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
         backendMode: generated.backendMode,
       });
 
-      return NextResponse.json({
-        exercise: storedExercise.payload,
-        backendMode: storedExercise.backendMode,
-      });
+      return attachStubHeader(
+        NextResponse.json({
+          exercise: storedExercise.payload,
+          backendMode: storedExercise.backendMode,
+        }),
+        storedExercise.backendMode,
+      );
     } catch (error) {
       if (error instanceof DeepTutorClientError) {
         return NextResponse.json(

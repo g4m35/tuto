@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { DeepTutorStatusBanner } from "@/components/dashboard/DeepTutorStatusBanner"
 import { Progress } from "@/components/ui/progress"
 import { toDashboardViewData } from "@/lib/course-data"
 import { listCoursesForUser } from "@/lib/course-store"
@@ -26,9 +27,12 @@ export default async function DashboardPage() {
     const courses = await listCoursesForUser(userId)
     const dashboard = toDashboardViewData(courses)
     const continueCourse = dashboard.continueCourse
+    const hasStubCourses = courses.some((course) => course.backendMode === "stub")
 
     return (
       <div className="flex flex-col gap-8">
+        <DeepTutorStatusBanner hasStubCourses={hasStubCourses} />
+
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="flex flex-col justify-between gap-8 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg-elev)_80%,transparent)] p-8">
             <div className="space-y-4">

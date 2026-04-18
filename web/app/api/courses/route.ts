@@ -9,6 +9,17 @@ import { withUsageLimit } from "@/lib/withUsageLimit";
 
 export const runtime = "nodejs";
 
+function attachStubHeader(
+  response: NextResponse,
+  backendMode: "live" | "stub",
+) {
+  if (backendMode === "stub") {
+    response.headers.set("X-Tuto-Stub", "true");
+  }
+
+  return response;
+}
+
 export async function GET() {
   const { userId } = await auth();
 
@@ -128,9 +139,12 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
 
     const persisted = await getCourseForUser(clerkId, course.id);
 
-    return NextResponse.json({
-      course: persisted ?? course,
-    });
+    return attachStubHeader(
+      NextResponse.json({
+        course: persisted ?? course,
+      }),
+      course.backendMode,
+    );
   } catch (error) {
     if (error instanceof DeepTutorClientError) {
       return NextResponse.json(
