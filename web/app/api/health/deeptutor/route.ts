@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+interface DeepTutorSystemStatus {
+  llm?: { status?: unknown };
+  embeddings?: { status?: unknown };
+}
+
 function getDeepTutorUrl() {
   return process.env.DEEPTUTOR_URL?.replace(/\/$/, "") ?? "";
 }
@@ -22,6 +27,8 @@ export async function GET() {
       connected: false,
       latency_ms: 0,
       version: null,
+      llm_configured: false,
+      embeddings_configured: false,
     });
   }
 
@@ -35,22 +42,35 @@ export async function GET() {
       headers,
       signal,
     });
-    const healthResponse = await fetch(`${baseUrl}/api/v1/guide/health`, {
+    const statusResponse = await fetch(`${baseUrl}/api/v1/system/status`, {
       cache: "no-store",
       headers,
       signal,
     });
     const latencyMs = Math.round(performance.now() - startedAt);
 
-    if (!healthResponse.ok) {
+    if (!statusResponse.ok) {
       return NextResponse.json({
         connected: false,
         latency_ms: latencyMs,
         version: null,
+        llm_configured: false,
+        embeddings_configured: false,
       });
     }
 
     let version: string | null = null;
+    let llmConfigured = false;
+    let embeddingsConfigured = false;
+
+    try {
+      const status = (await statusResponse.json()) as DeepTutorSystemStatus;
+      llmConfigured = status.llm?.status === "configured";
+      embeddingsConfigured = status.embeddings?.status === "configured";
+    } catch {
+      llmConfigured = false;
+      embeddingsConfigured = false;
+    }
 
     try {
       const versionResponse = await versionPromise;
@@ -70,12 +90,16 @@ export async function GET() {
       connected: true,
       latency_ms: latencyMs,
       version,
+      llm_configured: llmConfigured,
+      embeddings_configured: embeddingsConfigured,
     });
   } catch {
     return NextResponse.json({
       connected: false,
       latency_ms: Math.round(performance.now() - startedAt),
       version: null,
+      llm_configured: false,
+      embeddings_configured: false,
     });
   }
 }

@@ -246,6 +246,31 @@ Key storage details:
 
 - `DISABLE_SSL_VERIFY`
 
+## DeepTutor Provider Resolution
+
+- Embedding provider selection is resolved in `deeptutor/services/config/provider_runtime.py` via `EMBEDDING_PROVIDERS`, `_canonical_embedding_provider_name()`, `_resolve_embedding_provider()`, and `resolve_embedding_runtime_config()`.
+- `deeptutor/services/embedding/config.py` calls that resolver through `get_embedding_config()` and is the runtime gate used by `/api/v1/system/status`, `/api/v1/system/test/embeddings`, and the RAG pipeline.
+- Gemini embeddings are wired through the OpenAI-compatible Google endpoint with:
+  - `EMBEDDING_BINDING=gemini`
+  - `EMBEDDING_MODEL=gemini-embedding-001`
+  - `EMBEDDING_HOST=https://generativelanguage.googleapis.com/v1beta/openai/`
+  - `GOOGLE_API_KEY` as the shared Google credential fallback, without adding a separate embedding-only key
+- Live verification note: on April 18, 2026, `text-embedding-004` returned `404 NOT_FOUND` from the Gemini API OpenAI-compatible endpoint, while `gemini-embedding-001` succeeded. `text-embedding-004` is still documented by Google under Vertex AI, not the Gemini API key path used by this backend.
+
+### DeepTutor Smoke Commands
+
+- Status:
+
+```bash
+curl -sS http://127.0.0.1:8001/api/v1/system/status
+```
+
+- Embeddings connectivity:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8001/api/v1/system/test/embeddings
+```
+
 ## Notes for SaaS Wrapper Work
 
 - Clerk auth is wired in `web/app/layout.tsx`, and `web/middleware.ts` protects every non-public route with `auth.protect()`

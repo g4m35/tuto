@@ -16,6 +16,7 @@ ENV_KEY_ORDER = (
     "LLM_BINDING",
     "LLM_MODEL",
     "LLM_API_KEY",
+    "GOOGLE_API_KEY",
     "LLM_HOST",
     "LLM_API_VERSION",
     "EMBEDDING_BINDING",

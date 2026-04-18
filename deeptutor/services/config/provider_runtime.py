@@ -35,8 +35,7 @@ SEARCH_ENV_FALLBACK = {
 LLM_LOCALHOST_PROVIDERS = ("ollama", "vllm")
 
 EMBEDDING_PROVIDER_ALIASES = {
-    "google": "openai",
-    "gemini": "openai",
+    "google": "gemini",
     "huggingface": "custom",
     "lm_studio": "vllm",
     "llama_cpp": "vllm",
@@ -58,6 +57,15 @@ class EmbeddingProviderSpec:
     default_dim: int = 0
 
 EMBEDDING_PROVIDERS: dict[str, EmbeddingProviderSpec] = {
+    "gemini": EmbeddingProviderSpec(
+        label="Gemini",
+        default_api_base="https://generativelanguage.googleapis.com/v1beta/openai/",
+        keywords=("gemini", "google", "gemini-embedding-001", "gemini-embedding-2-preview", "text-embedding-004"),
+        is_local=False,
+        api_key_envs=("GOOGLE_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY"),
+        default_model="gemini-embedding-001",
+        default_dim=3072,
+    ),
     "openai": EmbeddingProviderSpec(
         label="OpenAI",
         default_api_base="https://api.openai.com/v1",
@@ -475,10 +483,6 @@ def resolve_embedding_runtime_config(
         _as_str((profile or {}).get("api_version")) or summary.embedding.get("api_version", "")
     )
     active_extra_headers = _to_headers((profile or {}).get("extra_headers"))
-    dimension = _resolve_embedding_dimension(
-        (model or {}).get("dimension") or summary.embedding.get("dimension") or 3072
-    )
-
     provider_pool = _collect_embedding_provider_pool(loaded)
     provider_name = _resolve_embedding_provider(
         hint=binding_hint,
@@ -488,6 +492,12 @@ def resolve_embedding_runtime_config(
     )
     spec = EMBEDDING_PROVIDERS[provider_name]
     mapped = provider_pool.get(provider_name)
+    dimension = _resolve_embedding_dimension(
+        (model or {}).get("dimension")
+        or (summary.embedding.get("dimension") if "EMBEDDING_DIMENSION" in env_values else None)
+        or spec.default_dim
+        or 3072
+    )
 
     api_key = active_api_key or (mapped.api_key if mapped else "")
     if not api_key:
