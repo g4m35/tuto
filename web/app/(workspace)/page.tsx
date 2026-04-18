@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * Root page now redirects to /chat.
- * Handles backward compatibility for /?session=xxx URLs.
+ * Root page now redirects to /dashboard by default.
+ * Backward-compatible chat query params still route into /chat.
  */
 export default function HomePage() {
   const router = useRouter();
@@ -16,7 +16,12 @@ export default function HomePage() {
     const capability = params.get("capability");
     const tools = params.getAll("tool");
 
-    let target = sessionId ? `/chat/${sessionId}` : "/chat";
+    const shouldOpenChat = Boolean(sessionId || capability || tools.length);
+    let target = shouldOpenChat
+      ? sessionId
+        ? `/chat/${sessionId}`
+        : "/chat"
+      : "/dashboard";
 
     const query: string[] = [];
     if (capability) query.push(`capability=${encodeURIComponent(capability)}`);

@@ -141,7 +141,11 @@ export default function GuidePage() {
   };
 
   const handleLoadSession = async (sessionId: string) => {
-    await loadSession(sessionId);
+    try {
+      await loadSession(sessionId);
+    } catch (error) {
+      console.error("Failed to load guided learning session:", error);
+    }
   };
 
   const handleFixHtml = async (description: string) => {
@@ -153,7 +157,9 @@ export default function GuidePage() {
     const params = new URLSearchParams(window.location.search);
     const session = params.get("session");
     if (session) {
-      void loadSession(session);
+      void loadSession(session).catch((error) => {
+        console.error("Failed to restore guided learning session from URL:", error);
+      });
     }
   }, [loadSession]);
 

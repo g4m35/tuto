@@ -97,11 +97,16 @@ export async function listSessions(
   return withClientCache<SessionSummary[]>(
     `sessions:${limit}:${offset}`,
     async () => {
-      const response = await fetch(apiUrl(`/api/v1/sessions?limit=${limit}&offset=${offset}`), {
-        cache: "no-store",
-      });
-      const data = await expectJson<{ sessions: SessionSummary[] }>(response);
-      return data.sessions ?? [];
+      try {
+        const response = await fetch(apiUrl(`/api/v1/sessions?limit=${limit}&offset=${offset}`), {
+          cache: "no-store",
+        });
+        const data = await expectJson<{ sessions: SessionSummary[] }>(response);
+        return data.sessions ?? [];
+      } catch (error) {
+        console.warn("Unable to load chat sessions. Returning an empty list instead.", error);
+        return [];
+      }
     },
     {
       force: options?.force,
