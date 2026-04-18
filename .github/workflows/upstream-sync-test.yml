@@ -1,0 +1,197 @@
+name: Upstream Sync Test
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  verify-upstream-sync:
+    if: github.event.pull_request.head.repo.full_name == github.repository && contains(github.event.pull_request.labels.*.name, 'upstream-sync')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Run upstream sync verification
+        id: verify
+        run: |
+          set +e
+
+          workdir="${RUNNER_TEMP}/upstream-sync-test"
+          mkdir -p "$workdir"
+
+          python_status="skipped"
+          web_status="skipped"
+
+          python -m pip install --upgrade pip >"$workdir/pip-install.log" 2>&1
+          pip_status=$?
+
+          if [ $pip_status -eq 0 ]; then
+            pip install -r requirements/dev.txt >>"$workdir/pip-install.log" 2>&1
+            pip_status=$?
+          fi
+
+          if [ $pip_status -eq 0 ]; then
+            pip install -e . >>"$workdir/pip-install.log" 2>&1
+            pip_status=$?
+          fi
+
+          if [ $pip_status -eq 0 ]; then
+            mkdir -p data/user/settings
+            printf '%s\n' \
+              'system:' \
+              '  language: en' \
+              'logging:' \
+              '  level: WARNING' \
+              > data/user/settings/main.yaml
+
+            if find tests -type f | grep -q .; then
+              pytest -q >"$workdir/pytest.log" 2>&1
+              if [ $? -eq 0 ]; then
+                python_status="passed"
+              else
+                python_status="failed"
+              fi
+            else
+              echo "No DeepTutor tests found." >"$workdir/pytest.log"
+              python_status="skipped"
+            fi
+          else
+            echo "Python dependency installation failed." >"$workdir/pytest.log"
+            python_status="failed"
+          fi
+
+          (
+            cd web && npm ci >"$workdir/npm-install.log" 2>&1
+          )
+          npm_status=$?
+
+          if [ $npm_status -eq 0 ]; then
+            (
+              cd web && npm run build >"$workdir/web-build.log" 2>&1
+            )
+            if [ $? -eq 0 ]; then
+              web_status="passed"
+            else
+              web_status="failed"
+            fi
+          else
+            echo "npm install failed." >"$workdir/web-build.log"
+            web_status="failed"
+          fi
+
+          overall_status="passed"
+          if [ "$python_status" = "failed" ] || [ "$web_status" = "failed" ]; then
+            overall_status="failed"
+          fi
+
+          echo "python_status=$python_status" >>"$GITHUB_OUTPUT"
+          echo "web_status=$web_status" >>"$GITHUB_OUTPUT"
+          echo "overall_status=$overall_status" >>"$GITHUB_OUTPUT"
+          {
+            echo "python_tail<<__EOF__"
+            tail -n 80 "$workdir/pytest.log"
+            echo "__EOF__"
+          } >>"$GITHUB_OUTPUT"
+          {
+            echo "web_tail<<__EOF__"
+            tail -n 80 "$workdir/web-build.log"
+            echo "__EOF__"
+          } >>"$GITHUB_OUTPUT"
+
+          exit 0
+
+      - name: Comment verification results on PR
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          PYTHON_STATUS: ${{ steps.verify.outputs.python_status }}
+          WEB_STATUS: ${{ steps.verify.outputs.web_status }}
+          PYTHON_TAIL: ${{ steps.verify.outputs.python_tail }}
+          WEB_TAIL: ${{ steps.verify.outputs.web_tail }}
+        with:
+          script: |
+            const marker = "<!-- upstream-sync-test -->";
+            const icon = (status) => {
+              if (status === "passed") return "✅ Passed";
+              if (status === "failed") return "❌ Failed";
+              return "⏭️ Skipped";
+            };
+
+            const body = [
+              marker,
+              "## Upstream Sync Verification",
+              "",
+              `- DeepTutor tests: ${icon(process.env.PYTHON_STATUS)}`,
+              `- \`npm run build\` in \`web/\`: ${icon(process.env.WEB_STATUS)}`,
+              "",
+              "### DeepTutor tests log tail",
+              "",
+              "```text",
+              process.env.PYTHON_TAIL || "No test output captured.",
+              "```",
+              "",
+              "### Web build log tail",
+              "",
+              "```text",
+              process.env.WEB_TAIL || "No build output captured.",
+              "```",
+            ].join("\n");
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) =>
+              comment.user?.login === "github-actions[bot]" && comment.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Fail when verification fails
+        if: steps.verify.outputs.overall_status != 'passed'
+        run: exit 1

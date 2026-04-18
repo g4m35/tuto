@@ -71,6 +71,34 @@
 
 > **[2025.12.29]** DeepTutor is officially released!
 
+## Staying in Sync with DeepTutor
+
+This repository follows [`HKUDS/DeepTutor`](https://github.com/HKUDS/DeepTutor) as an upstream source, but we do **not** auto-merge upstream changes into this fork.
+
+Our sync model is intentionally review-first:
+
+1. We maintain this repository as a fork with local product and integration changes.
+2. A scheduled GitHub Action checks upstream releases and opens a reviewable PR when a new release lands.
+3. We review upstream release notes, the `deeptutor/` diff, and risk areas such as API, config, and client-surface changes.
+4. We merge selectively only after manual approval and local verification.
+5. Nothing in the upstream sync flow auto-merges under any circumstances.
+
+If you are setting up the repo locally, configure the upstream remote like this:
+
+```bash
+git remote add upstream https://github.com/HKUDS/DeepTutor.git
+git fetch upstream --tags
+```
+
+If `upstream` already exists, update it instead:
+
+```bash
+git remote set-url upstream https://github.com/HKUDS/DeepTutor.git
+git fetch upstream --tags
+```
+
+The fork's accepted upstream release history lives in [`CHANGELOG-upstream.md`](CHANGELOG-upstream.md).
+
 
 ## ✨ Key Features
 
