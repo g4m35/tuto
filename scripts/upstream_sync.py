@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import json
 import os
 import re
@@ -30,6 +31,13 @@ def run(*args: str, check: bool = True) -> str:
 
 def git(*args: str, check: bool = True) -> str:
     return run("git", *args, check=check)
+
+
+@dataclass
+class MergeAttempt:
+    merged: bool
+    auto_resolved: list[str]
+    remaining_conflicts: list[str]
 
 
 def append_output(name: str, value: str) -> None:
@@ -69,6 +77,90 @@ def release_already_present(tag: str, base_ref: str) -> bool:
         text=True,
     )
     return result.returncode == 0
+
+
+def ref_has_path(ref: str, path: str) -> bool:
+    result = subprocess.run(
+        ["git", "cat-file", "-e", f"{ref}:{path}"],
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def is_ignored_path(path: str) -> bool:
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "-q", "--", path],
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def list_unmerged_paths() -> list[str]:
+    return [
+        path
+        for path in git("diff", "--name-only", "--diff-filter=U").splitlines()
+        if path
+    ]
+
+
+def resolve_safe_conflicts(paths: list[str]) -> list[str]:
+    resolved: list[str] = []
+
+    for path in paths:
+        if not is_ignored_path(path):
+            continue
+
+        if ref_has_path("HEAD", path):
+            run("git", "checkout", "--ours", "--", path)
+            run("git", "add", "--", path)
+        else:
+            subprocess.run(
+                ["git", "rm", "--force", "--ignore-unmatch", "--", path],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        resolved.append(path)
+
+    return resolved
+
+
+def attempt_merge(tag: str) -> MergeAttempt:
+    message = f"chore(upstream): sync DeepTutor {tag}"
+    result = subprocess.run(
+        ["git", "merge", "--no-ff", "-m", message, f"refs/tags/{tag}"],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode == 0:
+        return MergeAttempt(merged=True, auto_resolved=[], remaining_conflicts=[])
+
+    unmerged_paths = list_unmerged_paths()
+    if not unmerged_paths:
+        raise subprocess.CalledProcessError(
+            result.returncode,
+            result.args,
+            output=result.stdout,
+            stderr=result.stderr,
+        )
+
+    auto_resolved = resolve_safe_conflicts(unmerged_paths)
+    remaining_conflicts = list_unmerged_paths()
+
+    if remaining_conflicts:
+        subprocess.run(["git", "merge", "--abort"], check=False, capture_output=True, text=True)
+        return MergeAttempt(
+            merged=False,
+            auto_resolved=auto_resolved,
+            remaining_conflicts=remaining_conflicts,
+        )
+
+    run("git", "commit", "--no-edit")
+    return MergeAttempt(merged=True, auto_resolved=auto_resolved, remaining_conflicts=[])
 
 
 def detect_high_risk_changes(changed_files: list[str], diff_text: str) -> list[str]:
@@ -177,6 +269,36 @@ def render_pr_body(
     ).strip() + "\n"
 
 
+def render_blocked_sync_body(
+    *,
+    tag: str,
+    release_url: str,
+    conflicts: list[str],
+    auto_resolved: list[str],
+) -> str:
+    auto_resolved_section = (
+        "\n".join(f"- `{path}`" for path in auto_resolved)
+        if auto_resolved
+        else "- None."
+    )
+    conflicts_section = "\n".join(f"- `{path}`" for path in conflicts)
+
+    return (
+        "## Upstream sync blocked\n\n"
+        f"- Release: [{tag}]({release_url})\n"
+        "- Status: manual merge required\n\n"
+        "## Auto-resolved safe local-only conflicts\n\n"
+        f"{auto_resolved_section}\n\n"
+        "## Remaining conflicts\n\n"
+        f"{conflicts_section}\n\n"
+        "## Next steps\n\n"
+        "- Create a branch from `main`.\n"
+        f"- Merge `refs/tags/{tag}` manually.\n"
+        "- Resolve the remaining conflicts listed above.\n"
+        "- Open or update the upstream sync PR after verification.\n"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Prepare an upstream sync branch and PR body.")
     parser.add_argument("--base-ref", default="main")
@@ -207,6 +329,7 @@ def main() -> int:
 
     if not release:
         append_output("new_release", "false")
+        append_output("blocked", "false")
         append_output("reason", "No upstream release is newer than the merge log.")
         return 0
 
@@ -216,6 +339,7 @@ def main() -> int:
 
     if release_already_present(tag, args.base_ref):
         append_output("new_release", "false")
+        append_output("blocked", "false")
         append_output(
             "reason",
             f"Upstream release {tag} is already present on {args.base_ref}; update CHANGELOG-upstream.md when appropriate.",
@@ -227,11 +351,30 @@ def main() -> int:
     base_sha = git("rev-parse", args.base_ref)
     git("checkout", "-B", branch, args.base_ref)
 
-    try:
-        git("merge", "--no-ff", "-m", f"chore(upstream): sync DeepTutor {tag}", f"refs/tags/{tag}")
-    except subprocess.CalledProcessError:
-        subprocess.run(["git", "merge", "--abort"], capture_output=True, text=True)
-        raise
+    merge_attempt = attempt_merge(tag)
+
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    append_output("tag", tag)
+    append_output("auto_resolved", "\n".join(merge_attempt.auto_resolved))
+
+    if not merge_attempt.merged:
+        body = render_blocked_sync_body(
+            tag=tag,
+            release_url=str(release["html_url"]),
+            conflicts=merge_attempt.remaining_conflicts,
+            auto_resolved=merge_attempt.auto_resolved,
+        )
+        output_path.write_text(body, encoding="utf-8")
+
+        append_output("new_release", "false")
+        append_output("blocked", "true")
+        append_output("branch", branch)
+        append_output("body_path", str(output_path))
+        append_output("conflicts", "\n".join(merge_attempt.remaining_conflicts))
+        append_output("reason", f"Manual merge required for DeepTutor {tag}.")
+        return 0
 
     head_sha = git("rev-parse", "HEAD")
     changed_files = [
@@ -251,13 +394,11 @@ def main() -> int:
         high_risk_findings=high_risk_findings,
     )
 
-    output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(body, encoding="utf-8")
 
     append_output("new_release", "true")
+    append_output("blocked", "false")
     append_output("branch", branch)
-    append_output("tag", tag)
     append_output("title", title)
     append_output("body_path", str(output_path))
     append_output("base_sha", base_sha)

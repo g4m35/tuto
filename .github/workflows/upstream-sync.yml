@@ -5,6 +5,9 @@ on:
     - cron: "0 9 * * 1"
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 permissions:
   contents: write
   pull-requests: write
@@ -52,7 +55,7 @@ jobs:
             --output "${{ runner.temp }}/upstream-sync-pr.md"
 
       - name: Stop when there is nothing new to sync
-        if: steps.prepare.outputs.new_release != 'true'
+        if: steps.prepare.outputs.new_release != 'true' && steps.prepare.outputs.blocked != 'true'
         run: |
           echo "${{ steps.prepare.outputs.reason || 'No unsynced upstream release found.' }}"
 
@@ -62,12 +65,36 @@ jobs:
           git push --force-with-lease origin "${{ steps.prepare.outputs.branch }}"
 
       - name: Ensure sync labels exist
-        if: steps.prepare.outputs.new_release == 'true'
+        if: steps.prepare.outputs.new_release == 'true' || steps.prepare.outputs.blocked == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh label create upstream-sync --color 1D76DB --description "Review required for upstream DeepTutor sync PRs" 2>/dev/null || true
           gh label create needs-review --color FBCA04 --description "Manual maintainer review required before merge" 2>/dev/null || true
+
+      - name: Create or update blocked sync issue
+        id: blocked_issue
+        if: steps.prepare.outputs.blocked == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="Upstream sync blocked: DeepTutor ${{ steps.prepare.outputs.tag }}"
+          body_path="${{ steps.prepare.outputs.body_path }}"
+          issue_number="$(gh issue list --state open --label upstream-sync --json number,title --jq '.[] | select(.title == "'"$title"'") | .number' | head -n 1)"
+
+          if [ -z "$issue_number" ]; then
+            gh issue create \
+              --title "$title" \
+              --body-file "$body_path" \
+              --label upstream-sync \
+              --label needs-review
+            issue_number="$(gh issue list --state open --label upstream-sync --json number,title --jq '.[] | select(.title == "'"$title"'") | .number' | head -n 1)"
+          else
+            gh issue edit "$issue_number" --title "$title" --body-file "$body_path"
+            gh issue edit "$issue_number" --add-label upstream-sync --add-label needs-review
+          fi
+
+          echo "issue_number=$issue_number" >> "$GITHUB_OUTPUT"
 
       - name: Create or update upstream sync PR
         id: pr
@@ -95,6 +122,32 @@ jobs:
           gh pr edit "$pr_number" --add-reviewer g4m35 2>/dev/null || true
 
           echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize blocked sync result
+        if: steps.prepare.outputs.blocked == 'true'
+        run: |
+          {
+            echo "## Upstream Sync Blocked"
+            echo ""
+            echo "- Release: ${{ steps.prepare.outputs.tag }}"
+            echo "- Issue: #${{ steps.blocked_issue.outputs.issue_number }}"
+            echo "- Auto-resolved safe conflicts:"
+            if [ -n "${{ steps.prepare.outputs.auto_resolved }}" ]; then
+              while IFS= read -r path; do
+                [ -n "$path" ] && echo "  - \`$path\`"
+              done <<'EOF'
+${{ steps.prepare.outputs.auto_resolved }}
+EOF
+            else
+              echo "  - None"
+            fi
+            echo "- Remaining conflicts:"
+            while IFS= read -r path; do
+              [ -n "$path" ] && echo "  - \`$path\`"
+            done <<'EOF'
+${{ steps.prepare.outputs.conflicts }}
+EOF
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Summarize sync result
         if: steps.prepare.outputs.new_release == 'true'
