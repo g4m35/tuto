@@ -5,6 +5,7 @@
 # Includes full runtime + development tooling.
 
 -r server.txt
+-r tutorbot.txt
 
 pytest>=7.0.0
 pytest-asyncio>=0.23.0
