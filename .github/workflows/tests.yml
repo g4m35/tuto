@@ -26,6 +26,9 @@ on:
       - "pyproject.toml"
       - ".github/workflows/tests.yml"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   import-check:
     name: Import Check (Python ${{ matrix.python-version }})

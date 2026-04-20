@@ -89,6 +89,7 @@ def build_research_execution_policy(
         source_tools.add("web_search")
     if "papers" in request_config.sources:
         source_tools.add("paper_search")
+    rag_enabled = "rag" in source_tools
 
     allow_code_execution = (
         bool(request_config.sources)
@@ -115,7 +116,9 @@ def build_research_execution_policy(
         "execution_mode": depth_policy["execution_mode"],
         "max_parallel_topics": depth_policy["max_parallel_topics"],
         "new_topic_min_score": depth_policy["new_topic_min_score"],
-        "enable_rag": "rag" in source_tools,
+        "enable_rag": rag_enabled,
+        "enable_rag_hybrid": rag_enabled,
+        "enable_rag_naive": False,
         "enable_web_search": "web_search" in source_tools,
         "enable_paper_search": "paper_search" in source_tools,
         "enable_run_code": allow_code_execution,
@@ -138,7 +141,7 @@ def build_research_execution_policy(
         "researching": researching,
         "reporting": reporting,
         "queue": queue,
-        "intent": request_config.model_dump(),
+        "intent": request_config.model_dump(exclude_none=True),
     }
 
 
@@ -149,16 +152,7 @@ def build_research_runtime_config(
     enabled_tools: set[str],
     kb_name: str | None,
 ) -> dict[str, Any]:
-    capabilities = (
-        base_config.get("capabilities", {})
-        if isinstance(base_config.get("capabilities"), dict)
-        else {}
-    )
-    research_root = (
-        capabilities.get("research", {})
-        if isinstance(capabilities.get("research"), dict)
-        else {}
-    )
+    research_root = _resolve_research_root(base_config)
     researching_root = (
         research_root.get("researching", {})
         if isinstance(research_root.get("researching"), dict)
@@ -174,6 +168,10 @@ def build_research_runtime_config(
         request_config=request_config,
         enabled_tools=enabled_tools,
     )
+    rag_mode = str(rag_root.get("default_mode", "hybrid")).strip().lower()
+    rag_enabled = bool(policy["researching"].get("enable_rag"))
+    enable_rag_hybrid = rag_enabled and rag_mode != "naive"
+    enable_rag_naive = rag_enabled and rag_mode == "naive"
 
     runtime_config = dict(base_config)
     runtime_config["planning"] = policy["planning"]
@@ -184,6 +182,8 @@ def build_research_runtime_config(
             if key in researching_root
         },
         **policy["researching"],
+        "enable_rag_hybrid": enable_rag_hybrid,
+        "enable_rag_naive": enable_rag_naive,
     }
     runtime_config["reporting"] = {
         **{
@@ -219,6 +219,22 @@ def build_research_runtime_config(
     runtime_config["tools"] = tools_cfg
 
     return runtime_config
+
+
+def _resolve_research_root(base_config: dict[str, Any]) -> dict[str, Any]:
+    capabilities = (
+        base_config.get("capabilities", {})
+        if isinstance(base_config.get("capabilities"), dict)
+        else {}
+    )
+    if isinstance(capabilities.get("research"), dict):
+        return capabilities["research"]
+
+    legacy_research = base_config.get("research", {})
+    if isinstance(legacy_research, dict):
+        return legacy_research
+
+    return {}
 
 
 def _build_depth_policy(
