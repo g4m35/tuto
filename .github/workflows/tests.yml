@@ -91,7 +91,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-3.11-${{ hashFiles('requirements/server.txt', 'requirements/cli.txt') }}
+          key: ${{ runner.os }}-pip-3.11-${{ hashFiles('requirements/tutorbot.txt', 'requirements/server.txt', 'requirements/cli.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-3.11-
 
