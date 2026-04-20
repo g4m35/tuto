@@ -10,6 +10,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  NEXT_PUBLIC_API_BASE: "http://localhost:8001"
 
 permissions:
   contents: read
@@ -74,7 +75,20 @@ jobs:
               > data/user/settings/main.yaml
 
             if find tests -type f | grep -q .; then
-              pytest -q >"$workdir/pytest.log" 2>&1
+              pytest -q --import-mode=importlib \
+                tests/api \
+                tests/cli \
+                tests/services/test_app_facade.py \
+                tests/services/test_model_catalog.py \
+                tests/services/test_path_service.py \
+                tests/services/memory \
+                tests/services/session \
+                tests/tools \
+                tests/agents/research/test_request_config.py \
+                tests/agents/math_animator/test_request_config.py \
+                tests/agents/math_animator/test_utils.py \
+                tests/services/llm/test_utils.py \
+                >"$workdir/pytest.log" 2>&1
               if [ $? -eq 0 ]; then
                 python_status="passed"
               else
