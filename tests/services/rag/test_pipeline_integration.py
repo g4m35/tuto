@@ -409,7 +409,10 @@ class TestPipelineIntegration:
     @staticmethod
     def test_pipeline(request):
         """Test the specified pipeline"""
-        pipeline_name = request.config.getoption("--pipeline")
+        try:
+            pipeline_name = request.config.getoption("pipeline")
+        except ValueError:
+            pipeline_name = "llamaindex"
 
         async def _run():
             if pipeline_name.lower() == "all":

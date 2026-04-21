@@ -97,7 +97,7 @@ def test_embedding_explicit_binding_and_headers(tmp_path: Path) -> None:
     assert resolved.dimension == 1024
 
 
-def test_embedding_alias_canonicalization_google_to_openai(tmp_path: Path) -> None:
+def test_embedding_alias_canonicalization_google_to_gemini(tmp_path: Path) -> None:
     catalog = _build_catalog(
         embedding_profile={
             "id": "embedding-p",
@@ -111,8 +111,8 @@ def test_embedding_alias_canonicalization_google_to_openai(tmp_path: Path) -> No
         }
     )
     resolved = resolve_embedding_runtime_config(catalog=catalog, env_store=_env(tmp_path, []))
-    assert resolved.provider_name == "openai"
-    assert resolved.binding == "openai"
+    assert resolved.provider_name == "gemini"
+    assert resolved.binding == "gemini"
 
 
 def test_embedding_local_fallback_from_base_url(tmp_path: Path) -> None:

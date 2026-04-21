@@ -122,13 +122,13 @@ async def test_factory_complete_uses_litellm(monkeypatch) -> None:
     )
     captured: dict[str, object] = {}
 
-    async def _fake_litellm_complete(**kwargs):
+    async def _fake_sdk_complete(**kwargs):
         captured.update(kwargs)
         return "ok"
 
     monkeypatch.setattr("deeptutor.services.llm.factory.get_llm_config", lambda: cfg)
-    monkeypatch.setattr("deeptutor.services.llm.factory.litellm_available", lambda: True)
-    monkeypatch.setattr("deeptutor.services.llm.factory.litellm_complete", _fake_litellm_complete)
+    monkeypatch.setattr("deeptutor.services.llm.executors.sdk_complete", _fake_sdk_complete)
+    monkeypatch.setattr("deeptutor.services.llm.factory.sdk_complete", _fake_sdk_complete)
 
     result = await complete("hello")
     assert result == "ok"
@@ -154,7 +154,6 @@ async def test_factory_complete_uses_direct_azure(monkeypatch) -> None:
         return "ok"
 
     monkeypatch.setattr("deeptutor.services.llm.factory.get_llm_config", lambda: cfg)
-    monkeypatch.setattr("deeptutor.services.llm.factory.litellm_available", lambda: False)
     monkeypatch.setattr("deeptutor.services.llm.cloud_provider.complete", _fake_cloud_complete)
 
     result = await complete("hello")
@@ -173,7 +172,6 @@ async def test_factory_complete_openai_codex_requires_oauth(monkeypatch) -> None
         provider_mode="oauth",
     )
     monkeypatch.setattr("deeptutor.services.llm.factory.get_llm_config", lambda: cfg)
-    monkeypatch.setattr("deeptutor.services.llm.factory.litellm_available", lambda: False)
 
     with pytest.raises(Exception):
         await complete("hello", max_retries=0)
@@ -190,14 +188,14 @@ async def test_factory_stream_uses_litellm(monkeypatch) -> None:
         provider_mode="standard",
     )
 
-    async def _fake_litellm_stream(**kwargs):
+    async def _fake_sdk_stream(**kwargs):
         _ = kwargs
         yield "a"
         yield "b"
 
     monkeypatch.setattr("deeptutor.services.llm.factory.get_llm_config", lambda: cfg)
-    monkeypatch.setattr("deeptutor.services.llm.factory.litellm_available", lambda: True)
-    monkeypatch.setattr("deeptutor.services.llm.factory.litellm_stream", _fake_litellm_stream)
+    monkeypatch.setattr("deeptutor.services.llm.executors.sdk_stream", _fake_sdk_stream)
+    monkeypatch.setattr("deeptutor.services.llm.factory.sdk_stream", _fake_sdk_stream)
 
     chunks = []
     async for item in stream("hello"):

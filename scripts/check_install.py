@@ -118,32 +118,32 @@ def check_backend_packages() -> tuple[bool, int, int]:
     # Required packages: (pip_name, import_name, min_version, is_optional)
     packages = [
         # Core
-        ("python-dotenv", "dotenv", "1.0.0", False),
-        ("PyYAML", "yaml", "6.0", False),
-        ("tiktoken", "tiktoken", "0.5.0", False),
-        ("jinja2", "jinja2", "3.1.0", False),
+        ("python-dotenv", "dotenv", "1.2.2", False),
+        ("PyYAML", "yaml", "6.0.3", False),
+        ("tiktoken", "tiktoken", "0.12.0", False),
+        ("jinja2", "jinja2", "3.1.6", False),
         # HTTP & API
-        ("requests", "requests", "2.32.0", False),
-        ("openai", "openai", "1.30.0", False),
-        ("anthropic", "anthropic", "0.30.0", True),
-        ("aiohttp", "aiohttp", "3.9.0", False),
-        ("httpx", "httpx", "0.27.0", False),
+        ("requests", "requests", "2.33.1", False),
+        ("openai", "openai", "2.32.0", False),
+        ("anthropic", "anthropic", "0.96.0", True),
+        ("aiohttp", "aiohttp", "3.13.5", False),
+        ("httpx", "httpx", "0.28.1", False),
         # Async
-        ("nest-asyncio", "nest_asyncio", "1.5.8", False),
-        ("tenacity", "tenacity", "8.0.0", False),
+        ("nest-asyncio", "nest_asyncio", "1.6.0", False),
+        ("tenacity", "tenacity", "9.1.4", False),
         # Web framework
-        ("fastapi", "fastapi", "0.100.0", False),
-        ("uvicorn", "uvicorn", "0.24.0", False),
-        ("websockets", "websockets", "12.0", False),
-        ("pydantic", "pydantic", "2.0.0", False),
+        ("fastapi", "fastapi", "0.136.0", False),
+        ("uvicorn", "uvicorn", "0.45.0", False),
+        ("websockets", "websockets", "16.0", False),
+        ("pydantic", "pydantic", "2.13.3", False),
         # RAG
-        ("llama-index", "llama_index", "0.14.0", False),
-        ("PyMuPDF", "fitz", "1.26.0", False),
+        ("llama-index", "llama_index", "0.14.21", False),
+        ("PyMuPDF", "fitz", "1.27.2.2", False),
         # Academic
-        ("arxiv", "arxiv", "2.0.0", False),
+        ("arxiv", "arxiv", "3.0.0", False),
         # Optional API clients
-        ("perplexityai", "perplexity", "0.1.0", True),
-        ("dashscope", "dashscope", "1.14.0", True),
+        ("perplexityai", "perplexity", "0.32.1", True),
+        ("dashscope", "dashscope", "1.25.17", True),
     ]
 
     installed = 0
