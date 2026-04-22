@@ -248,14 +248,22 @@ Key storage details:
 
 ## DeepTutor Provider Resolution
 
-- Embedding provider selection is resolved in `deeptutor/services/config/provider_runtime.py` via `EMBEDDING_PROVIDERS`, `_canonical_embedding_provider_name()`, `_resolve_embedding_provider()`, and `resolve_embedding_runtime_config()`.
-- `deeptutor/services/embedding/config.py` calls that resolver through `get_embedding_config()` and is the runtime gate used by `/api/v1/system/status`, `/api/v1/system/test/embeddings`, and the RAG pipeline.
+### Embedding Provider Configuration
+
+- `deeptutor/services/config/provider_runtime.py` owns embedding provider metadata and selection. See:
+  - `deeptutor/services/config/provider_runtime.py:53-68` for the Gemini/OpenAI-compatible provider declaration in `EMBEDDING_PROVIDERS`
+  - `deeptutor/services/config/provider_runtime.py:372-381` for `_canonical_embedding_provider_name()`
+  - `deeptutor/services/config/provider_runtime.py:410-443` for `_resolve_embedding_provider()`
+  - `deeptutor/services/config/provider_runtime.py:457-520` for `resolve_embedding_runtime_config()`
+- `deeptutor/services/embedding/config.py:1-60` exposes `get_embedding_config()` as the runtime gate used by the rest of the backend.
+- `deeptutor/services/embedding/client.py:17-60` instantiates the embedding adapter from the resolved runtime config.
+- `deeptutor/api/routers/system.py:61-100` surfaces the configured embedding model and status through `/api/v1/system/status`.
 - Gemini embeddings are wired through the OpenAI-compatible Google endpoint with:
   - `EMBEDDING_BINDING=gemini`
   - `EMBEDDING_MODEL=gemini-embedding-001`
   - `EMBEDDING_HOST=https://generativelanguage.googleapis.com/v1beta/openai/`
   - `GOOGLE_API_KEY` as the shared Google credential fallback, without adding a separate embedding-only key
-- Live verification note: on April 18, 2026, `text-embedding-004` returned `404 NOT_FOUND` from the Gemini API OpenAI-compatible endpoint, while `gemini-embedding-001` succeeded. `text-embedding-004` is still documented by Google under Vertex AI, not the Gemini API key path used by this backend.
+- Production note: keep the current Gemini API-key path on `gemini-embedding-001`. On April 22, 2026, `text-embedding-004` still returned `404 NOT_FOUND` from the Gemini API OpenAI-compatible endpoint, while `gemini-embedding-001` succeeded. `text-embedding-004` is documented by Google under Vertex AI, not the Gemini API key path used by this backend.
 
 ### DeepTutor Smoke Commands
 

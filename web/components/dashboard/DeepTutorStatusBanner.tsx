@@ -15,7 +15,7 @@ interface DeepTutorStatusBannerProps {
 }
 
 export function DeepTutorStatusBanner({
-  hasStubCourses,
+  hasStubCourses: _hasStubCourses,
 }: DeepTutorStatusBannerProps) {
   const [health, setHealth] = useState<DeepTutorHealth | null>(null);
   const [hasCheckedHealth, setHasCheckedHealth] = useState(false);
@@ -54,31 +54,24 @@ export function DeepTutorStatusBanner({
     return null;
   }
 
-  if (!hasStubCourses && !hasCheckedHealth) {
-    return null;
-  }
-
-  if (!hasStubCourses && hasCheckedHealth && health?.connected && health.embeddings_configured) {
+  if (!hasCheckedHealth) {
     return null;
   }
 
   const isBackendWarning = hasCheckedHealth && health?.connected !== true;
   const isEmbeddingWarning =
     hasCheckedHealth && health?.connected === true && !health.embeddings_configured;
+
+  if (!isBackendWarning && !isEmbeddingWarning) {
+    return null;
+  }
+
   const title = isBackendWarning
-    ? "DeepTutor backend not connected."
-    : isEmbeddingWarning
-    ? "DeepTutor embeddings not configured."
-    : "Running in stub mode — connect DEEPTUTOR_URL for real content.";
-  const body = !hasCheckedHealth
-    ? "Checking DeepTutor connection status for this environment."
-    : isBackendWarning
+    ? "DeepTutor backend offline"
+    : "Document uploads limited — embeddings not configured";
+  const body = isBackendWarning
     ? "The dashboard cannot reach DeepTutor right now, so live course generation and health checks are unavailable."
-    : isEmbeddingWarning
-    ? `DeepTutor is reachable${health?.version ? ` (v${health.version})` : ""} in ${health?.latency_ms ?? 0} ms, but embeddings are still disabled. Topic generation can work while upload and retrieval flows remain limited.`
-    : health?.connected
-    ? `DeepTutor is reachable${health.version ? ` (v${health.version})` : ""} in ${health.latency_ms} ms. Existing stub courses will stay synthetic until regenerated.`
-    : "DeepTutor health check is unavailable from the dashboard right now.";
+    : `DeepTutor is reachable${health?.version ? ` (v${health.version})` : ""} in ${health?.latency_ms ?? 0} ms, but embeddings are still disabled. Chat can keep working while document upload and retrieval flows remain limited.`;
   const toneClasses = isBackendWarning
     ? "border-rose-400/40 bg-rose-100/80 text-rose-950"
     : "border-amber-400/40 bg-amber-100/80 text-amber-950";

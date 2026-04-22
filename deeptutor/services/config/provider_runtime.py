@@ -60,7 +60,8 @@ EMBEDDING_PROVIDERS: dict[str, EmbeddingProviderSpec] = {
     "gemini": EmbeddingProviderSpec(
         label="Gemini",
         default_api_base="https://generativelanguage.googleapis.com/v1beta/openai/",
-        keywords=("gemini", "google", "gemini-embedding-001", "gemini-embedding-2-preview", "text-embedding-004"),
+        # Keep Gemini API-key routing aligned with the OpenAI-compatible endpoint.
+        keywords=("gemini", "google", "gemini-embedding-001", "gemini-embedding-2-preview"),
         is_local=False,
         api_key_envs=("GOOGLE_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY"),
         default_model="gemini-embedding-001",

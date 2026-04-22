@@ -7,6 +7,10 @@ interface DeepTutorSystemStatus {
   embeddings?: { status?: unknown };
 }
 
+function isConfiguredStatus(value: unknown) {
+  return value === "configured";
+}
+
 function getDeepTutorUrl() {
   return process.env.DEEPTUTOR_URL?.replace(/\/$/, "") ?? "";
 }
@@ -65,8 +69,8 @@ export async function GET() {
 
     try {
       const status = (await statusResponse.json()) as DeepTutorSystemStatus;
-      llmConfigured = status.llm?.status === "configured";
-      embeddingsConfigured = status.embeddings?.status === "configured";
+      llmConfigured = isConfiguredStatus(status.llm?.status);
+      embeddingsConfigured = isConfiguredStatus(status.embeddings?.status);
     } catch {
       llmConfigured = false;
       embeddingsConfigured = false;
