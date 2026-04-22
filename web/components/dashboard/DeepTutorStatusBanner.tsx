@@ -22,8 +22,10 @@ export function DeepTutorStatusBanner({
 
   useEffect(() => {
     const controller = new AbortController();
+    let timeoutId: number | null = null;
+    let cancelled = false;
 
-    async function loadHealth() {
+    async function loadHealth(attempt = 0) {
       try {
         const response = await fetch("/api/health/deeptutor", {
           cache: "no-store",
@@ -31,13 +33,28 @@ export function DeepTutorStatusBanner({
         });
 
         if (!response.ok) {
+          if (!cancelled && attempt < 5) {
+            timeoutId = window.setTimeout(() => {
+              void loadHealth(attempt + 1);
+            }, 2_000);
+          }
           return;
         }
 
         const nextHealth = (await response.json()) as DeepTutorHealth;
         setHealth(nextHealth);
+
+        if (!nextHealth.connected && !cancelled && attempt < 5) {
+          timeoutId = window.setTimeout(() => {
+            void loadHealth(attempt + 1);
+          }, 2_000);
+        }
       } catch {
-        // Keep the banner copy stable if the health check fails.
+        if (!cancelled && attempt < 5) {
+          timeoutId = window.setTimeout(() => {
+            void loadHealth(attempt + 1);
+          }, 2_000);
+        }
       } finally {
         setHasCheckedHealth(true);
       }
@@ -46,6 +63,10 @@ export function DeepTutorStatusBanner({
     void loadHealth();
 
     return () => {
+      cancelled = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
       controller.abort();
     };
   }, []);

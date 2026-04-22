@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { UserButton } from "@clerk/nextjs"
 import { Flame, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -17,13 +18,27 @@ import {
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard", label: "Courses" },
-  { href: "/create", label: "Create" },
+  { id: "dashboard", href: "/dashboard", label: "Dashboard" },
+  { id: "courses", href: "/dashboard#courses", label: "Courses" },
+  { id: "create", href: "/create", label: "Create" },
 ]
 
 export function TopNav() {
   const pathname = usePathname()
+  const [hash, setHash] = useState("")
+
+  useEffect(() => {
+    const syncHash = () => {
+      setHash(window.location.hash)
+    }
+
+    syncHash()
+    window.addEventListener("hashchange", syncHash)
+
+    return () => {
+      window.removeEventListener("hashchange", syncHash)
+    }
+  }, [])
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg)_86%,transparent)] backdrop-blur-xl">
@@ -38,11 +53,13 @@ export function TopNav() {
           <nav className="hidden items-center gap-2 md:flex">
             {navItems.map((item) => {
               const active =
-                pathname === item.href || pathname.startsWith(`${item.href}/`)
+                item.id === "courses"
+                  ? pathname === "/dashboard" && hash === "#courses"
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`)
 
               return (
                 <Link
-                  key={item.href}
+                  key={item.id}
                   href={item.href}
                   className={cn(
                     "rounded-full px-4 py-2 text-sm font-medium text-[var(--text-dim)]",

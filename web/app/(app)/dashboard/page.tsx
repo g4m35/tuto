@@ -153,7 +153,7 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section className="space-y-5">
+        <section id="courses" className="scroll-mt-28 space-y-5">
           <div className="flex items-end justify-between gap-4">
             <div className="space-y-2">
               <p className="eyebrow">Course stack</p>
