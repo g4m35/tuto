@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node ./scripts/require-clerk-env.mjs",
+    "predev:turbo": "node ./scripts/require-clerk-env.mjs",
     "dev": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next dev",
     "dev:turbo": "node --max-old-space-size=6144 ./node_modules/next/dist/bin/next dev --turbopack",
     "build": "next build",
