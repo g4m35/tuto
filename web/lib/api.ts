@@ -2,20 +2,25 @@
 
 // Get API base URL from environment variable.
 // The launcher injects NEXT_PUBLIC_API_BASE from the canonical project-root `.env`.
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE ||
-  (() => {
-    if (typeof window !== "undefined") {
-      console.error("NEXT_PUBLIC_API_BASE is not set.");
-      console.error(
-        "Please configure NEXT_PUBLIC_API_BASE in your environment and restart the application.",
-      );
-      console.error("Run python scripts/start_tour.py to rebuild your local setup if needed.");
-    }
-    throw new Error(
-      "NEXT_PUBLIC_API_BASE is not configured. Please set it in your environment and restart.",
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE ?? null;
+
+function requireApiBaseUrl(): string {
+  if (API_BASE_URL) {
+    return API_BASE_URL;
+  }
+
+  if (typeof window !== "undefined") {
+    console.error("NEXT_PUBLIC_API_BASE is not set.");
+    console.error(
+      "Please configure NEXT_PUBLIC_API_BASE in your environment and restart the application.",
     );
-  })();
+    console.error("Run python scripts/start_tour.py to rebuild your local setup if needed.");
+  }
+
+  throw new Error(
+    "NEXT_PUBLIC_API_BASE is not configured. Please set it in your environment and restart.",
+  );
+}
 
 /**
  * Construct a full API URL from a path
@@ -23,13 +28,15 @@ export const API_BASE_URL =
  * @returns Full URL (e.g., 'http://localhost:8001/api/v1/knowledge/list')
  */
 export function apiUrl(path: string): string {
+  const apiBaseUrl = requireApiBaseUrl();
+
   // Remove leading slash if present to avoid double slashes
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
   // Remove trailing slash from base URL if present
-  const base = API_BASE_URL.endsWith("/")
-    ? API_BASE_URL.slice(0, -1)
-    : API_BASE_URL;
+  const base = apiBaseUrl.endsWith("/")
+    ? apiBaseUrl.slice(0, -1)
+    : apiBaseUrl;
 
   return `${base}${normalizedPath}`;
 }
@@ -40,9 +47,11 @@ export function apiUrl(path: string): string {
  * @returns WebSocket URL (e.g., 'ws://localhost:8001/api/v1/ws')
  */
 export function wsUrl(path: string): string {
+  const apiBaseUrl = requireApiBaseUrl();
+
   // Security Hardening: Convert http to ws and https to wss.
   // In production environments (where API_BASE_URL starts with https), this ensures secure websockets.
-  const base = API_BASE_URL.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+  const base = apiBaseUrl.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
 
   // Remove leading slash if present to avoid double slashes
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
