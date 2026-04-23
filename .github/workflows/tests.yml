@@ -53,11 +53,11 @@ jobs:
 
       - name: Typecheck web launch slice
         working-directory: web
-        run: ./node_modules/.bin/tsc --noEmit
+        run: npm run typecheck
 
       - name: Run targeted web launch tests
         working-directory: web
-        run: npx --yes tsx --test tests/billing-server.test.ts tests/course-store-ownership.test.ts
+        run: npm run test:node
 
   import-check:
     name: Import Check (Python ${{ matrix.python-version }})

@@ -112,7 +112,7 @@ jobs:
 
           if [ $npm_status -eq 0 ]; then
             (
-              cd web && npx --yes tsx --test tests/billing-server.test.ts tests/course-store-ownership.test.ts >"$workdir/web-node-tests.log" 2>&1
+              cd web && npm run test:node >"$workdir/web-node-tests.log" 2>&1
             )
             if [ $? -eq 0 ]; then
               web_node_tests_status="passed"
@@ -121,7 +121,7 @@ jobs:
             fi
 
             (
-              cd web && ./node_modules/.bin/tsc --noEmit >"$workdir/web-typecheck.log" 2>&1
+              cd web && npm run typecheck >"$workdir/web-typecheck.log" 2>&1
             )
             if [ $? -eq 0 ]; then
               web_typecheck_status="passed"

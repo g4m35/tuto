@@ -1,9 +1,14 @@
+import { auth } from "@clerk/nextjs/server";
 import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getBillingSummary } from "@/lib/billing-server";
 import { PricingClient } from "./PricingClient";
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const { userId } = await auth();
+  const billingSummary = userId ? await getBillingSummary(userId) : null;
+
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8">
@@ -31,7 +36,7 @@ export default function PricingPage() {
         </div>
 
         <Suspense>
-          <PricingClient />
+          <PricingClient billingSummary={billingSummary} />
         </Suspense>
       </div>
     </main>

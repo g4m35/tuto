@@ -1,5 +1,3 @@
-import "server-only";
-
 import { Pool, type QueryResult, type QueryResultRow } from "pg";
 
 type GlobalWithPgPool = typeof globalThis & {
