@@ -33,11 +33,11 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg)_86%,transparent)] backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-        <div className="flex items-center gap-8">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-7">
+        <div className="flex items-center gap-6">
           <Link
             href="/dashboard"
-            className="serif text-3xl font-semibold italic tracking-tight text-[var(--text)]"
+            className="serif text-[2rem] font-semibold italic tracking-tight text-[var(--text)]"
           >
             tuto.
           </Link>
@@ -55,7 +55,7 @@ export function TopNav() {
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "rounded-full px-4 py-2 text-sm font-medium text-[var(--text-dim)]",
+                    "rounded-full px-3.5 py-2 text-sm font-medium text-[var(--text-dim)]",
                     active
                       ? "surface-panel text-[var(--text)]"
                       : "hover:bg-[var(--bg-soft)] hover:text-[var(--text)]"
@@ -69,7 +69,7 @@ export function TopNav() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3 py-2 text-sm text-[var(--text-dim)] sm:inline-flex">
+          <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3 py-2 text-sm text-[var(--text-dim)] lg:inline-flex">
             <Flame className="size-4 text-[var(--accent)]" />
             <span>12 day streak</span>
           </div>

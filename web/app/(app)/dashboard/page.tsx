@@ -33,15 +33,15 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-8">
         <DeepTutorStatusBanner hasStubCourses={hasStubCourses} />
 
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="flex flex-col justify-between gap-8 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg-elev)_80%,transparent)] p-8">
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,0.88fr)]">
+          <div className="flex flex-col justify-between gap-7 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg-elev)_80%,transparent)] p-7">
             <div className="space-y-4">
               <p className="eyebrow">Study loop</p>
               <div className="space-y-3">
-                <h1 className="serif max-w-3xl text-5xl font-semibold tracking-tight text-balance text-[var(--text)] sm:text-6xl">
+                <h1 className="serif max-w-2xl text-4xl font-semibold tracking-tight text-balance text-[var(--text)] sm:text-5xl">
                   Welcome back, {dashboard.userName}.
                 </h1>
-                <p className="max-w-2xl text-base leading-7 text-[var(--text-dim)] text-pretty sm:text-lg">
+                <p className="max-w-xl text-base leading-7 text-[var(--text-dim)] text-pretty">
                   {continueCourse
                     ? "Your next session is already shaped. Stay inside the idea that still feels unstable and use the generated exercise while it is fresh."
                     : "Your dashboard is ready. Create a course from a topic or upload, and the next session will start taking shape here."}
@@ -49,12 +49,12 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-[var(--text-faint)]">
                   Active courses
                 </p>
-                <p className="mt-3 text-3xl font-semibold text-[var(--text)]">
+                <p className="mt-3 text-[1.9rem] font-semibold leading-none text-[var(--text)]">
                   {dashboard.courses.length}
                 </p>
               </div>
@@ -62,7 +62,7 @@ export default async function DashboardPage() {
                 <p className="text-xs uppercase tracking-[0.22em] text-[var(--text-faint)]">
                   Current streak
                 </p>
-                <p className="mt-3 text-3xl font-semibold text-[var(--text)]">
+                <p className="mt-3 text-[1.9rem] font-semibold leading-none text-[var(--text)]">
                   {dashboard.streakDays} days
                 </p>
               </div>
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
                 <p className="text-xs uppercase tracking-[0.22em] text-[var(--text-faint)]">
                   Focus area
                 </p>
-                <p className="mt-3 text-2xl font-semibold text-[var(--text)]">
+                <p className="mt-3 text-xl font-semibold leading-tight text-[var(--text)]">
                   {dashboard.insightTopic}
                 </p>
               </div>
@@ -80,7 +80,7 @@ export default async function DashboardPage() {
           <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)] py-0">
             <CardHeader className="border-b border-[var(--border)] px-6 py-6">
               <p className="eyebrow">Continue where you left off</p>
-              <CardTitle className="serif text-3xl font-semibold tracking-tight text-[var(--text)]">
+              <CardTitle className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
                 {continueCourse?.title || "No active course yet"}
               </CardTitle>
               <CardDescription className="max-w-md leading-7 text-[var(--text-dim)]">
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
               <p className="eyebrow">Insight</p>
-              <h2 className="serif text-3xl font-semibold tracking-tight text-[var(--text)]">
+              <h2 className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
                 {continueCourse
                   ? `Tuto is keeping a close eye on ${dashboard.insightTopic}.`
                   : "The dashboard is ready to start noticing your weak spots."}
@@ -157,7 +157,7 @@ export default async function DashboardPage() {
           <div className="flex items-end justify-between gap-4">
             <div className="space-y-2">
               <p className="eyebrow">Course stack</p>
-              <h2 className="serif text-3xl font-semibold tracking-tight text-[var(--text)]">
+              <h2 className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
                 Pick the track you want to push forward.
               </h2>
             </div>
@@ -167,7 +167,7 @@ export default async function DashboardPage() {
           </div>
 
           {dashboard.courses.length ? (
-            <div className="grid gap-4 xl:grid-cols-3">
+            <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
               {dashboard.courses.map((course) => (
                 <Link key={course.id} href={`/courses/${course.id}`} className="group">
                   <Card className="surface-card h-full border-[var(--border)] bg-[var(--bg-elev)] py-0 transition-transform duration-200 group-hover:-translate-y-1">
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
                           {course.progress}%
                         </span>
                       </div>
-                      <CardTitle className="serif text-3xl font-semibold tracking-tight text-[var(--text)]">
+                      <CardTitle className="serif text-[1.75rem] font-semibold tracking-tight text-[var(--text)]">
                         {course.title}
                       </CardTitle>
                       <CardDescription className="leading-7 text-[var(--text-dim)]">

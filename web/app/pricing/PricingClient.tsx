@@ -147,7 +147,7 @@ export function PricingClient({ billingSummary }: PricingClientProps) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-5 py-10 sm:px-8">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-5 py-8 sm:px-7">
       {statusMessage ? (
         <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm text-[var(--text-dim)]">
           {statusMessage}
@@ -164,7 +164,7 @@ export function PricingClient({ billingSummary }: PricingClientProps) {
             <div className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
               Current plan
             </div>
-            <div className="serif text-4xl font-semibold tracking-tight text-[var(--text)]">
+            <div className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
               {billingSummary?.tier === "team" ? "Team" : "Pro"}
             </div>
             <p className="max-w-2xl text-sm leading-6 text-[var(--text-dim)]">
@@ -189,27 +189,27 @@ export function PricingClient({ billingSummary }: PricingClientProps) {
           </div>
         </section>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         {pricingCards.map((card) => {
           const loading = loadingPlan === card.plan;
 
           return (
             <section
               key={card.plan}
-              className="surface-card flex h-full flex-col gap-5 rounded-[var(--radius-lg)] border border-[var(--border)] p-6"
+              className="surface-card flex h-full min-h-[22rem] flex-col gap-5 rounded-[var(--radius-lg)] border border-[var(--border)] p-6 lg:p-7"
             >
               <div className="space-y-2">
                 <div className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
                   {card.name}
                 </div>
-                <div className="serif text-4xl font-semibold tracking-tight text-[var(--text)]">
+                <div className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
                   {card.price}
                 </div>
-                <p className="max-w-xl text-sm leading-6 text-[var(--text-dim)]">
+                <p className="max-w-sm text-sm leading-6 text-[var(--text-dim)]">
                   {card.summary}
                 </p>
               </div>
-              <ul className="space-y-3 text-sm text-[var(--text-dim)]">
+              <ul className="space-y-3 text-sm leading-6 text-[var(--text-dim)]">
                 {card.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
                     <Check className="mt-0.5 size-4 text-[var(--accent)]" />

@@ -11,17 +11,17 @@ export default async function PricingPage() {
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-8 sm:px-7">
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-3">
             <div className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
               Billing
             </div>
             <div className="space-y-2">
-              <h1 className="serif text-5xl font-semibold tracking-tight text-[var(--text)]">
+              <h1 className="serif text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl">
                 Pick the plan that matches your learning load.
               </h1>
-              <p className="max-w-3xl text-base leading-7 text-[var(--text-dim)]">
+              <p className="max-w-2xl text-base leading-7 text-[var(--text-dim)]">
                 Free gets you started. Paid plans unlock heavier course generation, more knowledge-base uploads, and fewer artificial limits while the product moves toward launch.
               </p>
             </div>

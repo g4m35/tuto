@@ -88,20 +88,20 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-      <section className="space-y-6">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
+      <section className="max-w-3xl space-y-6">
         <div className="space-y-3">
           <p className="eyebrow">Create course</p>
-          <h1 className="serif max-w-3xl text-5xl font-semibold tracking-tight text-[var(--text)]">
+          <h1 className="serif max-w-2xl text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl">
             Build the next learning path.
           </h1>
-          <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
+          <p className="max-w-xl text-base leading-7 text-[var(--text-dim)] sm:text-lg sm:leading-8">
             Start from source material or begin with a topic. This flow now calls the
             DeepTutor backend instead of mock data.
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           {createModes.map((item) => {
             const active = mode === item.id
 
@@ -199,7 +199,7 @@ export default function CreateCoursePage() {
         </Card>
       </section>
 
-      <aside className="space-y-5">
+      <aside className="space-y-5 xl:pl-2">
         <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)]">
           <CardHeader>
             <CardTitle className="text-xl text-[var(--text)]">

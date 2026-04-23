@@ -8,7 +8,7 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <TopNav />
-      <div className="mx-auto flex min-h-[calc(100vh-81px)] w-full max-w-7xl flex-col px-5 pb-12 pt-8 sm:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-81px)] w-full max-w-6xl flex-col px-5 pb-12 pt-7 sm:px-7">
         {children}
       </div>
     </div>
