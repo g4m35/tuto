@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 // read at module-load time and the module throws if it's missing.
 process.env.NEXT_PUBLIC_API_BASE = "http://localhost:8001/api";
 
-const { resolveBase, apiUrl, wsUrl } = await import("../lib/api.ts");
+const { resolveBase, apiUrl, wsUrl } = await import("../lib/api");
 
 function setWindow(hostname: string | undefined): void {
   if (hostname === undefined) {
