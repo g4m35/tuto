@@ -47,6 +47,16 @@ Minimum required environment:
 - embedding provider credentials
 - database/storage configuration if production differs from local defaults
 
+Gemini-only shortcut:
+
+- Set `LLM_BINDING=gemini`
+- Set `LLM_MODEL` to your chosen Gemini chat model
+- Set `LLM_HOST=https://generativelanguage.googleapis.com/v1beta/openai/`
+- Set `EMBEDDING_BINDING=gemini`
+- Set `EMBEDDING_MODEL=gemini-embedding-001`
+- Set `EMBEDDING_HOST=https://generativelanguage.googleapis.com/v1beta/openai/`
+- Reuse the same Google AI Studio key for `LLM_API_KEY`, `EMBEDDING_API_KEY`, `GEMINI_API_KEY`, and `GOOGLE_API_KEY`
+
 ### 2. Auth and Data Ownership
 
 Pass when all are true:

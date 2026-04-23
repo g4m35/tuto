@@ -237,6 +237,24 @@ DEEPTUTOR_API_KEY=
 
 `DEEPTUTOR_API_KEY` is optional. The open-source local FastAPI server does not require it by default, but the web wrapper forwards it when a proxy or gateway expects authentication.
 
+If you are using Gemini for both chat and embeddings, you can keep a single Google AI Studio key and reuse it for `LLM_API_KEY`, `EMBEDDING_API_KEY`, `GEMINI_API_KEY`, and `GOOGLE_API_KEY`. DeepTutor's compatibility env path also accepts `GEMINI_API_KEY` or `GOOGLE_API_KEY` as LLM-key fallbacks when `LLM_BINDING=gemini`.
+
+```dotenv
+LLM_BINDING=gemini
+LLM_MODEL=gemini-2.5-pro
+LLM_API_KEY=your-google-ai-studio-key
+LLM_HOST=https://generativelanguage.googleapis.com/v1beta/openai/
+
+EMBEDDING_BINDING=gemini
+EMBEDDING_MODEL=gemini-embedding-001
+EMBEDDING_API_KEY=your-google-ai-studio-key
+EMBEDDING_HOST=https://generativelanguage.googleapis.com/v1beta/openai/
+EMBEDDING_DIMENSION=3072
+
+GEMINI_API_KEY=your-google-ai-studio-key
+GOOGLE_API_KEY=your-google-ai-studio-key
+```
+
 <details>
 <summary><b>Supported LLM Providers</b></summary>
 

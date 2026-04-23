@@ -305,7 +305,10 @@ async def main() -> None:
     parser.add_argument("--docs", nargs="+", help="Document files to process")
     parser.add_argument("--docs-dir", help="Directory containing documents to process")
     parser.add_argument("--base-dir", default="./knowledge_bases")
-    parser.add_argument("--api-key", default=os.getenv("LLM_API_KEY"))
+    parser.add_argument(
+        "--api-key",
+        default=os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"),
+    )
     parser.add_argument("--base-url", default=os.getenv("LLM_HOST"))
     parser.add_argument("--skip-processing", action="store_true")
     parser.add_argument("--skip-extract", action="store_true")

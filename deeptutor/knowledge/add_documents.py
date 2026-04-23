@@ -297,7 +297,10 @@ async def main() -> None:
     parser.add_argument("--docs", nargs="+", help="Files")
     parser.add_argument("--docs-dir", help="Directory")
     parser.add_argument("--base-dir", default=DEFAULT_BASE_DIR)
-    parser.add_argument("--api-key", default=os.getenv("LLM_API_KEY"))
+    parser.add_argument(
+        "--api-key",
+        default=os.getenv("LLM_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"),
+    )
     parser.add_argument("--base-url", default=os.getenv("LLM_HOST"))
     parser.add_argument("--allow-duplicates", action="store_true")
 

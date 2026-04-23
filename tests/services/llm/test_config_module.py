@@ -85,6 +85,37 @@ def test_get_llm_config_falls_back_to_env(monkeypatch, tmp_path: Path) -> None:
     assert config.binding == "openai"
 
 
+def test_get_llm_config_accepts_gemini_alias_keys(monkeypatch, tmp_path: Path) -> None:
+    """Gemini compatibility mode should accept Google/Gemini env aliases."""
+    _reset_config_cache()
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.setattr(
+        config_module,
+        "resolve_llm_runtime_config",
+        lambda: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+    _set_temp_env_store(
+        monkeypatch,
+        tmp_path,
+        "\n".join(
+            [
+                "LLM_MODEL=gemini-2.5-pro",
+                "LLM_HOST=https://generativelanguage.googleapis.com/v1beta/openai/",
+                "LLM_BINDING=gemini",
+                "GOOGLE_API_KEY=test-google-key",
+            ]
+        )
+        + "\n",
+    )
+
+    config = config_module.get_llm_config()
+    assert config.model == "gemini-2.5-pro"
+    assert config.binding == "gemini"
+    assert config.api_key == "test-google-key"
+
+
 def test_initialize_environment_sets_openai_env(monkeypatch) -> None:
     """initialize_environment should set OPENAI env vars from resolver output."""
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)

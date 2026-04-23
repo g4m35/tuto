@@ -131,6 +131,7 @@ psql "$DATABASE_URL" -f web/migrations/003_courses.sql
 
 - [ ] `DEEPTUTOR_URL` points the web app at the live Python backend.
 - [ ] The backend has valid LLM and embedding configuration.
+- [ ] If you run Gemini for both services, point `LLM_HOST` and `EMBEDDING_HOST` at `https://generativelanguage.googleapis.com/v1beta/openai/` and reuse the same Google AI Studio key across `LLM_API_KEY`, `EMBEDDING_API_KEY`, `GEMINI_API_KEY`, and `GOOGLE_API_KEY`.
 - [ ] The backend can write persistent data under its runtime data directories.
 - [ ] The backend is not running in stub mode for production course generation.
 

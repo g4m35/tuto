@@ -179,7 +179,10 @@ class MainSolver:
         from deeptutor.services.llm import is_local_llm_server
 
         if not api_key and not is_local_llm_server(base_url):
-            raise ValueError("API key not set. Provide api_key or set LLM_API_KEY in .env")
+            raise ValueError(
+                "API key not set. Provide api_key or set LLM_API_KEY in .env. "
+                "Gemini deployments can also use GEMINI_API_KEY or GOOGLE_API_KEY."
+            )
         if not api_key and is_local_llm_server(base_url):
             api_key = "sk-no-key-required"
 

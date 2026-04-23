@@ -47,6 +47,34 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = get_env_store().path.parent
 
 
+def _strip_value(value: str | None) -> str | None:
+    """Remove leading/trailing whitespace and quotes from string."""
+    if value is None:
+        return None
+    return value.strip().strip("\"'")
+
+
+def _resolve_env_api_key(binding: str | None, env_store=None) -> str | None:
+    """Resolve an API key from compatibility env vars for the active provider."""
+    store = env_store or get_env_store()
+    canonical = canonical_provider_name(binding) or (binding or "").strip().lower()
+    candidate_keys = ["LLM_API_KEY"]
+
+    spec = find_by_name(canonical)
+    if spec and spec.env_key and spec.env_key not in candidate_keys:
+        candidate_keys.append(spec.env_key)
+
+    if canonical == "gemini":
+        candidate_keys.append("GOOGLE_API_KEY")
+
+    for key in candidate_keys:
+        value = _strip_value(store.get(key))
+        if value:
+            return value
+
+    return None
+
+
 def _is_openai_compatible_binding(binding: str | None) -> bool:
     canonical = canonical_provider_name(binding) or (binding or "").strip().lower()
     if canonical in {"custom", "azure_openai"}:
@@ -78,7 +106,7 @@ def _setup_openai_env_vars_early() -> None:
     """
     env_store = get_env_store()
     binding = env_store.get("LLM_BINDING", "openai")
-    api_key = env_store.get("LLM_API_KEY", "")
+    api_key = _resolve_env_api_key(binding, env_store) or ""
     base_url = env_store.get("LLM_HOST", "")
 
     if _is_openai_compatible_binding(binding):
@@ -140,18 +168,11 @@ def initialize_environment() -> None:
     except Exception:
         env_store = get_env_store()
         binding = _strip_value(env_store.get("LLM_BINDING")) or "openai"
-        api_key = _strip_value(env_store.get("LLM_API_KEY"))
+        api_key = _resolve_env_api_key(binding, env_store)
         base_url = _strip_value(env_store.get("LLM_HOST"))
 
     if _is_openai_compatible_binding(binding):
         _set_openai_env_vars(api_key, base_url, source="initialize_environment")
-
-
-def _strip_value(value: str | None) -> str | None:
-    """Remove leading/trailing whitespace and quotes from string."""
-    if value is None:
-        return None
-    return value.strip().strip("\"'")
 
 
 def _get_llm_config_from_env() -> LLMConfig:
@@ -159,7 +180,7 @@ def _get_llm_config_from_env() -> LLMConfig:
     env_store = get_env_store()
     binding = _strip_value(env_store.get("LLM_BINDING")) or "openai"
     model = _strip_value(env_store.get("LLM_MODEL"))
-    api_key = _strip_value(env_store.get("LLM_API_KEY"))
+    api_key = _resolve_env_api_key(binding, env_store)
     base_url = _strip_value(env_store.get("LLM_HOST"))
     api_version = _strip_value(env_store.get("LLM_API_VERSION"))
 

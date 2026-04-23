@@ -17,6 +17,7 @@ from typing import Any, AsyncGenerator, Awaitable, Callable
 
 from deeptutor.config.settings import settings
 from deeptutor.logging import LLMStats, get_logger
+from deeptutor.services.provider_registry import canonical_provider_name, find_by_name
 from deeptutor.services.config import get_agent_params
 from deeptutor.services.llm import complete as llm_complete
 from deeptutor.services.llm import get_llm_config, get_token_limit_kwargs, supports_response_format
@@ -101,11 +102,20 @@ class BaseAgent(ABC):
             self.binding = binding or getattr(env_llm, "binding", "openai")
         except ValueError:
             # Fallback if env config not available
-            self.api_key = api_key or os.getenv("LLM_API_KEY")
+            fallback_binding = binding or os.getenv("LLM_BINDING", "openai")
+            fallback_key = os.getenv("LLM_API_KEY")
+            provider_name = canonical_provider_name(fallback_binding)
+            spec = find_by_name(provider_name)
+            if not fallback_key and spec and spec.env_key:
+                fallback_key = os.getenv(spec.env_key)
+            if not fallback_key and provider_name == "gemini":
+                fallback_key = os.getenv("GOOGLE_API_KEY")
+
+            self.api_key = api_key or fallback_key
             self.base_url = base_url or os.getenv("LLM_HOST")
             self.model = model or os.getenv("LLM_MODEL")
             self.api_version = api_version or os.getenv("LLM_API_VERSION")
-            self.binding = binding or os.getenv("LLM_BINDING", "openai")
+            self.binding = fallback_binding
 
         # Get Agent-specific configuration (if config provided)
         self.agent_config = self.config.get("agents", {}).get(agent_name, {})
