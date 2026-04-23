@@ -4,11 +4,37 @@
 
 This file records the earlier architecture/auth/billing verification phases.
 
-Since then, the repo has also landed KB-backed course generation changes in both `web/` and `deeptutor/`. For the current operator-facing launch gates, use [`LAUNCH_CHECKLIST.md`](LAUNCH_CHECKLIST.md) and [`ROADMAP.md`](ROADMAP.md) as the up-to-date references.
+Since then, the repo has also landed KB-backed course generation changes in both `web/` and `deeptutor/`, plus the billing-management and launch-coverage work listed below. For the current operator-facing launch gates, use [`LAUNCH_CHECKLIST.md`](LAUNCH_CHECKLIST.md) and [`ROADMAP.md`](ROADMAP.md) as the up-to-date references.
 
 ## Summary
 
 Verification now passes after removing the explicit Stripe `apiVersion` override from `web/lib/billing.ts` and rerunning the frontend build.
+
+## Latest Shipped Work
+
+- Pushed to `origin/main`:
+  - `46bdfc0` `feat(web): add billing management and launch coverage`
+  - `4e224f1` `chore(ci): harden web launch checks`
+- Landed:
+  - self-serve billing portal route and pricing-page paid-user management flow
+  - shared server-side billing helpers to keep checkout/portal logic testable
+  - focused web launch tests for billing helpers, Stripe webhook tier transitions, and cross-user course ownership
+  - CI wired to run `web` typecheck plus the focused node tests
+  - upstream-sync verification updated to report web node tests, typecheck, and build separately
+- Verification run before push:
+  - `npm run test:node` in `web`: `12/12` passed
+  - `npm run typecheck` in `web`: passed
+  - `npm run build` in `web`: passed
+  - workflow YAML parse check: `YAML_OK`
+  - local `GET http://localhost:3000/pricing`: `200 OK`
+- State at that point:
+  - `main` clean and matching `origin/main`
+  - app serving locally from the clean checkout
+- Biggest remaining production gaps:
+  - real deploy/rollback path
+  - staging Stripe/Clerk validation
+  - finalized cancel/downgrade policy
+  - one signed-in end-to-end browser smoke test
 
 ## Checklist
 
@@ -55,3 +81,6 @@ Verification now passes after removing the explicit Stripe `apiVersion` override
 - Phase 2 completed and committed as `feat: add Clerk authentication`
 - Phase 3 completed and committed as `feat: add billing foundation`
 - Phase 4 verification now passes after the Stripe typing fix
+- Post-verification launch hardening completed in:
+  - `4e224f1` `chore(ci): harden web launch checks`
+  - `46bdfc0` `feat(web): add billing management and launch coverage`
