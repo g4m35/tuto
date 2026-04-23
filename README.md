@@ -486,7 +486,7 @@ These directories survive `docker compose down` and are reused on the next `dock
 | `BACKEND_PORT`                  |    No    | Backend port (default `8001`)                                                           |
 | `FRONTEND_PORT`                 |    No    | Frontend port (default `3782`)                                                          |
 | `NEXT_PUBLIC_API_BASE_EXTERNAL` |    No    | Public backend URL for cloud deployment                                                 |
-| `DEEPTUTOR_URL`                 |    No    | Backend URL consumed by the `web/` course wrapper (for example `http://localhost:8001`) |
+| `DEEPTUTOR_URL`                 | Web prod | Backend URL consumed by the `web/` course wrapper (for example `http://localhost:8001`) |
 | `DEEPTUTOR_API_KEY`             |    No    | Optional API key forwarded by the `web/` DeepTutor client                               |
 | `DISABLE_SSL_VERIFY`            |    No    | Disable SSL verification (default `false`)                                              |
 
