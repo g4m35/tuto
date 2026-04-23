@@ -45,6 +45,10 @@
     --ring: rgba(232, 169, 72, 0.35);
   }
 
+  .dark {
+    color-scheme: dark;
+  }
+
   .theme-snow {
     --background: #f8fafc;
     --foreground: #0f172a;
@@ -114,6 +118,57 @@
     transform: translateY(-1px);
   }
 
+  .app-shell {
+    color-scheme: light;
+    --bg: #f3f5f7;
+    --bg-elev: #ffffff;
+    --bg-elev-2: #fbfcfd;
+    --bg-soft: #eef2f6;
+    --border: #d7dde6;
+    --border-strong: #b8c3d1;
+    --text: #111827;
+    --text-dim: #5b6575;
+    --text-faint: #8b96a8;
+    --accent: #2563eb;
+    --accent-strong: #1d4ed8;
+    --accent-ink: #eff6ff;
+    --success: #15803d;
+    --danger: #b91c1c;
+    --shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
+    --radius: 1.5rem;
+    --radius-md: 1.2rem;
+    --radius-sm: 1rem;
+    --radius-lg: 2rem;
+    --background: var(--bg);
+    --foreground: var(--text);
+    --card: rgba(255, 255, 255, 0.9);
+    --card-foreground: var(--text);
+    --popover: #ffffff;
+    --popover-foreground: var(--text);
+    --primary: var(--accent);
+    --primary-foreground: #ffffff;
+    --secondary: var(--bg-soft);
+    --secondary-foreground: var(--text);
+    --muted: var(--bg-soft);
+    --muted-foreground: var(--text-dim);
+    --accent-foreground: #ffffff;
+    --destructive: var(--danger);
+    --destructive-foreground: #ffffff;
+    --input: #d3dbe7;
+    --ring: rgba(37, 99, 235, 0.2);
+  }
+
+  .app-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 22%),
+      radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.14), transparent 26%),
+      linear-gradient(180deg, #f8fafc 0%, #f2f5f9 100%);
+  }
+
   * {
     @apply border-border;
     scrollbar-width: thin;
@@ -166,6 +221,39 @@
     background: rgba(232, 169, 72, 0.3);
     color: var(--text);
   }
+
+  :where(a, button, input, select, textarea, [role="button"]):focus-visible {
+    outline: 2px solid transparent;
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, white 88%, transparent),
+      0 0 0 5px var(--ring);
+  }
+
+  .app-shell ::selection {
+    background: rgba(37, 99, 235, 0.18);
+    color: var(--text);
+  }
+
+  .app-shell :where(a, button, input, select, textarea, [role="button"]):focus-visible {
+    box-shadow:
+      0 0 0 2px rgba(255, 255, 255, 0.92),
+      0 0 0 5px rgba(37, 99, 235, 0.22);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
@@ -196,6 +284,33 @@
     font-weight: 600;
     letter-spacing: 0.22em;
     text-transform: uppercase;
+  }
+
+  .app-shell .surface-card {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.94)),
+      var(--card);
+    border-color: color-mix(in srgb, var(--border) 88%, white);
+    box-shadow: var(--shadow);
+  }
+
+  .app-shell .surface-panel {
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(215, 221, 230, 0.95);
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.08);
+  }
+
+  .app-shell .eyebrow {
+    color: #607086;
+    font-size: 0.68rem;
+    letter-spacing: 0.24em;
+  }
+
+  .app-shell .app-grid {
+    background-image:
+      linear-gradient(to right, rgba(148, 163, 184, 0.14) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+    background-size: 28px 28px;
   }
 }
 

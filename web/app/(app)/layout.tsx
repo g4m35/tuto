@@ -6,9 +6,9 @@ export default function AppLayout({
   children: React.ReactNode
 }>) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="app-shell min-h-screen bg-background text-foreground">
       <TopNav />
-      <div className="mx-auto flex min-h-[calc(100vh-81px)] w-full max-w-7xl flex-col px-5 pb-12 pt-8 sm:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-73px)] w-full max-w-[1440px] flex-col px-4 pb-10 pt-6 sm:px-6 lg:px-8">
         {children}
       </div>
     </div>

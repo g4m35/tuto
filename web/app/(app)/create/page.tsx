@@ -1,25 +1,31 @@
 "use client"
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { FileText, Layers3, Sparkles, Upload, WandSparkles } from "lucide-react"
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Upload, WandSparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createModes } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 type CreateMode = "upload" | "topic"
 
+const panelTransition = {
+  duration: 0.42,
+  ease: [0.22, 1, 0.36, 1] as const,
+}
+
 export default function CreateCoursePage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const shouldReduceMotion = useReducedMotion()
   const [mode, setMode] = useState<CreateMode>("upload")
   const [title, setTitle] = useState("")
   const [subject, setSubject] = useState("Mathematics")
   const [difficulty, setDifficulty] = useState("Intermediate")
   const [topicPrompt, setTopicPrompt] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [status, setStatus] = useState("Drop a PDF, deck, or notes bundle here.")
+  const [status, setStatus] = useState("Choose a PDF, text file, or markdown document to build the course.")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -63,6 +69,15 @@ export default function CreateCoursePage() {
       const data = await response.json().catch(() => null)
 
       if (!response.ok) {
+        if (response.status === 429 && typeof data?.upgrade_url === "string") {
+          const upgradeUrl = new URL(data.upgrade_url, window.location.origin)
+          upgradeUrl.searchParams.set("reason", "limit")
+          upgradeUrl.searchParams.set("source", mode === "upload" ? "document_upload" : "course_creation")
+          upgradeUrl.searchParams.set("from", "/create")
+          router.push(`${upgradeUrl.pathname}${upgradeUrl.search}`)
+          return
+        }
+
         throw new Error(data?.error || "Course generation failed.")
       }
 
@@ -80,125 +95,199 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-      <section className="space-y-6">
-        <div className="space-y-3">
-          <p className="eyebrow">Create course</p>
-          <h1 className="serif max-w-3xl text-5xl font-semibold tracking-tight text-[var(--text)]">
-            Build the next learning path.
-          </h1>
-          <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
-            Start from source material or begin with a topic. This flow now calls the
-            DeepTutor backend instead of mock data.
-          </p>
-        </div>
+    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <div className="flex flex-col gap-6">
+        <motion.section
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={shouldReduceMotion ? undefined : panelTransition}
+          className="surface-card overflow-hidden rounded-[32px] p-6 sm:p-8"
+        >
+          <div className="app-grid rounded-[28px] border border-[var(--border)] bg-[var(--bg-elev)]/78 p-6">
+            <p className="eyebrow">Create course</p>
+            <div className="mt-4 max-w-3xl space-y-4">
+              <h1 className="text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl">
+                Build a minimal learning workspace around one topic at a time.
+              </h1>
+              <p className="max-w-2xl text-base leading-7 text-[var(--text-dim)] sm:text-lg">
+                Start from source material or generate from a prompt. The flow is now tuned
+                to feel lighter, calmer, and more direct.
+              </p>
+            </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          {createModes.map((item) => {
-            const active = mode === item.id
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {[
+                {
+                  title: "Single input",
+                  body: "One topic or one upload begins the path.",
+                  icon: FileText,
+                },
+                {
+                  title: "Clean progression",
+                  body: "Generated lessons turn into a focused active queue.",
+                  icon: Layers3,
+                },
+                {
+                  title: "Adaptive review",
+                  body: "Weak spots stay in view while the rest stays quiet.",
+                  icon: Sparkles,
+                },
+              ].map((item) => {
+                const Icon = item.icon
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setMode(item.id as CreateMode)
-                  setError(null)
-                }}
-                className={cn(
-                  "rounded-[var(--radius)] border p-5 text-left",
-                  active
-                    ? "border-[color:color-mix(in_srgb,var(--accent)_28%,var(--border))] bg-[color:color-mix(in_srgb,var(--accent)_8%,var(--bg-soft))]"
-                    : "border-[var(--border)] bg-[var(--bg-elev)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)]"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)]">
-                    {item.id === "upload" ? (
-                      <Upload className="size-4 text-[var(--accent)]" />
-                    ) : (
-                      <WandSparkles className="size-4 text-[var(--accent)]" />
+                return (
+                  <div
+                    key={item.title}
+                    className="rounded-[24px] border border-[var(--border)] bg-[var(--bg-elev)]/90 p-4"
+                  >
+                    <div className="inline-flex size-10 items-center justify-center rounded-2xl bg-[var(--bg-soft)] text-[var(--accent)]">
+                      <Icon className="size-[18px]" />
+                    </div>
+                    <h2 className="mt-4 font-medium text-[var(--text)]">{item.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{item.body}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
+          animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={shouldReduceMotion ? undefined : { ...panelTransition, delay: 0.08 }}
+          className="surface-card rounded-[32px] p-6 sm:p-8"
+        >
+          <div className="flex flex-col gap-5 border-b border-[var(--border)] pb-5">
+            <div className="space-y-2">
+              <p className="eyebrow">Input mode</p>
+              <h2 className="text-3xl font-semibold tracking-tight text-[var(--text)]">
+                Choose the source for the next course.
+              </h2>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {createModes.map((item) => {
+                const active = mode === item.id
+                const Icon = item.id === "upload" ? Upload : WandSparkles
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setMode(item.id as CreateMode)
+                      setError(null)
+                    }}
+                    className={cn(
+                      "rounded-[26px] border p-5 text-left transition-all",
+                      active
+                        ? "border-[color:color-mix(in_srgb,var(--accent)_30%,var(--border))] bg-[color:color-mix(in_srgb,var(--accent)_8%,white)] shadow-sm"
+                        : "border-[var(--border)] bg-[var(--bg-elev)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)]/70"
                     )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-[var(--text)]">{item.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
+                  >
+                    <div className="flex items-start gap-4">
+                      <span
+                        className={cn(
+                          "inline-flex size-11 items-center justify-center rounded-2xl border shadow-sm",
+                          active
+                            ? "border-blue-200 bg-white text-[var(--accent)]"
+                            : "border-[var(--border)] bg-[var(--bg-soft)] text-[var(--text-faint)]"
+                        )}
+                      >
+                        <Icon className="size-5" />
+                      </span>
+                      <div>
+                        <p className="font-medium text-[var(--text)]">{item.title}</p>
+                        <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
-        <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)] py-0">
-          <CardHeader className="border-b border-[var(--border)] px-6 py-5">
-            <CardTitle className="text-xl text-[var(--text)]">
-              {mode === "upload" ? "Upload document" : "Generate from topic"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 py-6">
-            {mode === "upload" ? (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.txt,.md"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null
-                    setSelectedFile(file)
-                    setStatus(file ? `${file.name} is ready for ingestion.` : "Drop a PDF, deck, or notes bundle here.")
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex min-h-64 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius)] border border-dashed border-[var(--border-strong)] bg-[color:color-mix(in_srgb,var(--bg-soft)_78%,var(--bg))] px-6 text-center"
+          <div className="pt-6">
+            <AnimatePresence mode="wait">
+              {mode === "upload" ? (
+                <motion.div
+                  key="upload"
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                  animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                  exit={shouldReduceMotion ? undefined : { opacity: 0, y: -12 }}
+                  transition={shouldReduceMotion ? undefined : { duration: 0.24 }}
                 >
-                  <div className="inline-flex size-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
-                    <Upload className="size-5 text-[var(--accent)]" />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-lg font-medium text-[var(--text)]">
-                      {selectedFile ? "Source ready" : "Choose your materials"}
-                    </p>
-                    <p className="max-w-md text-sm leading-6 text-[var(--text-dim)]">
-                      {status}
-                    </p>
-                  </div>
-                </button>
-              </>
-            ) : (
-              <div className="space-y-3">
-                <label
-                  htmlFor="topic-prompt"
-                  className="text-sm font-medium text-[var(--text)]"
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.txt,.md"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null
+                      setSelectedFile(file)
+                      setStatus(
+                        file
+                          ? `${file.name} is ready for ingestion.`
+                          : "Choose a PDF, text file, or markdown document to build the course."
+                      )
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="group flex min-h-[320px] w-full flex-col items-center justify-center gap-5 rounded-[30px] border border-dashed border-[var(--border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,252,0.8))] px-6 text-center"
+                  >
+                    <span className="inline-flex size-16 items-center justify-center rounded-[24px] bg-[var(--bg-elev)] text-[var(--accent)] shadow-sm transition-transform duration-200 group-hover:-translate-y-1">
+                      <Upload className="size-6" />
+                    </span>
+                    <div className="space-y-2">
+                      <p className="text-xl font-semibold text-[var(--text)]">
+                        {selectedFile ? "Source ready" : "Choose your materials"}
+                      </p>
+                      <p className="mx-auto max-w-md text-sm leading-6 text-[var(--text-dim)]">
+                        {status}
+                      </p>
+                    </div>
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="topic"
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                  animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                  exit={shouldReduceMotion ? undefined : { opacity: 0, y: -12 }}
+                  transition={shouldReduceMotion ? undefined : { duration: 0.24 }}
+                  className="space-y-3"
                 >
-                  Topic prompt
-                </label>
-                <textarea
-                  id="topic-prompt"
-                  value={topicPrompt}
-                  onChange={(event) => setTopicPrompt(event.target.value)}
-                  placeholder="Example: Build a five lesson course that teaches eigenvectors through geometric intuition and short visual drills."
-                  className="min-h-64 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4 text-base text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+                  <label htmlFor="topic-prompt" className="text-sm font-medium text-[var(--text)]">
+                    Topic prompt
+                  </label>
+                  <textarea
+                    id="topic-prompt"
+                    value={topicPrompt}
+                    onChange={(event) => setTopicPrompt(event.target.value)}
+                    placeholder="Example: Build a five lesson course that teaches eigenvectors through geometric intuition and short visual drills."
+                    className="min-h-[320px] w-full rounded-[30px] border border-[var(--border)] bg-[var(--bg-elev)] px-5 py-5 text-base leading-7 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.section>
+      </div>
 
-      <aside className="space-y-5">
-        <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)]">
-          <CardHeader>
-            <CardTitle className="text-xl text-[var(--text)]">
-              Course details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4">
+      <motion.aside
+        initial={shouldReduceMotion ? false : { opacity: 0, x: 20 }}
+        animate={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+        transition={shouldReduceMotion ? undefined : { ...panelTransition, delay: 0.14 }}
+        className="flex flex-col gap-6 xl:sticky xl:top-24 xl:h-fit"
+      >
+        <section className="surface-card rounded-[32px] p-6 sm:p-7">
+          <p className="eyebrow">Course details</p>
+          <div className="mt-5 grid gap-4">
             <div className="grid gap-2">
               <label htmlFor="course-title" className="text-sm text-[var(--text-dim)]">
                 Course title
@@ -208,7 +297,7 @@ export default function CreateCoursePage() {
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Linear algebra for machine learning"
-                className="h-12 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
+                className="h-12 rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] px-4 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
               />
             </div>
 
@@ -221,7 +310,7 @@ export default function CreateCoursePage() {
                   id="subject"
                   value={subject}
                   onChange={(event) => setSubject(event.target.value)}
-                  className="h-12 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
+                  className="h-12 rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] px-4 text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
                 >
                   <option>Mathematics</option>
                   <option>Chemistry</option>
@@ -238,7 +327,7 @@ export default function CreateCoursePage() {
                   id="difficulty"
                   value={difficulty}
                   onChange={(event) => setDifficulty(event.target.value)}
-                  className="h-12 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
+                  className="h-12 rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] px-4 text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
                 >
                   <option>Beginner</option>
                   <option>Intermediate</option>
@@ -247,8 +336,30 @@ export default function CreateCoursePage() {
               </div>
             </div>
 
+            <div className="rounded-[26px] border border-[var(--border)] bg-[var(--bg-soft)]/70 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-faint)]">
+                Build preview
+              </p>
+              <div className="mt-4 space-y-3 text-sm text-[var(--text-dim)]">
+                <div className="flex items-center justify-between gap-3">
+                  <span>Source mode</span>
+                  <span className="rounded-full bg-[var(--bg-elev)] px-3 py-1 text-[var(--text)] shadow-sm">
+                    {mode === "upload" ? "Upload" : "Topic"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Subject</span>
+                  <span className="text-[var(--text)]">{subject}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span>Difficulty</span>
+                  <span className="text-[var(--text)]">{difficulty}</span>
+                </div>
+              </div>
+            </div>
+
             {error ? (
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 text-sm leading-6 text-[var(--text-dim)]">
+              <div className="rounded-[24px] border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
                 {error}
               </div>
             ) : null}
@@ -257,28 +368,27 @@ export default function CreateCoursePage() {
               size="lg"
               onClick={() => void handleSubmit()}
               disabled={submitting}
+              className="rounded-full"
             >
               {submitting ? "Generating course..." : "Generate course"}
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <Card className="surface-card border-[var(--border)] bg-[color:color-mix(in_srgb,var(--accent)_9%,var(--bg-elev))]">
-          <CardHeader>
-            <CardTitle className="text-xl text-[var(--text)]">
-              Creation notes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm leading-7 text-[var(--text-dim)]">
+        <section className="surface-card rounded-[32px] p-6 sm:p-7">
+          <p className="eyebrow">Creation notes</p>
+          <div className="mt-5 space-y-4 text-sm leading-7 text-[var(--text-dim)]">
             <p>
-              Upload mode creates a DeepTutor knowledge base first, then adapts the existing guided-learning API to produce the course shell.
+              Upload mode creates a DeepTutor knowledge base first, then shapes a guided course
+              from the extracted material.
             </p>
             <p>
-              Topic mode goes straight into Guided Learning and returns a flat knowledge-point path, which this UI groups into units.
+              Topic mode skips the upload step and goes straight into guided learning, which keeps
+              the flow quick for exploration and prototyping.
             </p>
-          </CardContent>
-        </Card>
-      </aside>
+          </div>
+        </section>
+      </motion.aside>
     </div>
   )
 }
