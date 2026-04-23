@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from deeptutor.services.llm.config import LLMConfig
-from deeptutor.services.llm.factory import complete, stream
+from deeptutor.services.llm.factory import complete, stream  # noqa: F401
 
 
 # ---------------------------------------------------------------------------
@@ -109,9 +109,8 @@ async def test_stream_merges_config_and_caller_extra_headers(monkeypatch) -> Non
     assert headers["X-Config"] == "cfg"
     assert headers["X-Caller"] == "clr"
 
-
 @pytest.mark.asyncio
-async def test_factory_complete_uses_litellm(monkeypatch) -> None:
+async def test_factory_complete_routes_standard_provider_via_sdk(monkeypatch) -> None:
     cfg = LLMConfig(
         model="google/gemini-2.5-pro",
         api_key="sk-or-test",
@@ -178,7 +177,7 @@ async def test_factory_complete_openai_codex_requires_oauth(monkeypatch) -> None
 
 
 @pytest.mark.asyncio
-async def test_factory_stream_uses_litellm(monkeypatch) -> None:
+async def test_factory_stream_routes_standard_provider_via_sdk(monkeypatch) -> None:
     cfg = LLMConfig(
         model="deepseek-chat",
         api_key="deep-key",

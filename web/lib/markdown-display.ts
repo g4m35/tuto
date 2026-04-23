@@ -19,11 +19,188 @@ function stripInvisibleCharacters(value: string): string {
   return value.replace(ZERO_WIDTH_REGEX, "");
 }
 
-function stripDisplaySyntax(value: string): string {
-  return stripInvisibleCharacters(String(value))
+// Tags that the renderer (rehype-raw + react-markdown) is allowed to render
+// as actual HTML/SVG/MathML elements. Any other `<word>` looking token
+// (e.g. LLM-pseudo-tags like <mem>, <think>, <tool_call>, <answer>, <search>)
+// is escaped into inline code so the browser does not warn about unknown
+// custom elements with lowercase names.
+const ALLOWED_HTML_TAGS = new Set<string>([
+  // structural
+  "p", "div", "span", "section", "article", "aside", "header", "footer",
+  "main", "nav", "address", "dialog",
+  // text-level
+  "a", "em", "strong", "b", "i", "u", "s", "del", "ins", "small", "sub",
+  "sup", "mark", "kbd", "code", "samp", "var", "q", "cite", "abbr", "time",
+  "wbr", "ruby", "rt", "rp", "bdi", "bdo",
+  // line-level
+  "br", "hr",
+  // lists
+  "ol", "ul", "li", "dl", "dt", "dd",
+  // headings
+  "h1", "h2", "h3", "h4", "h5", "h6",
+  // block quotes / pre
+  "blockquote", "pre", "figure", "figcaption",
+  // tables
+  "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption", "col",
+  "colgroup",
+  // media
+  "img", "video", "audio", "source", "picture", "track", "iframe", "canvas",
+  "embed", "object", "param", "map", "area",
+  // disclosure / forms (we keep these even if they are usually stripped)
+  "details", "summary", "progress", "meter", "input", "textarea", "select",
+  "button", "label", "fieldset", "legend", "form", "option", "optgroup",
+  "datalist", "output",
+  // svg
+  "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline",
+  "polygon", "text", "tspan", "use", "defs", "lineargradient",
+  "radialgradient", "stop", "marker", "pattern", "mask", "clippath",
+  "symbol", "title", "desc", "foreignobject",
+  // mathml
+  "math", "mi", "mn", "mo", "ms", "mtext", "mrow", "mfrac", "msup", "msub",
+  "msubsup", "munder", "mover", "munderover", "mroot", "msqrt", "menclose",
+  "mspace", "mtable", "mtr", "mtd",
+]);
+
+const HTML_LIKE_TAG_REGEX = /<\/?([A-Za-z][A-Za-z0-9_-]*)\b[^<>]*?\/?>/g;
+const PROTECTED_SPAN_REGEX = /```[\s\S]*?```|`[^`\n]*`/g;
+const PROTECTED_PLACEHOLDER_REGEX = /\u0000PROTECTED_(\d+)\u0000/g;
+const HTML_TEXT_BREAK_TAGS = new Set<string>([
+  "br", "hr", "p", "div", "section", "article", "aside", "header", "footer",
+  "main", "nav", "address", "dialog", "li", "ul", "ol", "dl", "dt", "dd",
+  "blockquote", "pre", "figure", "figcaption", "table", "thead", "tbody",
+  "tfoot", "tr", "th", "td", "caption", "summary", "details",
+]);
+
+function escapeUnknownHtmlTags(content: string): string {
+  if (!content || (!content.includes("<") && !content.includes(">"))) {
+    return content;
+  }
+  const protectedSpans: string[] = [];
+  const masked = content.replace(PROTECTED_SPAN_REGEX, (match) => {
+    protectedSpans.push(match);
+    return `\u0000PROTECTED_${protectedSpans.length - 1}\u0000`;
+  });
+  const escaped = masked.replace(HTML_LIKE_TAG_REGEX, (match, name: string) => {
+    const lower = String(name).toLowerCase();
+    if (ALLOWED_HTML_TAGS.has(lower)) return match;
+    // Already wrapped in backticks (would happen if the source already
+    // protected a similar token earlier in the string).
+    return `\`${match}\``;
+  });
+  return escaped.replace(
+    PROTECTED_PLACEHOLDER_REGEX,
+    (_, idx: string) => protectedSpans[Number(idx)] ?? "",
+  );
+}
+
+function isAsciiLetter(value: string): boolean {
+  const code = value.charCodeAt(0);
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+}
+
+function appendCollapsedSpace(value: string): string {
+  if (!value) return value;
+  const last = value[value.length - 1];
+  return last.trim() ? `${value} ` : value;
+}
+
+function consumeHtmlTag(
+  value: string,
+  start: number,
+): { end: number; insertsSpacing: boolean } | null {
+  let index = start + 1;
+  if (index >= value.length) return null;
+
+  if (value.startsWith("!--", index)) {
+    const commentEnd = value.indexOf("-->", index + 3);
+    if (commentEnd === -1) return null;
+    return { end: commentEnd + 2, insertsSpacing: false };
+  }
+
+  if (value[index] === "!") {
+    const declarationEnd = value.indexOf(">", index + 1);
+    return declarationEnd === -1 ? null : { end: declarationEnd, insertsSpacing: false };
+  }
+
+  if (value[index] === "?") {
+    const processingEnd = value.indexOf(">", index + 1);
+    return processingEnd === -1 ? null : { end: processingEnd, insertsSpacing: false };
+  }
+
+  if (value[index] === "/") {
+    index += 1;
+  }
+
+  const nameStart = index;
+  while (index < value.length) {
+    const current = value[index];
+    if (
+      isAsciiLetter(current) ||
+      (current >= "0" && current <= "9") ||
+      current === "-" ||
+      current === "_" ||
+      current === ":"
+    ) {
+      index += 1;
+      continue;
+    }
+    break;
+  }
+
+  if (index === nameStart) return null;
+
+  const tagName = value.slice(nameStart, index).toLowerCase();
+  let quote: '"' | "'" | null = null;
+
+  for (; index < value.length; index += 1) {
+    const current = value[index];
+    if (quote) {
+      if (current === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (current === '"' || current === "'") {
+      quote = current;
+      continue;
+    }
+    if (current === ">") {
+      return { end: index, insertsSpacing: HTML_TEXT_BREAK_TAGS.has(tagName) };
+    }
+  }
+
+  return null;
+}
+
+function extractVisibleText(value: string): string {
+  let visible = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== "<") {
+      visible += value[index];
+      continue;
+    }
+
+    const tag = consumeHtmlTag(value, index);
+    if (!tag) {
+      visible += value[index];
+      continue;
+    }
+
+    if (tag.insertsSpacing) {
+      visible = appendCollapsedSpace(visible);
+    }
+    index = tag.end;
+  }
+
+  return visible
     .replace(/&nbsp;/gi, " ")
-    .replace(/<br\s*\/?>/gi, " ")
-    .replace(/<[^>]+>/g, "")
+    .replace(/&#160;/gi, " ")
+    .replace(/&#xA0;/gi, " ");
+}
+
+function stripDisplaySyntax(value: string): string {
+  return extractVisibleText(stripInvisibleCharacters(String(value)))
     .replace(/!\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/[`*_~]/g, "")
@@ -171,16 +348,17 @@ export function normalizeMarkdownForDisplay(content: string): string {
     .replace(/^\n+|\n+$/g, "");
 
   const cleaned = removeEmptyMarkdownTables(removeEmptyHtmlTables(normalized)).replace(/\n{3,}/g, "\n\n");
-  return linkifyCitations(unwrapBacktickedCitations(cleaned));
+  const safe = escapeUnknownHtmlTags(cleaned);
+  return linkifyCitations(unwrapBacktickedCitations(safe));
 }
 
 export function hasVisibleMarkdownContent(content: string): boolean {
   const normalized = normalizeMarkdownForDisplay(content);
   if (!normalized.trim()) return false;
 
-  const withoutEmptyBlocks = normalized
-    .replace(EMPTY_FENCED_CODE_BLOCK_REGEX, "")
-    .replace(/<[^>]+>/g, "")
+  const withoutEmptyBlocks = extractVisibleText(
+    normalized.replace(EMPTY_FENCED_CODE_BLOCK_REGEX, ""),
+  )
     .replace(/\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/!\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/^[\s>*\-+|#`]+$/gm, "");

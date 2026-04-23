@@ -62,6 +62,14 @@ export default function CreateCoursePage() {
 
       const data = await response.json().catch(() => null)
 
+      if (response.status === 429 && data?.upgrade_url) {
+        const pricingUrl = new URL(data.upgrade_url, window.location.origin)
+        pricingUrl.searchParams.set("source", "limit")
+        pricingUrl.searchParams.set("from", mode === "upload" ? "doc_upload" : "course_created")
+        router.push(`${pricingUrl.pathname}${pricingUrl.search}`)
+        return
+      }
+
       if (!response.ok) {
         throw new Error(data?.error || "Course generation failed.")
       }

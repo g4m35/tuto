@@ -54,6 +54,13 @@ Jake
 
 ---
 
+## Interactive REPL
+
+```bash
+deeptutor chat
+# inside the REPL: /regenerate or /retry re-runs the last user message
+```
+
 ## Sub-Agent Definitions
 
 ### Agent: Auth
