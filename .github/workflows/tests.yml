@@ -13,6 +13,11 @@ on:
       - "requirements/**"
       - "requirements.txt"
       - "pyproject.toml"
+      - "Dockerfile"
+      - "Dockerfile.backend"
+      - "docker-compose.ghcr.yml"
+      - "railway.toml"
+      - "web/railway.toml"
       - ".github/workflows/tests.yml"
   pull_request:
     branches:
@@ -26,6 +31,11 @@ on:
       - "requirements/**"
       - "requirements.txt"
       - "pyproject.toml"
+      - "Dockerfile"
+      - "Dockerfile.backend"
+      - "docker-compose.ghcr.yml"
+      - "railway.toml"
+      - "web/railway.toml"
       - ".github/workflows/tests.yml"
 
 env:
@@ -58,6 +68,16 @@ jobs:
       - name: Run targeted web launch tests
         working-directory: web
         run: npm run test:node
+
+      - name: Build web production app
+        working-directory: web
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_publishable_key
+          CLERK_SECRET_KEY: sk_test_ci_secret_key
+          NEXT_PUBLIC_CLERK_KEYLESS_DISABLED: "true"
+          NEXT_PUBLIC_API_BASE: http://127.0.0.1:8001
+          DEEPTUTOR_URL: http://127.0.0.1:8001
+        run: npm run build
 
   import-check:
     name: Import Check (Python ${{ matrix.python-version }})
@@ -171,14 +191,16 @@ jobs:
     steps:
       - name: Check test results
         run: |
-          echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Web launch checks | ${{ needs.web-launch-checks.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Import check (3.11/3.12) | ${{ needs.import-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Smoke tests (3.11) | ${{ needs.smoke-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## 🧪 Test Results Summary"
+            echo ""
+            echo "| Check | Status |"
+            echo "|-------|--------|"
+            echo "| Web launch checks | ${{ needs.web-launch-checks.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| Import check (3.11/3.12) | ${{ needs.import-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+            echo "| Smoke tests (3.11) | ${{ needs.smoke-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fail if tests failed
-        if: needs.web-launch-checks.result == 'failure' || needs.import-check.result == 'failure' || needs.smoke-tests.result == 'failure'
+        if: needs.web-launch-checks.result != 'success' || needs.import-check.result != 'success' || needs.smoke-tests.result != 'success'
         run: exit 1

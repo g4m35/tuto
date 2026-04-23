@@ -52,20 +52,9 @@ jobs:
           python_status="skipped"
           web_status="skipped"
 
-          python -m pip install --upgrade pip >"$workdir/pip-install.log" 2>&1
-          pip_status=$?
-
-          if [ $pip_status -eq 0 ]; then
-            pip install -r requirements/dev.txt >>"$workdir/pip-install.log" 2>&1
-            pip_status=$?
-          fi
-
-          if [ $pip_status -eq 0 ]; then
-            pip install -e . >>"$workdir/pip-install.log" 2>&1
-            pip_status=$?
-          fi
-
-          if [ $pip_status -eq 0 ]; then
+          if python -m pip install --upgrade pip >"$workdir/pip-install.log" 2>&1 \
+            && pip install -r requirements/dev.txt >>"$workdir/pip-install.log" 2>&1 \
+            && pip install -e . >>"$workdir/pip-install.log" 2>&1; then
             mkdir -p data/user/settings
             printf '%s\n' \
               'system:' \
@@ -75,7 +64,7 @@ jobs:
               > data/user/settings/main.yaml
 
             if find tests -type f | grep -q .; then
-              pytest -q --import-mode=importlib \
+              if pytest -q --import-mode=importlib \
                 tests/api \
                 tests/cli \
                 tests/services/test_model_catalog.py \
@@ -87,8 +76,7 @@ jobs:
                 tests/agents/math_animator/test_request_config.py \
                 tests/agents/math_animator/test_utils.py \
                 tests/services/llm/test_utils.py \
-                >"$workdir/pytest.log" 2>&1
-              if [ $? -eq 0 ]; then
+                >"$workdir/pytest.log" 2>&1; then
                 python_status="passed"
               else
                 python_status="failed"
@@ -102,16 +90,12 @@ jobs:
             python_status="failed"
           fi
 
-          (
+          if (
             cd web && npm ci >"$workdir/npm-install.log" 2>&1
-          )
-          npm_status=$?
-
-          if [ $npm_status -eq 0 ]; then
-            (
+          ); then
+            if (
               cd web && npm run build >"$workdir/web-build.log" 2>&1
-            )
-            if [ $? -eq 0 ]; then
+            ); then
               web_status="passed"
             else
               web_status="failed"
@@ -126,15 +110,13 @@ jobs:
             overall_status="failed"
           fi
 
-          echo "python_status=$python_status" >>"$GITHUB_OUTPUT"
-          echo "web_status=$web_status" >>"$GITHUB_OUTPUT"
-          echo "overall_status=$overall_status" >>"$GITHUB_OUTPUT"
           {
+            echo "python_status=$python_status"
+            echo "web_status=$web_status"
+            echo "overall_status=$overall_status"
             echo "python_tail<<__EOF__"
             tail -n 80 "$workdir/pytest.log"
             echo "__EOF__"
-          } >>"$GITHUB_OUTPUT"
-          {
             echo "web_tail<<__EOF__"
             tail -n 80 "$workdir/web-build.log"
             echo "__EOF__"
