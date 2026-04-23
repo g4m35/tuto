@@ -79,9 +79,13 @@ class EnvStore:
         return values.get(key, os.getenv(key, default))
 
     def as_summary(self) -> ConfigSummary:
+        runtime_backend_port = os.getenv("BACKEND_PORT") or os.getenv("PORT")
         values = self.load()
         return ConfigSummary(
-            backend_port=_safe_int(values.get("BACKEND_PORT") or os.getenv("BACKEND_PORT"), 8001),
+            backend_port=_safe_int(
+                runtime_backend_port or values.get("BACKEND_PORT"),
+                8001,
+            ),
             frontend_port=_safe_int(values.get("FRONTEND_PORT") or os.getenv("FRONTEND_PORT"), 3782),
             llm={
                 "binding": values.get("LLM_BINDING", os.getenv("LLM_BINDING", "openai")),

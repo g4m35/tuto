@@ -5,6 +5,7 @@ Combines user directory initialization and port configuration management.
 """
 
 import json
+import os
 from pathlib import Path
 
 import yaml
@@ -212,16 +213,20 @@ def get_backend_port(project_root: Path | None = None) -> int:
     Get backend port from environment variable.
 
     Configure in .env file: BACKEND_PORT=8001
+    Hosted platforms like Railway often inject PORT instead.
 
     Returns:
         Backend port number (default: 8001)
     """
-    env_port = get_env_store().get("BACKEND_PORT", "8001")
+    env_port = os.getenv("BACKEND_PORT") or os.getenv("PORT") or get_env_store().get(
+        "BACKEND_PORT",
+        "8001",
+    )
     try:
         return int(env_port)
     except ValueError:
         logger = _get_setup_logger()
-        logger.warning(f"Invalid BACKEND_PORT: {env_port}, using default 8001")
+        logger.warning(f"Invalid backend port value: {env_port}, using default 8001")
         return 8001
 
 
