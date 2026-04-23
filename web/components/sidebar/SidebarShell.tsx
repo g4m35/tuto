@@ -9,7 +9,7 @@ import {
   BookOpen,
   Bot,
   Brain,
-  Github,
+  GitBranch,
   Library,
   MessageSquare,
   PanelLeftClose,
@@ -185,7 +185,7 @@ export function SidebarShell({
             aria-label="GitHub"
             className="mt-1 flex h-9 w-9 items-center justify-center rounded-xl text-[var(--muted-foreground)]/70 transition-colors hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
           >
-            <Github size={15} strokeWidth={1.6} />
+            <GitBranch size={15} strokeWidth={1.6} />
           </a>
           <VersionBadge collapsed />
         </div>
@@ -308,7 +308,7 @@ export function SidebarShell({
             aria-label="GitHub"
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--muted-foreground)]/55 transition-colors hover:bg-[var(--background)]/50 hover:text-[var(--muted-foreground)]"
           >
-            <Github size={13} strokeWidth={1.7} />
+            <GitBranch size={13} strokeWidth={1.7} />
           </a>
         </div>
       </div>
