@@ -6,15 +6,6 @@ import { useEffect, useState } from "react"
 import { UserButton } from "@clerk/nextjs"
 import { Flame, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -82,29 +73,10 @@ export function TopNav() {
             <Flame className="size-4 text-[var(--accent)]" />
             <span>12 day streak</span>
           </div>
-          <Dialog>
-            <DialogTrigger render={<Button variant="secondary" size="sm" />}>
+          <Button variant="secondary" size="sm" render={<Link href="/pricing" />}>
               <Sparkles data-icon="inline-start" />
               Upgrade
-            </DialogTrigger>
-            <DialogContent className="surface-card max-w-md border-[var(--border)] bg-[var(--bg-elev-2)] text-[var(--text)]">
-              <DialogHeader>
-                <DialogTitle className="serif text-3xl font-semibold tracking-tight">
-                  Move faster with Pro
-                </DialogTitle>
-                <DialogDescription className="text-[var(--text-dim)]">
-                  Unlock unlimited practice, richer course generation, and deeper feedback loops when pricing is ready.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 text-sm text-[var(--text-dim)]">
-                We have billing infrastructure in place. The plan chooser is the next product pass.
-              </div>
-              <DialogFooter
-                showCloseButton
-                className="border-[var(--border)] bg-[var(--bg-soft)]"
-              />
-            </DialogContent>
-          </Dialog>
+          </Button>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] p-1">
             <UserButton />
           </div>

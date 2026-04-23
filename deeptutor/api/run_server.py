@@ -24,6 +24,40 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(line_buffering=True)
 
+
+def _build_reload_excludes(project_root: Path) -> list[str]:
+    """Return repo-relative reload excludes safe for uvicorn/watchfiles.
+
+    Uvicorn 0.45 resolves excludes by globbing non-directory entries against the
+    current working directory. Absolute file paths (for example a worktree
+    `.git` file) trigger ``pathlib``'s "Non-relative patterns are unsupported"
+    error, so keep every exclude relative to the project root we `chdir` into.
+    """
+
+    candidates = [
+        project_root / "venv",
+        project_root / ".venv",
+        project_root / "data",
+        project_root / "node_modules",
+        project_root / "web" / "node_modules",
+        project_root / "web" / ".next",
+        project_root / ".git",
+        project_root / "scripts",
+    ]
+
+    excludes: list[str] = []
+    for path in candidates:
+        if not path.exists():
+            continue
+        try:
+            relative_path = path.relative_to(project_root)
+        except ValueError:
+            continue
+        excludes.append(relative_path.as_posix() or ".")
+
+    return excludes
+
+
 def main() -> None:
     # Get project root directory
     project_root = Path(__file__).parent.parent.parent
@@ -40,21 +74,7 @@ def main() -> None:
 
     backend_port = get_backend_port(project_root)
 
-    # Configure reload_excludes to skip directories that shouldn't trigger reloads
-    # Use absolute paths to ensure they're properly resolved
-    reload_excludes = [
-        str(project_root / "venv"),  # Virtual environment
-        str(project_root / ".venv"),  # Virtual environment (alternative name)
-        str(project_root / "data"),  # Data directory (includes knowledge_bases, user data, logs)
-        str(project_root / "node_modules"),  # Node modules (if any at root)
-        str(project_root / "web" / "node_modules"),  # Web node modules
-        str(project_root / "web" / ".next"),  # Next.js build
-        str(project_root / ".git"),  # Git directory
-        str(project_root / "scripts"),  # Scripts directory - don't reload on launcher changes
-    ]
-
-    # Filter out non-existent directories to avoid warnings
-    reload_excludes = [d for d in reload_excludes if Path(d).exists()]
+    reload_excludes = _build_reload_excludes(project_root)
 
     # Start uvicorn server with reload enabled
     uvicorn.run(

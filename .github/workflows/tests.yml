@@ -117,6 +117,7 @@ jobs:
           pytest -q --import-mode=importlib \
             tests/api \
             tests/cli \
+            tests/agents/guide/test_guide_manager_kb_flow.py \
             tests/services/test_app_facade.py \
             tests/services/test_model_catalog.py \
             tests/services/test_path_service.py \

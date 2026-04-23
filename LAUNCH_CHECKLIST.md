@@ -10,14 +10,16 @@ Date reviewed: 2026-04-22
 
 - [x] Clerk route protection is wired in [`web/proxy.ts`](web/proxy.ts).
 - [x] Stripe server helpers and webhook-based tier syncing are present in [`web/lib/billing.ts`](web/lib/billing.ts) and [`web/app/api/webhooks/stripe/route.ts`](web/app/api/webhooks/stripe/route.ts).
+- [x] A pricing surface now exists in [`web/app/pricing/page.tsx`](web/app/pricing/page.tsx), and the top-nav upgrade CTA routes there from [`web/components/ui/TopNav.tsx`](web/components/ui/TopNav.tsx).
+- [x] Stripe Checkout Session creation is wired in [`web/app/api/billing/checkout/route.ts`](web/app/api/billing/checkout/route.ts).
 - [x] Usage-limit enforcement exists in [`web/lib/usage.ts`](web/lib/usage.ts), [`web/lib/limits.ts`](web/lib/limits.ts), and [`web/lib/withUsageLimit.ts`](web/lib/withUsageLimit.ts).
 - [x] Per-user course persistence is wired in [`web/lib/course-store.ts`](web/lib/course-store.ts) with SQL schema in [`web/migrations/003_courses.sql`](web/migrations/003_courses.sql).
 - [x] KB-backed upload flow now creates a knowledge base, waits for readiness, persists `kb_name`, and starts guided learning against that KB via [`web/lib/deeptutor.ts`](web/lib/deeptutor.ts), [`web/app/api/courses/route.ts`](web/app/api/courses/route.ts), [`deeptutor/api/routers/guide.py`](deeptutor/api/routers/guide.py), and [`deeptutor/agents/guide/guide_manager.py`](deeptutor/agents/guide/guide_manager.py).
 
 ### Stop-ship gaps
 
-- [ ] There is no self-serve checkout-session creation route in `web/app/api/**`.
-- [ ] There is no finished `/pricing` product surface; the upgrade CTA in [`web/components/ui/TopNav.tsx`](web/components/ui/TopNav.tsx) is still placeholder copy.
+- [ ] There is still no billing-portal or self-serve subscription-management flow for existing subscribers.
+- [ ] The pricing and checkout flow now exists, but it still needs final plan validation, copy polish, and paid-user management UX.
 - [ ] The Docker deployment files are geared toward the upstream all-in-one OSS app and do not yet wire the fork's Clerk, Stripe, or Postgres requirements.
 - [ ] The release workflow still targets `ghcr.io/hkuds/deeptutor` in [`.github/workflows/docker-release.yml`](.github/workflows/docker-release.yml), not this fork's own registry/image.
 - [ ] CI currently covers backend import/smoke checks only; it does not gate the `web/` build, auth flow, billing flow, or purchase path.
@@ -56,11 +58,10 @@ Date reviewed: 2026-04-22
 
 ### Missing before charging customers
 
-- [ ] Add a server route that creates Stripe Checkout Sessions.
-- [ ] Add a real pricing/upgrade screen and wire the upgrade CTA to it.
 - [ ] Add a billing-portal or cancellation-management flow for existing subscribers.
 - [ ] Decide and implement downgrade behavior after cancellation or failed payment.
 - [ ] Decide whether team billing is actually launch-ready; the code has a `team` tier, but no visible team-management UX.
+- [ ] Validate that the current plan prices and Stripe product IDs match what you actually intend to sell.
 
 ### Required environment variables
 
@@ -73,6 +74,7 @@ Date reviewed: 2026-04-22
 ### Operator verification
 
 - [ ] A free user can hit a limit and gets a deterministic upgrade response.
+- [ ] The `/pricing` page can start a Stripe checkout redirect for both `pro` and `team`.
 - [ ] A successful Stripe checkout upgrades the user's `tier` within minutes through the webhook path.
 - [ ] `invoice.payment_failed` moves the user into the intended degraded state.
 - [ ] Subscription cancellation returns the user to the intended plan at the intended time.
@@ -222,7 +224,7 @@ psql "$DATABASE_URL" -f web/migrations/003_courses.sql
 
 ## 8. Recommended Order Of Operations
 
-1. Finish the self-serve billing surface: checkout creation, pricing page, portal/cancel flow.
+1. Finish the self-serve billing surface: portal/cancel flow plus final plan validation.
 2. Lock production deployment for this fork, not the upstream GHCR image.
 3. Provision Postgres and document migration execution.
 4. Add monitoring and alerting for web, backend, and Stripe webhooks.

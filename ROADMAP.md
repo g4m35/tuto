@@ -5,10 +5,10 @@
 - [x] Course creation now provisions a real DeepTutor knowledge base for uploaded documents.
 - [x] Upload flow waits for the knowledge base to become ready before starting guided learning.
 - [x] Guided-learning sessions now persist and return `kb_name` so the KB-backed session survives after creation.
+- [x] The app now has a self-serve pricing page and Stripe Checkout Session creation route.
 
 ## Remaining Launch-Critical Work
 
-- [ ] Build the self-serve pricing and checkout flow for Stripe.
 - [ ] Add billing-management and downgrade UX for existing subscribers.
 - [ ] Lock production deployment for this fork's Clerk + Stripe + Postgres requirements.
 - [ ] Add monitoring, alerting, and a rollback runbook.
