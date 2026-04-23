@@ -1,0 +1,84 @@
+# Backend-only image for hosted API deployments such as Railway.
+
+FROM python:3.11-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONIOENCODING=utf-8 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    build-essential \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+COPY requirements/ ./requirements/
+COPY requirements.txt ./
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+FROM python:3.11-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONIOENCODING=utf-8 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    ca-certificates \
+    curl \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+COPY deeptutor/ ./deeptutor/
+COPY deeptutor_cli/ ./deeptutor_cli/
+COPY scripts/ ./scripts/
+COPY pyproject.toml ./
+COPY requirements/ ./requirements/
+COPY requirements.txt ./
+
+RUN mkdir -p \
+    data/user/settings \
+    data/memory \
+    data/user/workspace/memory \
+    data/user/workspace/notebook \
+    data/user/workspace/co-writer/audio \
+    data/user/workspace/co-writer/tool_calls \
+    data/user/workspace/chat/chat \
+    data/user/workspace/chat/deep_solve \
+    data/user/workspace/chat/deep_question \
+    data/user/workspace/chat/deep_research/reports \
+    data/user/workspace/chat/math_animator \
+    data/user/workspace/chat/_detached_code_execution \
+    data/user/logs \
+    data/knowledge_bases
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD /bin/bash -lc 'curl --fail http://127.0.0.1:${PORT:-${BACKEND_PORT:-8001}}/ >/dev/null || exit 1'
+
+CMD ["/bin/bash", "-lc", "exec python -m uvicorn deeptutor.api.main:app --host 0.0.0.0 --port ${PORT:-${BACKEND_PORT:-8001}}"]
