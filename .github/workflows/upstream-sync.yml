@@ -133,20 +133,16 @@ jobs:
             echo "- Issue: #${{ steps.blocked_issue.outputs.issue_number }}"
             echo "- Auto-resolved safe conflicts:"
             if [ -n "${{ steps.prepare.outputs.auto_resolved }}" ]; then
-              while IFS= read -r path; do
+              printf '%s\n' "${{ steps.prepare.outputs.auto_resolved }}" | while IFS= read -r path; do
                 [ -n "$path" ] && echo "  - \`$path\`"
-              done <<'EOF'
-${{ steps.prepare.outputs.auto_resolved }}
-EOF
+              done
             else
               echo "  - None"
             fi
             echo "- Remaining conflicts:"
-            while IFS= read -r path; do
+            printf '%s\n' "${{ steps.prepare.outputs.conflicts }}" | while IFS= read -r path; do
               [ -n "$path" ] && echo "  - \`$path\`"
-            done <<'EOF'
-${{ steps.prepare.outputs.conflicts }}
-EOF
+            done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Summarize sync result

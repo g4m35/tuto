@@ -37,6 +37,7 @@ class CreateSessionRequest(BaseModel):
     notebook_id: str | None = None  # Optional, single notebook mode
     records: list[dict] | None = None  # Optional, cross-notebook mode with direct records
     notebook_references: list[dict] | None = None
+    kb_name: str | None = None
 
 
 class ChatRequest(BaseModel):
@@ -157,10 +158,6 @@ async def create_session(request: CreateSessionRequest):
                     user_question=raw_user_input,
                     records=selected_records,
                 )
-                user_input = (
-                    f"[Notebook Context]\n{notebook_context}\n\n"
-                    f"[User Question]\n{raw_user_input}"
-                )
 
         # Reset LLM stats for new session
         BaseAgent.reset_stats("guide")
@@ -170,6 +167,7 @@ async def create_session(request: CreateSessionRequest):
             user_input=user_input,
             display_title=raw_user_input,
             notebook_context=notebook_context,
+            kb_name=request.kb_name,
         )
 
         if result and "session_id" in result:

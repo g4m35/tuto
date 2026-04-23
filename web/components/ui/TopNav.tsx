@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { UserButton } from "@clerk/nextjs"
 import { Flame, Sparkles } from "lucide-react"
-import { buttonVariants } from "@/components/ui/Button"
+import { Button } from "@/components/ui/Button"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -46,6 +46,8 @@ export function TopNav() {
               const active =
                 item.id === "courses"
                   ? pathname === "/dashboard" && hash === "#courses"
+                  : item.id === "dashboard"
+                    ? pathname === "/dashboard" && hash !== "#courses"
                   : pathname === item.href || pathname.startsWith(`${item.href}/`)
 
               return (
@@ -71,13 +73,10 @@ export function TopNav() {
             <Flame className="size-4 text-[var(--accent)]" />
             <span>12 day streak</span>
           </div>
-          <Link
-            href="/pricing"
-            className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
-          >
+          <Button variant="secondary" size="sm" render={<Link href="/pricing" />}>
               <Sparkles data-icon="inline-start" />
               Upgrade
-          </Link>
+          </Button>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] p-1">
             <UserButton />
           </div>

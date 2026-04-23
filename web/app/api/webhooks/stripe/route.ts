@@ -17,6 +17,22 @@ interface UserRow {
   tier: BillingTier;
 }
 
+interface SubscriptionStateInput {
+  clerkId?: string | null;
+  stripeCustomerId: string | null;
+  tier: BillingTier;
+  subscriptionStatus: string;
+  currentPeriodEnd: Date | null;
+}
+
+interface StripeWebhookDeps {
+  retrieveSubscription: (
+    subscriptionId: string,
+  ) => Promise<Stripe.Response<Stripe.Subscription> | Stripe.Subscription>;
+  getUserByStripeCustomerId: (customerId: string) => Promise<UserRow | null>;
+  syncSubscriptionState: (input: SubscriptionStateInput) => Promise<void>;
+}
+
 function formatWebhookError(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -158,13 +174,7 @@ async function updateUserSubscriptionStateByCustomerId(input: {
   }
 }
 
-async function syncSubscriptionState(input: {
-  clerkId?: string | null;
-  stripeCustomerId: string | null;
-  tier: BillingTier;
-  subscriptionStatus: string;
-  currentPeriodEnd: Date | null;
-}) {
+async function syncSubscriptionState(input: SubscriptionStateInput) {
   if (input.clerkId) {
     await upsertUserSubscriptionState({
       clerkId: input.clerkId,
@@ -197,19 +207,28 @@ async function retrieveSubscription(
   });
 }
 
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+const defaultWebhookDeps: StripeWebhookDeps = {
+  retrieveSubscription,
+  getUserByStripeCustomerId,
+  syncSubscriptionState,
+};
+
+async function handleCheckoutSessionCompleted(
+  session: Stripe.Checkout.Session,
+  deps: StripeWebhookDeps,
+) {
   if (typeof session.subscription !== "string") {
     console.warn("checkout.session.completed arrived without a subscription id.");
     return;
   }
 
-  const subscription = await retrieveSubscription(session.subscription);
+  const subscription = await deps.retrieveSubscription(session.subscription);
   const existingUser =
     session.customer && typeof session.customer === "string"
-      ? await getUserByStripeCustomerId(session.customer)
+      ? await deps.getUserByStripeCustomerId(session.customer)
       : null;
 
-  await syncSubscriptionState({
+  await deps.syncSubscriptionState({
     clerkId: getClerkIdFromCheckoutSession(session) ?? existingUser?.clerk_id ?? null,
     stripeCustomerId: getCustomerId(session.customer),
     tier: getTierForSubscription(subscription),
@@ -218,8 +237,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   });
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  await syncSubscriptionState({
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription, deps: StripeWebhookDeps) {
+  await deps.syncSubscriptionState({
     stripeCustomerId: getCustomerId(subscription.customer),
     tier: getTierForSubscription(subscription),
     subscriptionStatus: subscription.status,
@@ -227,8 +246,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   });
 }
 
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  await syncSubscriptionState({
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription, deps: StripeWebhookDeps) {
+  await deps.syncSubscriptionState({
     stripeCustomerId: getCustomerId(subscription.customer),
     tier: "free",
     subscriptionStatus: subscription.status,
@@ -239,15 +258,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   });
 }
 
-async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice, deps: StripeWebhookDeps) {
   const stripeCustomerId = getCustomerId(invoice.customer);
-  const existingUser = stripeCustomerId ? await getUserByStripeCustomerId(stripeCustomerId) : null;
+  const existingUser = stripeCustomerId
+    ? await deps.getUserByStripeCustomerId(stripeCustomerId)
+    : null;
   const invoiceSubscription = invoice.parent?.subscription_details?.subscription;
 
   if (typeof invoiceSubscription === "string") {
-    const subscription = await retrieveSubscription(invoiceSubscription);
+    const subscription = await deps.retrieveSubscription(invoiceSubscription);
 
-    await syncSubscriptionState({
+    await deps.syncSubscriptionState({
       clerkId: existingUser?.clerk_id ?? null,
       stripeCustomerId,
       tier: getTierForSubscription(subscription),
@@ -257,13 +278,35 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     return;
   }
 
-  await syncSubscriptionState({
+  await deps.syncSubscriptionState({
     clerkId: existingUser?.clerk_id ?? null,
     stripeCustomerId,
     tier: existingUser?.tier ?? "free",
     subscriptionStatus: "payment_failed",
     currentPeriodEnd: null,
   });
+}
+
+export async function processStripeWebhookEvent(
+  event: Pick<Stripe.Event, "type" | "data">,
+  deps: StripeWebhookDeps = defaultWebhookDeps,
+) {
+  switch (event.type) {
+    case "checkout.session.completed":
+      await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session, deps);
+      break;
+    case "customer.subscription.updated":
+      await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, deps);
+      break;
+    case "customer.subscription.deleted":
+      await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, deps);
+      break;
+    case "invoice.payment_failed":
+      await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, deps);
+      break;
+    default:
+      break;
+  }
 }
 
 export async function POST(request: Request) {
@@ -289,22 +332,7 @@ export async function POST(request: Request) {
     );
   }
 
-  switch (event.type) {
-    case "checkout.session.completed":
-      await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
-      break;
-    case "customer.subscription.updated":
-      await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
-      break;
-    case "customer.subscription.deleted":
-      await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-      break;
-    case "invoice.payment_failed":
-      await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
-      break;
-    default:
-      break;
-  }
+  await processStripeWebhookEvent(event);
 
   return NextResponse.json({ received: true });
 }

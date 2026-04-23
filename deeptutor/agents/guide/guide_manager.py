@@ -17,6 +17,7 @@ import yaml
 from deeptutor.logging import get_logger
 from deeptutor.services.config import load_config_with_main, parse_language
 from deeptutor.services.path_service import get_path_service
+from deeptutor.services.rag.service import RAGService
 
 from .agents import ChatAgent, DesignAgent, InteractiveAgent, SummaryAgent
 
@@ -29,6 +30,7 @@ class GuidedSession:
     notebook_id: str
     notebook_name: str
     created_at: float
+    kb_name: str | None = None
     knowledge_points: list[dict[str, Any]] = field(default_factory=list)
     current_index: int = -1
     chat_history: list[dict[str, Any]] = field(default_factory=list)
@@ -60,6 +62,7 @@ class GuidedSession:
         session_data.setdefault("chat_history", [])
         session_data.setdefault("status", "initialized")
         session_data.setdefault("summary", "")
+        session_data.setdefault("kb_name", None)
         session_data["html_pages"] = html_pages
         session_data["page_statuses"] = page_statuses
         session_data["page_errors"] = page_errors
@@ -172,6 +175,7 @@ class GuideManager:
         self._sessions: dict[str, GuidedSession] = {}
         self._generation_tasks: dict[str, asyncio.Task[None]] = {}
         self.max_parallel_generations = 2
+        self._rag_service: RAGService | None = None
 
     def _get_session_file(self, session_id: str) -> Path:
         """Get session file path"""
@@ -211,6 +215,63 @@ class GuideManager:
             key = str(index)
             session.page_statuses.setdefault(key, "pending")
             session.page_errors.setdefault(key, "")
+
+    def _get_rag_service(self) -> RAGService:
+        if self._rag_service is None:
+            self._rag_service = RAGService()
+        return self._rag_service
+
+    async def _retrieve_kb_context(self, query: str, kb_name: str) -> str:
+        cleaned_query = query.strip()
+        if not cleaned_query:
+            return ""
+
+        try:
+            result = await self._get_rag_service().search(
+                query=cleaned_query[:500],
+                kb_name=kb_name,
+                mode="hybrid",
+            )
+        except Exception as exc:
+            self.logger.warning(f"KB retrieval failed for '{kb_name}': {exc}")
+            return ""
+
+        context = str(result.get("answer") or result.get("content") or "").strip()
+        if not context:
+            self.logger.warning(f"KB retrieval returned no grounded context for '{kb_name}'")
+            return ""
+
+        return context[:6000]
+
+    @staticmethod
+    def _compose_supporting_context(notebook_context: str, kb_name: str | None, kb_context: str) -> str:
+        sections: list[str] = []
+
+        cleaned_notebook = notebook_context.strip()
+        if cleaned_notebook:
+            sections.append(f"[Notebook Context]\n{cleaned_notebook}")
+
+        cleaned_kb = kb_context.strip()
+        if cleaned_kb:
+            label = kb_name or "knowledge-base"
+            sections.append(f"[Knowledge Base Context: {label}]\n{cleaned_kb}")
+
+        return "\n\n".join(sections)
+
+    def _build_design_input(
+        self,
+        user_input: str,
+        notebook_context: str,
+        kb_name: str | None,
+        kb_context: str,
+    ) -> str:
+        supporting_context = self._compose_supporting_context(notebook_context, kb_name, kb_context)
+        cleaned_user_input = user_input.strip()
+
+        if not supporting_context:
+            return cleaned_user_input
+
+        return f"{supporting_context}\n\n[User Question]\n{cleaned_user_input}"
 
     def _count_ready_pages(self, session: GuidedSession) -> int:
         return sum(1 for status in session.page_statuses.values() if status == "ready")
@@ -340,6 +401,7 @@ class GuideManager:
         user_input: str,
         display_title: str | None = None,
         notebook_context: str = "",
+        kb_name: str | None = None,
     ) -> dict[str, Any]:
         """
         Create new learning session
@@ -358,8 +420,13 @@ class GuideManager:
             }
 
         session_id = str(uuid.uuid4())[:8]
+        kb_context = ""
+        if kb_name:
+            kb_context = await self._retrieve_kb_context(display_title or user_input, kb_name)
 
-        design_result = await self.design_agent.process(user_input=user_input)
+        supporting_context = self._compose_supporting_context(notebook_context, kb_name, kb_context)
+        design_input = self._build_design_input(user_input, notebook_context, kb_name, kb_context)
+        design_result = await self.design_agent.process(user_input=design_input)
 
         if not design_result.get("success"):
             return {
@@ -383,11 +450,12 @@ class GuideManager:
             session_id=session_id,
             notebook_id="user_input",
             notebook_name=session_title or "Guided Learning",
+            kb_name=kb_name,
             created_at=time.time(),
             knowledge_points=knowledge_points,
             current_index=-1,
             status="initialized",
-            notebook_context=notebook_context,
+            notebook_context=supporting_context,
         )
         self._initialize_page_statuses(session)
 
@@ -396,6 +464,7 @@ class GuideManager:
         return {
             "success": True,
             "session_id": session_id,
+            "kb_name": kb_name,
             "knowledge_points": knowledge_points,
             "total_points": len(knowledge_points),
             "message": f"Learning plan created with {len(knowledge_points)} knowledge points",
@@ -481,6 +550,7 @@ class GuideManager:
             "current_index": 0,
             "current_knowledge": session.knowledge_points[0] if session.knowledge_points else None,
             "html": session.html_pages.get("0", ""),
+            "kb_name": session.kb_name,
             "page_statuses": session.page_statuses,
             "progress": self._calculate_progress(session),
             "total_points": len(session.knowledge_points),
@@ -677,6 +747,7 @@ class GuideManager:
             "session_id": session.session_id,
             "current_index": session.current_index,
             "status": session.status,
+            "kb_name": session.kb_name,
             "page_statuses": session.page_statuses,
             "page_errors": session.page_errors,
             "html_pages": session.html_pages,
@@ -728,6 +799,7 @@ class GuideManager:
                     {
                         "session_id": data.get("session_id", ""),
                         "topic": data.get("notebook_name", ""),
+                        "kb_name": data.get("kb_name"),
                         "status": data.get("status", "initialized"),
                         "created_at": data.get("created_at", 0),
                         "total_points": total_points,

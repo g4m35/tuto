@@ -17,6 +17,7 @@ export interface GenerateCourseParams {
   difficulty: string;
   prompt: string;
   sourceMode: "topic" | "upload";
+  knowledgeBaseName?: string | null;
 }
 
 export interface GenerateCourseResult {
@@ -45,6 +46,14 @@ export interface GenerateExerciseContext {
 interface SseEnvelope {
   event: string;
   data: Record<string, unknown>;
+}
+
+interface KnowledgeBaseProgressResponse {
+  stage?: string;
+  status?: string;
+  message?: string;
+  error?: string;
+  task_id?: string;
 }
 
 export class DeepTutorClientError extends Error {
@@ -95,6 +104,64 @@ function slugify(value: string) {
 function buildKnowledgeBaseName(fileName: string, userId: string) {
   const stem = fileName.replace(/\.[^.]+$/, "");
   return `${slugify(userId)}-${slugify(stem) || "kb"}-${Date.now().toString(36)}`;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isKnowledgeBaseReady(progress: KnowledgeBaseProgressResponse) {
+  const stage = typeof progress.stage === "string" ? progress.stage : null;
+  const status = typeof progress.status === "string" ? progress.status : null;
+  return stage === "completed" || status === "ready";
+}
+
+async function waitForKnowledgeBaseReady(
+  knowledgeBaseName: string,
+  options: { timeoutMs?: number; pollIntervalMs?: number } = {},
+) {
+  const timeoutMs = options.timeoutMs ?? 120_000;
+  const pollIntervalMs = options.pollIntervalMs ?? 2_000;
+  const deadline = Date.now() + timeoutMs;
+  let lastError: unknown = null;
+  let lastProgress: KnowledgeBaseProgressResponse | null = null;
+
+  while (Date.now() < deadline) {
+    let progress: KnowledgeBaseProgressResponse | null = null;
+
+    try {
+      progress = await fetchJson<KnowledgeBaseProgressResponse>(
+        `/api/v1/knowledge/${encodeURIComponent(knowledgeBaseName)}/progress`,
+        { method: "GET" },
+      );
+    } catch (error) {
+      lastError = error;
+      await sleep(pollIntervalMs);
+      continue;
+    }
+
+    lastProgress = progress;
+
+    if (isKnowledgeBaseReady(progress)) {
+      return;
+    }
+
+    if (progress.stage === "error" || progress.status === "error") {
+      throw new DeepTutorClientError(
+        `Knowledge base "${knowledgeBaseName}" reported an error while initializing.`,
+        null,
+        progress,
+      );
+    }
+
+    await sleep(pollIntervalMs);
+  }
+
+  throw new DeepTutorClientError(
+    `Timed out waiting for knowledge base "${knowledgeBaseName}" to become ready.`,
+    null,
+    lastError ?? lastProgress,
+  );
 }
 
 async function fetchJson<T>(
@@ -267,6 +334,25 @@ export async function ingestDocument(
   };
 }
 
+function buildGuidePrompt(params: GenerateCourseParams) {
+  const lines = [
+    `Course title: ${params.title}`,
+    `Subject: ${params.subject}`,
+    `Difficulty: ${params.difficulty}`,
+  ];
+
+  const cleanedPrompt = params.prompt.trim();
+  if (cleanedPrompt) {
+    lines.push(`Learning goal: ${cleanedPrompt}`);
+  }
+
+  if (params.sourceMode === "upload") {
+    lines.push("Use the attached knowledge base as the primary source of truth for the course plan.");
+  }
+
+  return lines.join("\n");
+}
+
 export async function generateCourse(
   sourceIds: string[],
   params: GenerateCourseParams,
@@ -294,10 +380,14 @@ export async function generateCourse(
     };
   }
 
-  const prompt =
-    params.sourceMode === "upload" && sourceIds.length
-      ? `${params.prompt}\n\nSource knowledge bases: ${sourceIds.join(", ")}\nNote: Guided Learning does not accept KB attachments directly, so these source IDs are passed as prompt context only.`
-      : params.prompt;
+  const knowledgeBaseName =
+    params.sourceMode === "upload"
+      ? params.knowledgeBaseName ?? sourceIds[0] ?? null
+      : null;
+
+  if (params.sourceMode === "upload" && knowledgeBaseName) {
+    await waitForKnowledgeBaseReady(knowledgeBaseName);
+  }
 
   const created = await fetchJson<{
     success?: boolean;
@@ -308,7 +398,8 @@ export async function generateCourse(
   }>("/api/v1/guide/create_session", {
     method: "POST",
     body: JSON.stringify({
-      user_input: prompt,
+      user_input: buildGuidePrompt(params),
+      ...(knowledgeBaseName ? { kb_name: knowledgeBaseName } : {}),
     }),
   });
 

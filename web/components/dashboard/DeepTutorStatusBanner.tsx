@@ -89,10 +89,10 @@ export function DeepTutorStatusBanner({
 
   const title = isBackendWarning
     ? "DeepTutor backend offline"
-    : "Document uploads limited — embeddings not configured";
+    : "Document uploads limited: embeddings not configured";
   const body = isBackendWarning
     ? "The dashboard cannot reach DeepTutor right now, so live course generation and health checks are unavailable."
-    : `DeepTutor is reachable${health?.version ? ` (v${health.version})` : ""} in ${health?.latency_ms ?? 0} ms, but embeddings are still disabled. Chat can keep working while document upload and retrieval flows remain limited.`;
+    : `DeepTutor is reachable${health?.version ? ` (v${health.version})` : ""} in ${health?.latency_ms ?? 0} ms, but embeddings are still disabled. Chat can keep working, while document upload and retrieval flows remain limited.`;
   const toneClasses = isBackendWarning
     ? "border-rose-400/40 bg-rose-100/80 text-rose-950"
     : "border-amber-400/40 bg-amber-100/80 text-amber-950";

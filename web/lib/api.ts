@@ -2,20 +2,25 @@
 
 // Get API base URL from environment variable.
 // The launcher injects NEXT_PUBLIC_API_BASE from the canonical project-root `.env`.
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE ||
-  (() => {
-    if (typeof window !== "undefined") {
-      console.error("NEXT_PUBLIC_API_BASE is not set.");
-      console.error(
-        "Please configure NEXT_PUBLIC_API_BASE in your environment and restart the application.",
-      );
-      console.error("Run python scripts/start_tour.py to rebuild your local setup if needed.");
-    }
-    throw new Error(
-      "NEXT_PUBLIC_API_BASE is not configured. Please set it in your environment and restart.",
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE ?? null;
+
+function requireApiBaseUrl(): string {
+  if (API_BASE_URL) {
+    return API_BASE_URL;
+  }
+
+  if (typeof window !== "undefined") {
+    console.error("NEXT_PUBLIC_API_BASE is not set.");
+    console.error(
+      "Please configure NEXT_PUBLIC_API_BASE in your environment and restart the application.",
     );
-  })();
+    console.error("Run python scripts/start_tour.py to rebuild your local setup if needed.");
+  }
+
+  throw new Error(
+    "NEXT_PUBLIC_API_BASE is not configured. Please set it in your environment and restart.",
+  );
+}
 
 // Hostnames that always refer to the local machine. When the build-time base
 // URL points to one of these, but the page is opened from a non-local origin,
@@ -48,7 +53,7 @@ function isLoopbackHost(host: string): boolean {
  * like `http://localhost:8001/api` continue to work after the rewrite).
  */
 export function resolveBase(): string {
-  const base = API_BASE_URL;
+  const base = requireApiBaseUrl();
   if (typeof window === "undefined") return base;
   try {
     const url = new URL(base);
@@ -77,10 +82,13 @@ export function resolveBase(): string {
  * @returns Full URL (e.g., 'http://localhost:8001/api/v1/knowledge/list')
  */
 export function apiUrl(path: string): string {
+  const apiBaseUrl = requireApiBaseUrl();
+
   // Remove leading slash if present to avoid double slashes
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
-  // Remove trailing slash from base URL if present
+  // Prefer the runtime-resolved base so LAN clients do not get trapped
+  // on their own loopback interface when the build-time value is localhost.
   const base = resolveBase();
   const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
 
@@ -93,6 +101,8 @@ export function apiUrl(path: string): string {
  * @returns WebSocket URL (e.g., 'ws://localhost:8001/api/v1/ws')
  */
 export function wsUrl(path: string): string {
+  const apiBaseUrl = requireApiBaseUrl();
+
   // Security Hardening: Convert http to ws and https to wss.
   // In production environments (where API_BASE_URL starts with https), this ensures secure websockets.
   const base = resolveBase().replace(/^http:/, "ws:").replace(/^https:/, "wss:");
