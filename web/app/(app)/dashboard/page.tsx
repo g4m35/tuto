@@ -1,20 +1,36 @@
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
-import { ArrowRight, BookOpen, Brain, Clock3 } from "lucide-react"
+import { ArrowRight, BookOpen, Clock3, Flame, Sparkles } from "lucide-react"
 import { buttonVariants } from "@/components/ui/Button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { DeepTutorStatusBanner } from "@/components/dashboard/DeepTutorStatusBanner"
 import { Progress } from "@/components/ui/progress"
 import { toDashboardViewData } from "@/lib/course-data"
 import { listCoursesForUser } from "@/lib/course-store"
 import { cn } from "@/lib/utils"
+
+function DashboardMetric({
+  label,
+  value,
+  detail,
+}: {
+  label: string
+  value: string
+  detail?: string
+}) {
+  return (
+    <div className="editorial-stat p-5">
+      <p className="eyebrow">{label}</p>
+      <p className="mt-4 text-[2rem] font-medium leading-none tracking-[-0.04em] text-[var(--text)]">
+        {value}
+      </p>
+      {detail ? (
+        <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
+          {detail}
+        </p>
+      ) : null}
+    </div>
+  )
+}
 
 export default async function DashboardPage() {
   const { userId } = await auth()
@@ -28,210 +44,186 @@ export default async function DashboardPage() {
     const dashboard = toDashboardViewData(courses)
     const continueCourse = dashboard.continueCourse
     const hasStubCourses = courses.some((course) => course.backendMode === "stub")
+    const completedLessons = dashboard.courses.reduce(
+      (total, course) => total + course.lessonsComplete,
+      0
+    )
 
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-10">
         <DeepTutorStatusBanner hasStubCourses={hasStubCourses} />
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(340px,0.88fr)]">
-          <div className="flex flex-col justify-between gap-7 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg-elev)_80%,transparent)] p-7">
+        <section className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_340px] xl:items-end">
+          <div className="space-y-6">
+            <p className="eyebrow">This week</p>
             <div className="space-y-4">
-              <p className="eyebrow">Study loop</p>
-              <div className="space-y-3">
-                <h1 className="serif max-w-2xl text-4xl font-semibold tracking-tight text-balance text-[var(--text)] sm:text-5xl">
-                  Welcome back, {dashboard.userName}.
-                </h1>
-                <p className="max-w-xl text-base leading-7 text-[var(--text-dim)] text-pretty">
-                  {continueCourse
-                    ? "Your next session is already shaped. Stay inside the idea that still feels unstable and use the generated exercise while it is fresh."
-                    : "Your dashboard is ready. Create a course from a topic or upload, and the next session will start taking shape here."}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                  Active courses
-                </p>
-                <p className="mt-3 text-[1.9rem] font-semibold leading-none text-[var(--text)]">
-                  {dashboard.courses.length}
-                </p>
-              </div>
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                  Current streak
-                </p>
-                <p className="mt-3 text-[1.9rem] font-semibold leading-none text-[var(--text)]">
-                  {dashboard.streakDays} days
-                </p>
-              </div>
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                  Focus area
-                </p>
-                <p className="mt-3 text-xl font-semibold leading-tight text-[var(--text)]">
-                  {dashboard.insightTopic}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)] py-0">
-            <CardHeader className="border-b border-[var(--border)] px-6 py-6">
-              <p className="eyebrow">Continue where you left off</p>
-              <CardTitle className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
-                {continueCourse?.title || "No active course yet"}
-              </CardTitle>
-              <CardDescription className="max-w-md leading-7 text-[var(--text-dim)]">
-                {dashboard.continueCopy}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-5 px-6 py-6">
-              {continueCourse ? (
-                <>
-                  <div className="flex flex-wrap gap-3 text-sm text-[var(--text-dim)]">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2">
-                      <BookOpen className="size-4 text-[var(--accent)]" />
-                      {continueCourse.lessonsComplete}/{continueCourse.lessonCount} lessons
-                    </div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2">
-                      <Clock3 className="size-4 text-[var(--accent)]" />
-                      {continueCourse.duration}
-                    </div>
-                  </div>
-                  <Progress
-                    value={continueCourse.progress}
-                    className="gap-2"
-                  />
-                  <p className="text-sm leading-7 text-[var(--text-dim)]">
-                    {continueCourse.description}
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm leading-7 text-[var(--text-dim)]">
-                  Create your first course to populate the dashboard with a learning path and adaptive review.
-                </p>
-              )}
-            </CardContent>
-            <CardFooter className="border-[var(--border)] bg-[var(--bg-soft)] px-6 py-5">
-              <Link
-                href={continueCourse ? `/courses/${continueCourse.id}` : "/create"}
-                className={cn(
-                  buttonVariants(),
-                  "w-full sm:w-auto"
-                )}
-              >
-                {continueCourse ? "Continue session" : "Create first course"}
-                <ArrowRight data-icon="inline-end" />
-              </Link>
-            </CardFooter>
-          </Card>
-        </section>
-
-        <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[color:color-mix(in_srgb,var(--accent)_12%,var(--bg-elev))] p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-2">
-              <p className="eyebrow">Insight</p>
-              <h2 className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
+              <h1 className="serif max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-[var(--text)] sm:text-6xl">
                 {continueCourse
-                  ? `Tuto is keeping a close eye on ${dashboard.insightTopic}.`
-                  : "The dashboard is ready to start noticing your weak spots."}
-              </h2>
-              <p className="max-w-2xl text-base leading-7 text-[var(--text-dim)]">
+                  ? "Welcome back. Pick up where the idea still feels unstable."
+                  : "Welcome in. Tell Tuto what you want to learn next."}
+              </h1>
+              <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
                 {continueCourse
-                  ? "We carried your current lesson forward into the next exercise and kept the practice loop narrow instead of flooding you with new material."
-                  : "Once a course exists, this panel will summarize which concept needs another pass and how the next exercise changed."}
+                  ? `You were last working on ${dashboard.insightTopic}. The next session is already shaped around that weak spot, so you can stay inside the thread instead of starting over.`
+                  : "Create a course from a topic or source document and the dashboard will start turning your materials into a paced learning path."}
               </p>
             </div>
-            <div className="inline-flex items-center gap-3 rounded-[var(--radius-sm)] border border-[color:color-mix(in_srgb,var(--accent)_24%,var(--border))] bg-[var(--bg)] px-4 py-3 text-sm text-[var(--text-dim)]">
-              <Brain className="size-5 text-[var(--accent)]" />
-              {continueCourse
-                ? "Adaptive review is already shaping the next lesson."
-                : "Adaptive review starts after the first course generation."}
+
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={continueCourse ? `/courses/${continueCourse.id}` : "/create"}
+                className={cn(buttonVariants({ size: "lg" }))}
+              >
+                {continueCourse ? "Resume lesson" : "Create course"}
+                <ArrowRight data-icon="inline-end" />
+              </Link>
+              <Link
+                href="/create"
+                className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
+              >
+                <Sparkles data-icon="inline-start" />
+                Start a new path
+              </Link>
             </div>
           </div>
+
+          <aside className="surface-card p-6">
+            <p className="eyebrow">Last 7 days</p>
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
+                <span>Courses in motion</span>
+                <span className="text-[var(--text)]">{dashboard.courses.length}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
+                <span>Lessons completed</span>
+                <span className="text-[var(--text)]">{completedLessons}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
+                <span>Current streak</span>
+                <span className="text-[var(--text)]">{dashboard.streakDays} days</span>
+              </div>
+            </div>
+            <div className="mt-6 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
+              <div className="flex items-start gap-3">
+                <Flame className="mt-0.5 size-4 text-[var(--accent)]" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-[var(--text)]">
+                    {continueCourse ? `Next up: ${dashboard.insightTopic}` : "Ready for a first session"}
+                  </p>
+                  <p className="text-sm leading-6 text-[var(--text-dim)]">
+                    {dashboard.continueCopy}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <DashboardMetric
+            label="Courses"
+            value={String(dashboard.courses.length)}
+            detail="currently active"
+          />
+          <DashboardMetric
+            label="Mastered"
+            value={`${completedLessons}/${Math.max(
+              dashboard.courses.reduce((total, course) => total + course.lessonCount, 0),
+              1
+            )}`}
+            detail="lessons complete"
+          />
+          <DashboardMetric
+            label="Streak"
+            value={`${dashboard.streakDays} days`}
+            detail="steady momentum"
+          />
+          <DashboardMetric
+            label="Focus"
+            value={dashboard.insightTopic}
+            detail="current weak spot"
+          />
         </section>
 
         <section id="courses" className="scroll-mt-28 space-y-5">
           <div className="flex items-end justify-between gap-4">
             <div className="space-y-2">
-              <p className="eyebrow">Course stack</p>
-              <h2 className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
-                Pick the track you want to push forward.
+              <p className="eyebrow">Your courses</p>
+              <h2 className="serif text-[2.25rem] font-semibold tracking-[-0.05em] text-[var(--text)]">
+                Keep moving the tracks that matter.
               </h2>
             </div>
-            <Link href="/create" className="text-sm font-medium text-[var(--accent)]">
+            <Link href="/create" className="text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
               Create a new course
             </Link>
           </div>
 
           {dashboard.courses.length ? (
-            <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-              {dashboard.courses.map((course) => (
-                <Link key={course.id} href={`/courses/${course.id}`} className="group">
-                  <Card className="surface-card h-full border-[var(--border)] bg-[var(--bg-elev)] py-0 transition-transform duration-200 group-hover:-translate-y-1">
-                    <CardHeader className="px-6 py-6">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-xs uppercase tracking-[0.22em] text-[var(--text-faint)]">
-                          {course.subject}
-                        </span>
-                        <span className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-2.5 py-1 text-xs text-[var(--text-dim)]">
-                          {course.progress}%
-                        </span>
+            <div className="flex flex-col gap-3">
+              {dashboard.courses.map((course, index) => (
+                <Link
+                  key={course.id}
+                  href={`/courses/${course.id}`}
+                  className="group editorial-card relative overflow-hidden px-5 py-5 sm:px-6"
+                >
+                  <span
+                    className="absolute left-0 top-4 bottom-4 w-px rounded-full bg-[var(--accent)]/60 transition-opacity group-hover:opacity-100"
+                    aria-hidden="true"
+                  />
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px_120px] lg:items-center">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                        <span>{String(index + 1).padStart(2, "0")}</span>
+                        <span className="size-1 rounded-full bg-[var(--text-faint)]" />
+                        <span>{course.subject}</span>
                       </div>
-                      <CardTitle className="serif text-[1.75rem] font-semibold tracking-tight text-[var(--text)]">
+                      <h3 className="text-xl font-medium tracking-[-0.03em] text-[var(--text)]">
                         {course.title}
-                      </CardTitle>
-                      <CardDescription className="leading-7 text-[var(--text-dim)]">
-                        {course.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-5 px-6 pb-6">
+                      </h3>
+                      <p className="text-sm text-[var(--text-dim)]">
+                        Next up <span className="text-[var(--text)]">{course.weakness}</span>
+                        <span className="mx-2 text-[var(--border-strong)]">·</span>
+                        <span>{course.duration}</span>
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
                       <Progress value={course.progress} className="gap-2" />
-                      <div className="grid grid-cols-2 gap-3 text-sm text-[var(--text-dim)]">
-                        <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-3">
-                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                            Pace
-                          </p>
-                          <p className="mt-2 text-[var(--text)]">{course.intensity}</p>
-                        </div>
-                        <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-3">
-                          <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                            Weak spot
-                          </p>
-                          <p className="mt-2 text-[var(--text)]">{course.weakness}</p>
-                        </div>
+                      <div className="flex items-center justify-between text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                        <span>
+                          <span className="mr-1 text-[var(--text)]">{course.progress}%</span>
+                          in progress
+                        </span>
+                        <span>
+                          <span className="mr-1 text-[var(--text)]">{course.lessonsComplete}</span>
+                          complete
+                        </span>
                       </div>
-                    </CardContent>
-                    <CardFooter className="justify-between border-[var(--border)] bg-[var(--bg-soft)] px-6 py-5">
-                      <span className="text-sm text-[var(--text-dim)]">
-                        {course.lessonsComplete}/{course.lessonCount} lessons complete
+                    </div>
+
+                    <div className="flex justify-start lg:justify-end">
+                      <span className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+                        <BookOpen data-icon="inline-start" />
+                        Open
                       </span>
-                      <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)]">
-                        Open course
-                        <ArrowRight className="size-4" />
-                      </span>
-                    </CardFooter>
-                  </Card>
+                    </div>
+                  </div>
                 </Link>
               ))}
             </div>
           ) : (
-            <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)]">
-              <CardContent className="px-6 py-8 text-sm leading-7 text-[var(--text-dim)]">
-                No courses yet. Start with a topic or upload, and the dashboard will replace the mock shell with your real guided sessions.
-              </CardContent>
-            </Card>
+            <div className="editorial-card px-6 py-8 text-sm leading-7 text-[var(--text-dim)]">
+              No courses yet. Start from a topic or upload, and the dashboard will replace this shell with your real path.
+            </div>
           )}
         </section>
       </div>
     )
   } catch (error) {
     return (
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elev)] p-8">
+      <div className="editorial-card px-8 py-8">
         <p className="eyebrow">Dashboard unavailable</p>
-        <h1 className="serif mt-3 text-4xl font-semibold tracking-tight text-[var(--text)]">
+        <h1 className="serif mt-4 text-4xl font-semibold tracking-[-0.04em] text-[var(--text)]">
           We could not load your courses.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">

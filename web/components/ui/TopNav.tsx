@@ -4,14 +4,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { UserButton } from "@clerk/nextjs"
-import { Flame, Sparkles } from "lucide-react"
+import { BookOpen, Flame, LayoutGrid, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { id: "dashboard", href: "/dashboard", label: "Dashboard" },
-  { id: "courses", href: "/dashboard#courses", label: "Courses" },
-  { id: "create", href: "/create", label: "Create" },
+  { id: "dashboard", href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
+  { id: "courses", href: "/dashboard#courses", label: "Courses", icon: BookOpen },
+  { id: "create", href: "/create", label: "Create", icon: Sparkles },
 ]
 
 export function TopNav() {
@@ -32,17 +32,18 @@ export function TopNav() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg)_86%,transparent)] backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-7">
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg)_82%,transparent)] backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-4 px-5 py-4 sm:px-8">
+        <div className="flex items-center gap-8">
           <Link
             href="/dashboard"
-            className="serif text-[2rem] font-semibold italic tracking-tight text-[var(--text)]"
+            className="[font-family:var(--font-serif)] text-[1.95rem] font-medium italic tracking-tight text-[var(--text)]"
           >
             tuto.
           </Link>
-          <nav className="hidden items-center gap-2 md:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => {
+              const Icon = item.icon
               const active =
                 item.id === "courses"
                   ? pathname === "/dashboard" && hash === "#courses"
@@ -55,13 +56,17 @@ export function TopNav() {
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "rounded-full px-3.5 py-2 text-sm font-medium text-[var(--text-dim)]",
+                    "relative inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.83rem] font-medium text-[var(--text-dim)]",
                     active
-                      ? "surface-panel text-[var(--text)]"
+                      ? "text-[var(--text)]"
                       : "hover:bg-[var(--bg-soft)] hover:text-[var(--text)]"
                   )}
                 >
+                  <Icon className="size-3.5" />
                   {item.label}
+                  {active ? (
+                    <span className="absolute inset-x-3.5 bottom-1 h-px bg-[var(--accent)]/85" />
+                  ) : null}
                 </Link>
               )
             })}
@@ -74,8 +79,8 @@ export function TopNav() {
             <span>12 day streak</span>
           </div>
           <Button variant="secondary" size="sm" render={<Link href="/pricing" />}>
-              <Sparkles data-icon="inline-start" />
-              Upgrade
+            <Sparkles data-icon="inline-start" />
+            Upgrade
           </Button>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] p-1">
             <UserButton />

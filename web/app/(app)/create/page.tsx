@@ -1,14 +1,54 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Upload, WandSparkles } from "lucide-react"
+import { BookOpen, FileText, Upload, WandSparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { createModes } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 type CreateMode = "upload" | "topic"
+
+const createModes = [
+  {
+    id: "upload" as const,
+    title: "From material",
+    description: "PDF, notes, or a source document you already trust.",
+    icon: Upload,
+  },
+  {
+    id: "topic" as const,
+    title: "From a topic",
+    description: "Start from a prompt and let Tuto shape the first draft.",
+    icon: WandSparkles,
+  },
+]
+
+function buildPreviewLessons(title: string, topicPrompt: string, mode: CreateMode) {
+  const subject = (topicPrompt || title || "your topic").trim()
+
+  if (mode === "upload") {
+    return [
+      "Orient the material",
+      "Extract the governing ideas",
+      "Practice the unstable section",
+      "Close with a transfer drill",
+    ].map((label, index) => `L0${index + 1} · ${label}`)
+  }
+
+  const token = subject
+    .split(/[\s,:-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(" ")
+
+  return [
+    `L01 · ${token || "Frame the subject"}`,
+    "L02 · Build the core intuition",
+    "L03 · Move into a worked example",
+    "L04 · Practice the weak spot",
+    "L05 · Synthesize the whole path",
+  ]
+}
 
 export default function CreateCoursePage() {
   const router = useRouter()
@@ -19,9 +59,14 @@ export default function CreateCoursePage() {
   const [difficulty, setDifficulty] = useState("Intermediate")
   const [topicPrompt, setTopicPrompt] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [status, setStatus] = useState("Drop a PDF, deck, or notes bundle here.")
+  const [status, setStatus] = useState("Drop a PDF, notes bundle, or reading packet here.")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const previewLessons = useMemo(
+    () => buildPreviewLessons(title, topicPrompt, mode),
+    [mode, title, topicPrompt]
+  )
 
   async function handleSubmit() {
     setError(null)
@@ -32,7 +77,7 @@ export default function CreateCoursePage() {
     }
 
     if (mode === "topic" && !topicPrompt.trim()) {
-      setError("Add a topic prompt so DeepTutor knows what to generate.")
+      setError("Add a topic prompt so Tuto knows what to generate.")
       return
     }
 
@@ -88,65 +133,59 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
-      <section className="max-w-3xl space-y-6">
-        <div className="space-y-3">
-          <p className="eyebrow">Create course</p>
-          <h1 className="serif max-w-2xl text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl">
-            Build the next learning path.
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_360px]">
+      <section className="space-y-8">
+        <div className="space-y-4">
+          <p className="eyebrow">Create a course</p>
+          <h1 className="serif max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-[var(--text)] sm:text-6xl">
+            Tell Tuto what you want to learn. We&apos;ll build the shape of it.
           </h1>
-          <p className="max-w-xl text-base leading-7 text-[var(--text-dim)] sm:text-lg sm:leading-8">
-            Start from source material or begin with a topic. This flow now calls the
-            DeepTutor backend instead of mock data.
+          <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
+            Start from material you already have, or begin with a topic and let the first lesson path take form before you commit.
           </p>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
           {createModes.map((item) => {
             const active = mode === item.id
+            const Icon = item.icon
 
             return (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => {
-                  setMode(item.id as CreateMode)
+                  setMode(item.id)
                   setError(null)
                 }}
                 className={cn(
-                  "rounded-[var(--radius)] border p-5 text-left",
+                  "editorial-card text-left px-5 py-5",
                   active
-                    ? "border-[color:color-mix(in_srgb,var(--accent)_28%,var(--border))] bg-[color:color-mix(in_srgb,var(--accent)_8%,var(--bg-soft))]"
-                    : "border-[var(--border)] bg-[var(--bg-elev)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-soft)]"
+                    ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
+                    : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)]">
-                    {item.id === "upload" ? (
-                      <Upload className="size-4 text-[var(--accent)]" />
-                    ) : (
-                      <WandSparkles className="size-4 text-[var(--accent)]" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-[var(--text)]">{item.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
+                <Icon className="size-4 text-[var(--text-faint)]" />
+                <p className="mt-4 text-sm font-medium text-[var(--text)]">{item.title}</p>
+                <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">{item.description}</p>
               </button>
             )
           })}
         </div>
 
-        <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)] py-0">
-          <CardHeader className="border-b border-[var(--border)] px-6 py-5">
-            <CardTitle className="text-xl text-[var(--text)]">
-              {mode === "upload" ? "Upload document" : "Generate from topic"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-6 py-6">
+        <div className="editorial-card p-6 sm:p-7">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <p className="eyebrow">What do you want to learn?</p>
+              <input
+                id="course-title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Bayesian inference for builders"
+                className="w-full border-0 bg-transparent p-0 text-2xl font-medium tracking-[-0.03em] text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] sm:text-[2rem]"
+              />
+            </div>
+
             {mode === "upload" ? (
               <>
                 <input
@@ -157,79 +196,45 @@ export default function CreateCoursePage() {
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null
                     setSelectedFile(file)
-                    setStatus(file ? `${file.name} is ready for ingestion.` : "Drop a PDF, deck, or notes bundle here.")
+                    setStatus(file ? `${file.name} is ready for ingestion.` : "Drop a PDF, notes bundle, or reading packet here.")
                   }}
                 />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex min-h-64 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius)] border border-dashed border-[var(--border-strong)] bg-[color:color-mix(in_srgb,var(--bg-soft)_78%,var(--bg))] px-6 text-center"
+                  className="flex min-h-56 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-soft)] px-6 text-center"
                 >
-                  <div className="inline-flex size-14 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
-                    <Upload className="size-5 text-[var(--accent)]" />
+                  <div className="inline-flex size-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
+                    <Upload className="size-5 text-[var(--text)]" />
                   </div>
                   <div className="space-y-2">
                     <p className="text-lg font-medium text-[var(--text)]">
-                      {selectedFile ? "Source ready" : "Choose your materials"}
+                      {selectedFile ? "Source ready" : "Choose your material"}
                     </p>
-                    <p className="max-w-md text-sm leading-6 text-[var(--text-dim)]">
-                      {status}
-                    </p>
+                    <p className="max-w-md text-sm leading-6 text-[var(--text-dim)]">{status}</p>
                   </div>
                 </button>
               </>
             ) : (
-              <div className="space-y-3">
-                <label
-                  htmlFor="topic-prompt"
-                  className="text-sm font-medium text-[var(--text)]"
-                >
-                  Topic prompt
-                </label>
-                <textarea
-                  id="topic-prompt"
-                  value={topicPrompt}
-                  onChange={(event) => setTopicPrompt(event.target.value)}
-                  placeholder="Example: Build a five lesson course that teaches eigenvectors through geometric intuition and short visual drills."
-                  className="min-h-64 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4 text-base text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
-      <aside className="space-y-5 xl:pl-2">
-        <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)]">
-          <CardHeader>
-            <CardTitle className="text-xl text-[var(--text)]">
-              Course details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <label htmlFor="course-title" className="text-sm text-[var(--text-dim)]">
-                Course title
-              </label>
-              <input
-                id="course-title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Linear algebra for machine learning"
-                className="h-12 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
+              <textarea
+                id="topic-prompt"
+                value={topicPrompt}
+                onChange={(event) => setTopicPrompt(event.target.value)}
+                placeholder="Build a slow visual path through Bayesian inference, ending with a practical coding intuition."
+                className="min-h-56 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-soft)] px-5 py-5 text-base leading-7 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
               />
-            </div>
+            )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <label htmlFor="subject" className="text-sm text-[var(--text-dim)]">
+            <div className="grid gap-4 border-t border-[var(--border)] pt-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="subject" className="text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
                   Subject
                 </label>
                 <select
                   id="subject"
                   value={subject}
                   onChange={(event) => setSubject(event.target.value)}
-                  className="h-12 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
+                  className="h-11 w-full rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
                 >
                   <option>Mathematics</option>
                   <option>Chemistry</option>
@@ -237,16 +242,15 @@ export default function CreateCoursePage() {
                   <option>Biology</option>
                 </select>
               </div>
-
-              <div className="grid gap-2">
-                <label htmlFor="difficulty" className="text-sm text-[var(--text-dim)]">
-                  Difficulty
+              <div className="space-y-2">
+                <label htmlFor="difficulty" className="text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                  Depth
                 </label>
                 <select
                   id="difficulty"
                   value={difficulty}
                   onChange={(event) => setDifficulty(event.target.value)}
-                  className="h-12 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
+                  className="h-11 w-full rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
                 >
                   <option>Beginner</option>
                   <option>Intermediate</option>
@@ -256,36 +260,69 @@ export default function CreateCoursePage() {
             </div>
 
             {error ? (
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4 text-sm leading-6 text-[var(--text-dim)]">
+              <div className="rounded-[var(--radius-sm)] border border-[var(--danger)]/30 bg-[var(--danger)]/8 px-4 py-3 text-sm leading-6 text-[var(--text-dim)]">
                 {error}
               </div>
             ) : null}
 
-            <Button
-              size="lg"
-              onClick={() => void handleSubmit()}
-              disabled={submitting}
-            >
-              {submitting ? "Generating course..." : "Generate course"}
-            </Button>
-          </CardContent>
-        </Card>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
+              <div className="flex items-center gap-3 text-sm text-[var(--text-faint)]">
+                <BookOpen className="size-4" />
+                Private by default. Only you see your courses and notes.
+              </div>
+              <Button size="lg" onClick={() => void handleSubmit()} disabled={submitting}>
+                {submitting ? "Composing..." : "Generate course"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        <Card className="surface-card border-[var(--border)] bg-[color:color-mix(in_srgb,var(--accent)_9%,var(--bg-elev))]">
-          <CardHeader>
-            <CardTitle className="text-xl text-[var(--text)]">
-              Creation notes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm leading-7 text-[var(--text-dim)]">
-            <p>
-              Upload mode creates a DeepTutor knowledge base first, then adapts the existing guided-learning API to produce the course shell.
-            </p>
-            <p>
-              Topic mode goes straight into Guided Learning and returns a flat knowledge-point path, which this UI groups into units.
-            </p>
-          </CardContent>
-        </Card>
+      <aside className="space-y-4">
+        <div className="space-y-2">
+          <p className="eyebrow">Preview</p>
+          <p className="text-sm leading-6 text-[var(--text-dim)]">
+            This is the shape of the draft before the real guide payload arrives.
+          </p>
+        </div>
+
+        <div className="editorial-card min-h-[28rem] p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+              <span>Draft</span>
+              <span>{subject}</span>
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-2xl font-medium tracking-[-0.04em] text-[var(--text)]">
+                {title.trim() || "Your next course"}
+              </h2>
+              <p className="text-sm leading-6 text-[var(--text-dim)]">
+                {mode === "upload"
+                  ? selectedFile
+                    ? `Built from ${selectedFile.name}.`
+                    : "Built from a source document once you choose one."
+                  : topicPrompt.trim() || "Start with a topic prompt and the lesson spine will take shape here."}
+              </p>
+            </div>
+
+            <div className="space-y-2 border-t border-[var(--border)] pt-4">
+              {previewLessons.map((lesson) => (
+                <div
+                  key={lesson}
+                  className="flex items-center gap-3 border-b border-[var(--border)] py-3 text-sm text-[var(--text)] last:border-b-0"
+                >
+                  <FileText className="size-4 text-[var(--text-faint)]" />
+                  <span>{lesson}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4 text-sm text-[var(--text-dim)]">
+              Estimate <span className="text-[var(--text)]">5 lessons · 1h 40m total</span>
+            </div>
+          </div>
+        </div>
       </aside>
     </div>
   )

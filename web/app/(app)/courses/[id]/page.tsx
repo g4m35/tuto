@@ -1,13 +1,7 @@
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
-import { ArrowRight, ChevronRight, Clock3, Flame, Layers3 } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { ArrowLeft, ArrowRight, Clock3, Flame, Layers3, LockKeyhole } from "lucide-react"
+import { buttonVariants } from "@/components/ui/Button"
 import { Progress } from "@/components/ui/progress"
 import { findLesson, toCourseDetailData } from "@/lib/course-data"
 import { getCourseForUser } from "@/lib/course-store"
@@ -30,9 +24,9 @@ export default async function CourseDetailPage({
 
     if (!courseRecord) {
       return (
-        <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elev)] p-8">
+        <div className="editorial-card px-8 py-8">
           <p className="eyebrow">Course not found</p>
-          <h1 className="serif mt-3 text-4xl font-semibold tracking-tight text-[var(--text)]">
+          <h1 className="serif mt-4 text-4xl font-semibold tracking-[-0.04em] text-[var(--text)]">
             This course has not been created yet.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">
@@ -48,252 +42,232 @@ export default async function CourseDetailPage({
       course.learningPath.flatMap((level) => level.lessons).find((lesson) => lesson.state === "current") ??
       course.learningPath.flatMap((level) => level.lessons)[0]
 
-    return (
-      <div className="flex flex-col gap-8">
-        <nav className="flex items-center gap-2 text-sm text-[var(--text-dim)]">
-          <Link href="/dashboard" className="hover:text-[var(--text)]">
-            Dashboard
-          </Link>
-          <ChevronRight className="size-4 text-[var(--text-faint)]" />
-          <span className="text-[var(--text)]">{course.title}</span>
-        </nav>
+    const flattenedLessons = course.learningPath.flatMap((level, levelIndex) =>
+      level.lessons.map((lesson) => ({
+        ...lesson,
+        levelTitle: level.title,
+        levelIndex,
+      }))
+    )
 
-        <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)] py-0">
-            <CardHeader className="gap-4 border-b border-[var(--border)] px-7 py-7">
-              <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-dim)]">
-                <span className="eyebrow">{course.subject}</span>
-                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-1">
-                  {course.level}
-                </span>
-                {courseRecord.backendMode === "stub" ? (
-                  <span className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-1">
-                    Stubbed backend
-                  </span>
-                ) : null}
-              </div>
-              <div className="space-y-3">
-                <CardTitle className="serif max-w-3xl text-5xl font-semibold tracking-tight text-[var(--text)]">
-                  {course.title}
-                </CardTitle>
-                <CardDescription className="max-w-2xl text-base leading-7 text-[var(--text-dim)]">
-                  {course.description}
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="grid gap-6 px-7 py-7 md:grid-cols-[0.9fr_1.1fr]">
+    return (
+      <div className="flex flex-col gap-10">
+        <Link
+          href="/dashboard#courses"
+          className="inline-flex items-center gap-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
+        >
+          <ArrowLeft className="size-4" />
+          Back to courses
+        </Link>
+
+        <section className="grid gap-10 xl:grid-cols-[minmax(0,1.35fr)_360px] xl:items-start">
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+              <span>{course.subject}</span>
+              <span className="size-1 rounded-full bg-[var(--text-faint)]" />
+              <span>{course.level}</span>
+              {courseRecord.backendMode === "stub" ? (
+                <>
+                  <span className="size-1 rounded-full bg-[var(--text-faint)]" />
+                  <span>Stubbed backend</span>
+                </>
+              ) : null}
+            </div>
+
+            <div className="space-y-4">
+              <h1 className="serif max-w-4xl text-5xl font-semibold tracking-[-0.055em] text-[var(--text)] sm:text-6xl">
+                {course.title}
+              </h1>
+              <p className="max-w-2xl text-xl leading-8 text-[var(--text-dim)] italic">
+                {course.description}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              {currentLesson ? (
+                <Link
+                  href={`/courses/${course.id}/lesson/${currentLesson.id}`}
+                  className={cn(buttonVariants({ size: "lg" }))}
+                >
+                  Continue
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+              ) : null}
+              <Link
+                href={`/courses/${course.id}`}
+                className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
+              >
+                Practice weak spot
+              </Link>
+            </div>
+          </div>
+
+          <aside className="space-y-4">
+            <div className="editorial-card p-6">
               <div className="space-y-5">
-                <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-1">
-                  <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                      Progress
-                    </p>
-                    <p className="mt-3 text-3xl font-semibold text-[var(--text)]">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="eyebrow">Progress</p>
+                    <p className="mt-3 text-[3rem] font-medium leading-none tracking-[-0.06em] text-[var(--text)]">
                       {course.progress}%
                     </p>
                   </div>
-                  <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                      Hours invested
-                    </p>
-                    <p className="mt-3 text-3xl font-semibold text-[var(--text)]">
-                      {course.hoursInvested}
-                    </p>
-                  </div>
-                  <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                      Streak
-                    </p>
-                    <p className="mt-3 text-3xl font-semibold text-[var(--text)]">
-                      {course.streak} days
-                    </p>
+                  <div className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                    {course.learningPath.length} units
                   </div>
                 </div>
+
                 <Progress value={course.progress} className="gap-2" />
-              </div>
 
-              <div className="space-y-4 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--bg-soft))] p-5">
-                <p className="eyebrow">Source materials</p>
-                <div className="space-y-3">
-                  {course.materials.map((item) => (
-                    <div
-                      key={item.label + item.detail}
-                      className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg)] p-4"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-medium text-[var(--text)]">{item.label}</p>
-                        <span className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-2.5 py-1 text-xs text-[var(--text-dim)]">
-                          {item.type}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">
-                        {item.detail}
-                      </p>
-                    </div>
-                  ))}
+                <div className="space-y-3 text-sm text-[var(--text-dim)]">
+                  <div className="flex items-center justify-between">
+                    <span>Lessons completed</span>
+                    <span className="text-[var(--text)]">{course.lessonsComplete}/{course.lessonCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Hours invested</span>
+                    <span className="text-[var(--text)]">{course.hoursInvested}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Current streak</span>
+                    <span className="text-[var(--text)]">{course.streak} days</span>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <div className="grid gap-4">
-            <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)]">
-              <CardHeader>
-                <CardTitle className="text-lg text-[var(--text)]">
-                  Session rhythm
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 text-sm text-[var(--text-dim)]">
-                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-3">
-                  <Clock3 className="size-4 text-[var(--accent)]" />
+            <div className="editorial-card p-5">
+              <p className="eyebrow">Session rhythm</p>
+              <div className="mt-4 space-y-3 text-sm text-[var(--text-dim)]">
+                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
+                  <Clock3 className="size-4 text-[var(--text)]" />
                   {course.duration}
                 </div>
-                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-3">
-                  <Layers3 className="size-4 text-[var(--accent)]" />
+                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
+                  <Layers3 className="size-4 text-[var(--text)]" />
                   {course.intensity}
                 </div>
-                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] p-3">
-                  <Flame className="size-4 text-[var(--accent)]" />
-                  Focused remediation on {course.weakness}
+                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
+                  <Flame className="size-4 text-[var(--text)]" />
+                  Focused review on {course.weakness}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card className="surface-card border-[var(--border)] bg-[var(--bg-elev)]">
-              <CardHeader>
-                <CardTitle className="text-lg text-[var(--text)]">
-                  Next lesson
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {currentLesson ? (
-                  <Link
-                    href={`/courses/${course.id}/lesson/${currentLesson.id}`}
-                    className="group flex items-center justify-between rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm font-medium text-[var(--text)]"
-                  >
-                    Open current exercise
-                    <ArrowRight className="size-4 text-[var(--accent)] transition-transform group-hover:translate-x-1" />
-                  </Link>
-                ) : (
-                  <p className="text-sm text-[var(--text-dim)]">
-                    No lessons have been generated for this course yet.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+            <div className="editorial-card p-5">
+              <p className="eyebrow">Source material</p>
+              <div className="mt-4 space-y-3">
+                {course.materials.map((item) => (
+                  <div key={item.label + item.detail} className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-[var(--text)]">{item.label}</p>
+                      <span className="text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
+                        {item.type}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
         </section>
 
         <section className="space-y-5">
           <div className="space-y-2">
             <p className="eyebrow">Learning path</p>
-            <h2 className="serif text-4xl font-semibold tracking-tight text-[var(--text)]">
+            <h2 className="serif text-[2.5rem] font-semibold tracking-[-0.05em] text-[var(--text)]">
               Move through the path in order.
             </h2>
           </div>
 
-          <div className="grid gap-5">
-            {course.learningPath.map((level, index) => (
-              <Card
-                key={level.id}
-                className="surface-card border-[var(--border)] bg-[var(--bg-elev)] py-0"
-              >
-                <CardHeader className="border-b border-[var(--border)] px-6 py-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.2em] text-[var(--text-faint)]">
-                        Level {index + 1}
-                      </span>
-                      <CardTitle className="serif text-3xl font-semibold tracking-tight text-[var(--text)]">
-                        {level.title}
-                      </CardTitle>
-                      <CardDescription className="max-w-2xl text-[var(--text-dim)]">
-                        {level.description}
-                      </CardDescription>
+          <div className="space-y-3">
+            {flattenedLessons.map((lesson, index) => {
+              const lessonHref = `/courses/${course.id}/lesson/${lesson.id}`
+              const locked = lesson.state === "locked"
+              const current = lesson.state === "current"
+              const done = lesson.state === "complete"
+
+              const content = (
+                <div className="relative grid gap-4 px-5 py-5 sm:grid-cols-[48px_minmax(0,1fr)_120px] sm:items-center sm:px-6">
+                  <div className="relative flex items-center justify-center">
+                    {index < flattenedLessons.length - 1 ? (
+                      <span
+                        className="absolute left-1/2 top-10 bottom-[-28px] w-px -translate-x-1/2 bg-[var(--border)]"
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                    <span
+                      className={cn(
+                        "relative z-10 inline-flex size-7 items-center justify-center rounded-full border text-[10px] font-medium uppercase tracking-[0.08em]",
+                        current && "border-[var(--text)] bg-[var(--text)] text-[var(--accent-ink)]",
+                        done && "border-[var(--border-strong)] bg-[var(--bg-soft)] text-[var(--text)]",
+                        locked && "border-[var(--border)] bg-[var(--bg-elev-2)] text-[var(--text-faint)]"
+                      )}
+                    >
+                      {index + 1}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
+                      <span>{lesson.levelTitle}</span>
+                      <span className="size-1 rounded-full bg-[var(--text-faint)]" />
+                      <span>{lesson.state}</span>
                     </div>
-                    <div className="min-w-56 space-y-2">
-                      <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
-                        <span>Completion</span>
-                        <span>{level.completion}%</span>
-                      </div>
-                      <Progress value={level.completion} className="gap-2" />
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-medium tracking-[-0.03em] text-[var(--text)]">
+                        {lesson.title}
+                      </h3>
+                      <p className="max-w-2xl text-sm leading-6 text-[var(--text-dim)]">
+                        {lesson.summary}
+                      </p>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
-                  {level.lessons.map((lesson) => {
-                    const lessonHref = `/courses/${course.id}/lesson/${lesson.id}`
-                    const lessonClassName = cn(
-                      "flex h-full flex-col gap-4 rounded-[var(--radius-sm)] border p-4",
-                      lesson.state === "current" &&
-                        "border-[color:color-mix(in_srgb,var(--accent)_28%,var(--border))] bg-[color:color-mix(in_srgb,var(--accent)_8%,var(--bg-soft))]",
-                      lesson.state === "complete" &&
-                        "border-[var(--border)] bg-[var(--bg-soft)]",
-                      lesson.state === "locked" &&
-                        "border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg-soft)_72%,var(--bg))] opacity-70"
-                    )
 
-                    const content = (
-                      <>
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">
-                              {lesson.state}
-                            </p>
-                            <h3 className="mt-2 text-lg font-medium text-[var(--text)]">
-                              {lesson.title}
-                            </h3>
-                          </div>
-                          <span className="rounded-full border border-[var(--border)] bg-[var(--bg)] px-2.5 py-1 text-xs text-[var(--text-dim)]">
-                            {lesson.xp} XP
-                          </span>
-                        </div>
-                        <p className="flex-1 text-sm leading-6 text-[var(--text-dim)]">
-                          {lesson.summary}
-                        </p>
-                        <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
-                          <span>{lesson.duration}</span>
-                          {lesson.state !== "locked" ? (
-                            <span className="inline-flex items-center gap-2 text-[var(--accent)]">
-                              Open lesson
-                              <ArrowRight className="size-4" />
-                            </span>
-                          ) : (
-                            <span>Finish the current lesson first</span>
-                          )}
-                        </div>
-                      </>
-                    )
-
-                    return lesson.state === "locked" ? (
-                      <div
-                        key={lesson.id}
-                        className={lessonClassName}
-                      >
-                        {content}
-                      </div>
+                  <div className="flex items-center justify-start gap-3 text-sm text-[var(--text-dim)] sm:justify-end">
+                    <span>{lesson.duration}</span>
+                    {locked ? (
+                      <span className="inline-flex items-center gap-2 text-[var(--text-faint)]">
+                        <LockKeyhole className="size-4" />
+                        Locked
+                      </span>
+                    ) : done ? (
+                      <span className="text-[var(--text)]">Mastered</span>
                     ) : (
-                      <Link
-                        key={lesson.id}
-                        href={lessonHref}
-                        className={lessonClassName}
-                      >
-                        {content}
-                      </Link>
-                    )
-                  })}
-                </CardContent>
-              </Card>
-            ))}
+                      <span className="inline-flex items-center gap-2 text-[var(--text)]">
+                        Continue
+                        <ArrowRight className="size-4" />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+
+              const wrapperClassName = cn(
+                "editorial-card block overflow-hidden",
+                current && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
+              )
+
+              return locked ? (
+                <div key={lesson.id} className={wrapperClassName}>
+                  {content}
+                </div>
+              ) : (
+                <Link key={lesson.id} href={lessonHref} className={wrapperClassName}>
+                  {content}
+                </Link>
+              )
+            })}
           </div>
         </section>
       </div>
     )
   } catch (error) {
     return (
-      <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-elev)] p-8">
+      <div className="editorial-card px-8 py-8">
         <p className="eyebrow">Course unavailable</p>
-        <h1 className="serif mt-3 text-4xl font-semibold tracking-tight text-[var(--text)]">
+        <h1 className="serif mt-4 text-4xl font-semibold tracking-[-0.04em] text-[var(--text)]">
           We could not load this course.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">
