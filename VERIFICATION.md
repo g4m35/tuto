@@ -1,5 +1,11 @@
 # Verification Report
 
+## Current Status Note
+
+This file records the earlier architecture/auth/billing verification phases.
+
+Since then, the repo has also landed KB-backed course generation changes in both `web/` and `deeptutor/`. For the current operator-facing launch gates, use [`LAUNCH_CHECKLIST.md`](LAUNCH_CHECKLIST.md) and [`ROADMAP.md`](ROADMAP.md) as the up-to-date references.
+
 ## Summary
 
 Verification now passes after removing the explicit Stripe `apiVersion` override from `web/lib/billing.ts` and rerunning the frontend build.

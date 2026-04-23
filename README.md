@@ -103,6 +103,20 @@ git fetch upstream --tags
 
 The fork's accepted upstream release history lives in [`CHANGELOG-upstream.md`](CHANGELOG-upstream.md).
 
+## Launching This Fork
+
+If you are operating the Clerk + Stripe + course-creation fork in this repository, use [`LAUNCH_CHECKLIST.md`](LAUNCH_CHECKLIST.md) as the source of truth for launch readiness.
+
+It covers the parts that differ from the upstream OSS app, especially:
+
+- Clerk production setup
+- Stripe paid-plan readiness
+- Postgres and migration bootstrapping for `web/`
+- deployment caveats for this fork
+- monitoring, rollback, and KB-backed course verification
+
+Do not assume the upstream GHCR image or the OSS Docker docs are sufficient for this fork's paid launch without reviewing that checklist first.
+
 
 ## ✨ Key Features
 
