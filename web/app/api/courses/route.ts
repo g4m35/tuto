@@ -97,6 +97,7 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
       difficulty,
       prompt: description,
       sourceMode: mode,
+      knowledgeBaseName,
     });
 
     const courseId = randomUUID();
