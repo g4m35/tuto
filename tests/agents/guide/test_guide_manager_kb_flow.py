@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+import deeptutor.agents.base_agent as base_agent_module
 from deeptutor.agents.guide.guide_manager import GuideManager, GuidedSession
 
 
@@ -22,11 +23,21 @@ class _FakeRAGService:
 
 
 def _build_manager(tmp_path, monkeypatch: pytest.MonkeyPatch) -> tuple[GuideManager, _FakeRAGService]:
+    config_path = tmp_path / "main.yaml"
+    config_path.write_text(
+        "system:\n"
+        "  language: en\n"
+        "logging:\n"
+        "  level: WARNING\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(base_agent_module, "get_agent_params", lambda _module_name: {})
     manager = GuideManager(
         api_key="sk-test",
         base_url="https://example.com",
         language="en",
         output_dir=str(tmp_path),
+        config_path=str(config_path),
     )
     fake_rag = _FakeRAGService()
     manager._rag_service = fake_rag
