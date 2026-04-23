@@ -64,6 +64,12 @@ const ALLOWED_HTML_TAGS = new Set<string>([
 const HTML_LIKE_TAG_REGEX = /<\/?([A-Za-z][A-Za-z0-9_-]*)\b[^<>]*?\/?>/g;
 const PROTECTED_SPAN_REGEX = /```[\s\S]*?```|`[^`\n]*`/g;
 const PROTECTED_PLACEHOLDER_REGEX = /\u0000PROTECTED_(\d+)\u0000/g;
+const HTML_TEXT_BREAK_TAGS = new Set<string>([
+  "br", "hr", "p", "div", "section", "article", "aside", "header", "footer",
+  "main", "nav", "address", "dialog", "li", "ul", "ol", "dl", "dt", "dd",
+  "blockquote", "pre", "figure", "figcaption", "table", "thead", "tbody",
+  "tfoot", "tr", "th", "td", "caption", "summary", "details",
+]);
 
 function escapeUnknownHtmlTags(content: string): string {
   if (!content || (!content.includes("<") && !content.includes(">"))) {
@@ -87,11 +93,114 @@ function escapeUnknownHtmlTags(content: string): string {
   );
 }
 
-function stripDisplaySyntax(value: string): string {
-  return stripInvisibleCharacters(String(value))
+function isAsciiLetter(value: string): boolean {
+  const code = value.charCodeAt(0);
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
+}
+
+function appendCollapsedSpace(value: string): string {
+  if (!value) return value;
+  const last = value[value.length - 1];
+  return last.trim() ? `${value} ` : value;
+}
+
+function consumeHtmlTag(
+  value: string,
+  start: number,
+): { end: number; insertsSpacing: boolean } | null {
+  let index = start + 1;
+  if (index >= value.length) return null;
+
+  if (value.startsWith("!--", index)) {
+    const commentEnd = value.indexOf("-->", index + 3);
+    if (commentEnd === -1) return null;
+    return { end: commentEnd + 2, insertsSpacing: false };
+  }
+
+  if (value[index] === "!") {
+    const declarationEnd = value.indexOf(">", index + 1);
+    return declarationEnd === -1 ? null : { end: declarationEnd, insertsSpacing: false };
+  }
+
+  if (value[index] === "?") {
+    const processingEnd = value.indexOf(">", index + 1);
+    return processingEnd === -1 ? null : { end: processingEnd, insertsSpacing: false };
+  }
+
+  if (value[index] === "/") {
+    index += 1;
+  }
+
+  const nameStart = index;
+  while (index < value.length) {
+    const current = value[index];
+    if (
+      isAsciiLetter(current) ||
+      (current >= "0" && current <= "9") ||
+      current === "-" ||
+      current === "_" ||
+      current === ":"
+    ) {
+      index += 1;
+      continue;
+    }
+    break;
+  }
+
+  if (index === nameStart) return null;
+
+  const tagName = value.slice(nameStart, index).toLowerCase();
+  let quote: '"' | "'" | null = null;
+
+  for (; index < value.length; index += 1) {
+    const current = value[index];
+    if (quote) {
+      if (current === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (current === '"' || current === "'") {
+      quote = current;
+      continue;
+    }
+    if (current === ">") {
+      return { end: index, insertsSpacing: HTML_TEXT_BREAK_TAGS.has(tagName) };
+    }
+  }
+
+  return null;
+}
+
+function extractVisibleText(value: string): string {
+  let visible = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== "<") {
+      visible += value[index];
+      continue;
+    }
+
+    const tag = consumeHtmlTag(value, index);
+    if (!tag) {
+      visible += value[index];
+      continue;
+    }
+
+    if (tag.insertsSpacing) {
+      visible = appendCollapsedSpace(visible);
+    }
+    index = tag.end;
+  }
+
+  return visible
     .replace(/&nbsp;/gi, " ")
-    .replace(/<br\s*\/?>/gi, " ")
-    .replace(/<[^>]+>/g, "")
+    .replace(/&#160;/gi, " ")
+    .replace(/&#xA0;/gi, " ");
+}
+
+function stripDisplaySyntax(value: string): string {
+  return extractVisibleText(stripInvisibleCharacters(String(value)))
     .replace(/!\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/[`*_~]/g, "")
@@ -247,9 +356,9 @@ export function hasVisibleMarkdownContent(content: string): boolean {
   const normalized = normalizeMarkdownForDisplay(content);
   if (!normalized.trim()) return false;
 
-  const withoutEmptyBlocks = normalized
-    .replace(EMPTY_FENCED_CODE_BLOCK_REGEX, "")
-    .replace(/<[^>]+>/g, "")
+  const withoutEmptyBlocks = extractVisibleText(
+    normalized.replace(EMPTY_FENCED_CODE_BLOCK_REGEX, ""),
+  )
     .replace(/\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/!\[(.*?)\]\([^)]+\)/g, "$1")
     .replace(/^[\s>*\-+|#`]+$/gm, "");
