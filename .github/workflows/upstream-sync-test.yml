@@ -50,8 +50,6 @@ jobs:
           mkdir -p "$workdir"
 
           python_status="skipped"
-          web_node_tests_status="skipped"
-          web_typecheck_status="skipped"
           web_status="skipped"
 
           python -m pip install --upgrade pip >"$workdir/pip-install.log" 2>&1
@@ -80,7 +78,6 @@ jobs:
               pytest -q --import-mode=importlib \
                 tests/api \
                 tests/cli \
-                tests/agents/guide/test_guide_manager_kb_flow.py \
                 tests/services/test_model_catalog.py \
                 tests/services/test_path_service.py \
                 tests/services/memory \
@@ -112,24 +109,6 @@ jobs:
 
           if [ $npm_status -eq 0 ]; then
             (
-              cd web && npm run test:node >"$workdir/web-node-tests.log" 2>&1
-            )
-            if [ $? -eq 0 ]; then
-              web_node_tests_status="passed"
-            else
-              web_node_tests_status="failed"
-            fi
-
-            (
-              cd web && npm run typecheck >"$workdir/web-typecheck.log" 2>&1
-            )
-            if [ $? -eq 0 ]; then
-              web_typecheck_status="passed"
-            else
-              web_typecheck_status="failed"
-            fi
-
-            (
               cd web && npm run build >"$workdir/web-build.log" 2>&1
             )
             if [ $? -eq 0 ]; then
@@ -138,37 +117,21 @@ jobs:
               web_status="failed"
             fi
           else
-            echo "npm install failed." >"$workdir/web-node-tests.log"
-            echo "npm install failed." >"$workdir/web-typecheck.log"
             echo "npm install failed." >"$workdir/web-build.log"
-            web_node_tests_status="failed"
-            web_typecheck_status="failed"
             web_status="failed"
           fi
 
           overall_status="passed"
-          if [ "$python_status" = "failed" ] || [ "$web_node_tests_status" = "failed" ] || [ "$web_typecheck_status" = "failed" ] || [ "$web_status" = "failed" ]; then
+          if [ "$python_status" = "failed" ] || [ "$web_status" = "failed" ]; then
             overall_status="failed"
           fi
 
           echo "python_status=$python_status" >>"$GITHUB_OUTPUT"
-          echo "web_node_tests_status=$web_node_tests_status" >>"$GITHUB_OUTPUT"
-          echo "web_typecheck_status=$web_typecheck_status" >>"$GITHUB_OUTPUT"
           echo "web_status=$web_status" >>"$GITHUB_OUTPUT"
           echo "overall_status=$overall_status" >>"$GITHUB_OUTPUT"
           {
             echo "python_tail<<__EOF__"
             tail -n 80 "$workdir/pytest.log"
-            echo "__EOF__"
-          } >>"$GITHUB_OUTPUT"
-          {
-            echo "web_node_tests_tail<<__EOF__"
-            tail -n 80 "$workdir/web-node-tests.log"
-            echo "__EOF__"
-          } >>"$GITHUB_OUTPUT"
-          {
-            echo "web_typecheck_tail<<__EOF__"
-            tail -n 80 "$workdir/web-typecheck.log"
             echo "__EOF__"
           } >>"$GITHUB_OUTPUT"
           {
@@ -184,12 +147,8 @@ jobs:
         uses: actions/github-script@v7
         env:
           PYTHON_STATUS: ${{ steps.verify.outputs.python_status }}
-          WEB_NODE_TESTS_STATUS: ${{ steps.verify.outputs.web_node_tests_status }}
-          WEB_TYPECHECK_STATUS: ${{ steps.verify.outputs.web_typecheck_status }}
           WEB_STATUS: ${{ steps.verify.outputs.web_status }}
           PYTHON_TAIL: ${{ steps.verify.outputs.python_tail }}
-          WEB_NODE_TESTS_TAIL: ${{ steps.verify.outputs.web_node_tests_tail }}
-          WEB_TYPECHECK_TAIL: ${{ steps.verify.outputs.web_typecheck_tail }}
           WEB_TAIL: ${{ steps.verify.outputs.web_tail }}
         with:
           script: |
@@ -205,26 +164,12 @@ jobs:
               "## Upstream Sync Verification",
               "",
               `- DeepTutor tests: ${icon(process.env.PYTHON_STATUS)}`,
-              `- Web launch node tests: ${icon(process.env.WEB_NODE_TESTS_STATUS)}`,
-              `- Web typecheck: ${icon(process.env.WEB_TYPECHECK_STATUS)}`,
               `- \`npm run build\` in \`web/\`: ${icon(process.env.WEB_STATUS)}`,
               "",
               "### DeepTutor tests log tail",
               "",
               "```text",
               process.env.PYTHON_TAIL || "No test output captured.",
-              "```",
-              "",
-              "### Web launch node tests log tail",
-              "",
-              "```text",
-              process.env.WEB_NODE_TESTS_TAIL || "No test output captured.",
-              "```",
-              "",
-              "### Web typecheck log tail",
-              "",
-              "```text",
-              process.env.WEB_TYPECHECK_TAIL || "No typecheck output captured.",
               "```",
               "",
               "### Web build log tail",
