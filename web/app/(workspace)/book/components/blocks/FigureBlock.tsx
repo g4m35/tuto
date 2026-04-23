@@ -1,51 +1,42 @@
-"use client";
+'use client'
 
-import VisualizationViewer from "@/components/visualize/VisualizationViewer";
-import MarkdownRenderer from "@/components/common/MarkdownRenderer";
-import type { Block } from "@/lib/book-types";
-import type { VisualizeRenderType, VisualizeResult } from "@/lib/visualize-types";
+import VisualizationViewer from '@/components/visualize/VisualizationViewer'
+import MarkdownRenderer from '@/components/common/MarkdownRenderer'
+import type { Block } from '@/lib/book-types'
+import type { VisualizeRenderType, VisualizeResult } from '@/lib/visualize-types'
 
 export interface FigureBlockProps {
-  block: Block;
+  block: Block
 }
 
-const FIGURE_RENDER_TYPES: ReadonlySet<VisualizeRenderType> = new Set([
-  "svg",
-  "chartjs",
-  "mermaid",
-]);
+const FIGURE_RENDER_TYPES: ReadonlySet<VisualizeRenderType> = new Set(['svg', 'chartjs', 'mermaid'])
 
 function coerceRenderType(value: unknown, language: string): VisualizeRenderType {
-  if (typeof value === "string" && (FIGURE_RENDER_TYPES as Set<string>).has(value)) {
-    return value as VisualizeRenderType;
+  if (typeof value === 'string' && (FIGURE_RENDER_TYPES as Set<string>).has(value)) {
+    return value as VisualizeRenderType
   }
-  if (language === "javascript" || language === "js") return "chartjs";
-  if (language === "mermaid") return "mermaid";
-  return "svg";
+  if (language === 'json') return 'chartjs'
+  if (language === 'javascript' || language === 'js') return 'chartjs'
+  if (language === 'mermaid') return 'mermaid'
+  return 'svg'
 }
 
 export default function FigureBlock({ block }: FigureBlockProps) {
-  const code =
-    (block.payload?.code as { language?: string; content?: string } | undefined) ||
-    {};
-  const language = String(code.language || "svg");
-  const content = String(code.content || "");
-  const description = block.payload?.description
-    ? String(block.payload.description)
-    : "";
-  const chartType = block.payload?.chart_type
-    ? String(block.payload.chart_type)
-    : "";
+  const code = (block.payload?.code as { language?: string; content?: string } | undefined) || {}
+  const language = String(code.language || 'svg')
+  const content = String(code.content || '')
+  const description = block.payload?.description ? String(block.payload.description) : ''
+  const chartType = block.payload?.chart_type ? String(block.payload.chart_type) : ''
 
   if (!content.trim()) {
     return (
       <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]/40 p-4 text-xs italic text-[var(--muted-foreground)]">
         (Figure payload is empty)
       </div>
-    );
+    )
   }
 
-  const renderType = coerceRenderType(block.payload?.render_type, language);
+  const renderType = coerceRenderType(block.payload?.render_type, language)
 
   const result: VisualizeResult = {
     response: description,
@@ -54,17 +45,17 @@ export default function FigureBlock({ block }: FigureBlockProps) {
     analysis: {
       render_type: renderType,
       description,
-      data_description: "",
+      data_description: '',
       chart_type: chartType,
       visual_elements: [],
-      rationale: "",
+      rationale: '',
     },
     review: {
-      optimized_code: "",
+      optimized_code: '',
       changed: false,
-      review_notes: "",
+      review_notes: '',
     },
-  };
+  }
 
   return (
     <figure className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-sm">
@@ -75,5 +66,5 @@ export default function FigureBlock({ block }: FigureBlockProps) {
         </figcaption>
       )}
     </figure>
-  );
+  )
 }

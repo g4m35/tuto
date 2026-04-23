@@ -79,7 +79,7 @@ function getTierForPriceId(priceId: string | null | undefined): BillingTier {
     return "pro";
   }
 
-  return "free";
+  throw new Error(`Unrecognized Stripe recurring price id: ${priceId ?? "null"}`);
 }
 
 function getTierForSubscription(subscription: Stripe.Subscription): BillingTier {
@@ -332,7 +332,14 @@ export async function POST(request: Request) {
     );
   }
 
-  await processStripeWebhookEvent(event);
+  try {
+    await processStripeWebhookEvent(event);
+  } catch (error) {
+    return NextResponse.json(
+      { error: `Webhook processing failed: ${formatWebhookError(error)}` },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ received: true });
 }

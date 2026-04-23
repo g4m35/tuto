@@ -6,12 +6,29 @@ type GlobalWithPgPool = typeof globalThis & {
 
 let pool: Pool | null = null;
 
+export class DatabaseConfigurationError extends Error {
+  constructor(feature: string) {
+    super(`${feature} requires a configured database.`);
+    this.name = "DatabaseConfigurationError";
+  }
+}
+
 export function getDatabaseUrl(): string | null {
   return process.env.DATABASE_URL ?? process.env.POSTGRES_URL ?? null;
 }
 
 export function isDatabaseConfigured(): boolean {
   return Boolean(getDatabaseUrl());
+}
+
+export function canUseEphemeralDatabaseFallback(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
+export function assertDatabaseConfigured(feature: string): void {
+  if (!isDatabaseConfigured()) {
+    throw new DatabaseConfigurationError(feature);
+  }
 }
 
 function getPool(): Pool {
@@ -27,7 +44,7 @@ function getPool(): Pool {
 
   const connectionString = getDatabaseUrl();
   if (!connectionString) {
-    throw new Error("Missing required Postgres environment variable: DATABASE_URL or POSTGRES_URL");
+    throw new DatabaseConfigurationError("Database access");
   }
 
   pool = new Pool({

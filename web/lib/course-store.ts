@@ -1,7 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { isDatabaseConfigured, query } from "@/lib/db";
+import {
+  assertDatabaseConfigured,
+  canUseEphemeralDatabaseFallback,
+  isDatabaseConfigured,
+  query,
+} from "@/lib/db";
 import type { StoredCourse, StoredExercise } from "@/lib/course-data";
 
 interface CourseRow {
@@ -40,6 +45,10 @@ interface FileStoreShape {
 }
 
 const FILE_STORE_PATH = path.join(process.cwd(), ".local-data", "course-store.json");
+
+function assertCourseStoreConfigured() {
+  assertDatabaseConfigured("Course storage");
+}
 
 function toIsoString(value: Date | string) {
   return typeof value === "string" ? value : value.toISOString();
@@ -109,6 +118,10 @@ async function writeFileStore(nextStore: FileStoreShape) {
 
 export async function listCoursesForUser(clerkId: string): Promise<StoredCourse[]> {
   if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
     const store = await readFileStore();
     return store.courses
       .filter((course) => course.clerkId === clerkId)
@@ -133,6 +146,10 @@ export async function getCourseForUser(
   courseId: string,
 ): Promise<StoredCourse | null> {
   if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
     const store = await readFileStore();
     return store.courses.find((course) => course.clerkId === clerkId && course.id === courseId) ?? null;
   }
@@ -161,6 +178,10 @@ export async function saveCourse(course: Omit<StoredCourse, "createdAt" | "updat
   };
 
   if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
     const store = await readFileStore();
     store.courses = [
       stored,
@@ -224,6 +245,10 @@ export async function updateCourseProgress(input: {
   deeptutorStatus?: string;
 }) {
   if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
     const store = await readFileStore();
     store.courses = store.courses.map((course) =>
       course.clerkId === input.clerkId && course.id === input.courseId
@@ -270,6 +295,10 @@ export async function saveExercise(
   };
 
   if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
     const store = await readFileStore();
     store.exercises = [
       stored,
@@ -318,6 +347,10 @@ export async function getLatestExerciseForLesson(input: {
   lessonId: string;
 }): Promise<StoredExercise | null> {
   if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
     const store = await readFileStore();
     return (
       store.exercises.find(

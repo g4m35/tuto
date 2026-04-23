@@ -163,7 +163,7 @@ class VisualizeCapability(BaseCapability):
         elif analysis.render_type == "html":
             lang_tag = "html"
         else:
-            lang_tag = "javascript"
+            lang_tag = "json"
         content_md = f"```{lang_tag}\n{final_code}\n```"
         await stream.content(content_md, source=self.name, stage="reviewing")
 
@@ -281,7 +281,7 @@ class VisualizeCapability(BaseCapability):
         elif render_type == "mermaid":
             lang_tag = "mermaid"
         else:
-            lang_tag = "javascript"
+            lang_tag = "json"
         content_md = f"```{lang_tag}\n{final_code}\n```"
         body = (notice + "\n\n" + content_md).strip() if notice else content_md
         await stream.content(body, source=self.name, stage="generating")

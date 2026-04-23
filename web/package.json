@@ -2,16 +2,21 @@
   "name": "opentutor-web",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "predev": "node ./scripts/require-clerk-env.mjs",
     "predev:turbo": "node ./scripts/require-clerk-env.mjs",
     "dev": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next dev",
     "dev:turbo": "node --max-old-space-size=6144 ./node_modules/next/dist/bin/next dev --turbopack",
+    "validate:env": "node ./scripts/validate-production-env.mjs",
     "build": "next build",
     "start": "next start",
+    "ci": "npm run lint && npm run typecheck && npm run test:node && npm run build",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test:node": "npx --yes tsx --test tests/billing-server.test.ts tests/course-store-ownership.test.ts tests/stripe-webhook-route.test.ts",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:node": "tsx --test tests/*.test.ts",
     "perf:check": "node ./scripts/route_budgets.mjs",
     "build:perf": "npm run build && npm run perf:check",
     "i18n:parity": "node ./scripts/i18n_parity.mjs",
@@ -66,6 +71,10 @@
     "eslint-config-next": "^16.2.4",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "uuid": "14.0.0"
   }
 }

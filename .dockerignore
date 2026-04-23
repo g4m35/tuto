@@ -16,6 +16,8 @@
 # Documentation
 # ============================================
 *.md
+!deeptutor/**/*.md
+!deeptutor_cli/**/*.md
 !README.md
 docs/
 assets/gifs/
@@ -49,9 +51,15 @@ wheels/
 MANIFEST
 
 # Virtual environments
-.env
+.env*
 *.env
 !.env.example
+web/.env*
+!web/.env.example
+.vercel/
+web/.vercel/
+.clerk/
+web/.clerk/
 env/
 venv/
 ENV/
@@ -85,6 +93,7 @@ yarn-error.log*
 web/.next/
 out/
 web/out/
+*.tsbuildinfo
 
 # ============================================
 # IDE and Editor
@@ -112,6 +121,8 @@ docker-compose*.yml
 data/user/
 data/knowledge_bases/
 run_code_workspace/
+.local-data/
+web/.local-data/
 
 # ============================================
 # Development and Testing

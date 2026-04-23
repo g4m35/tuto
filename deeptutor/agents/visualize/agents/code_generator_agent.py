@@ -71,7 +71,7 @@ class CodeGeneratorAgent(BaseAgent):
         elif analysis.render_type == "html":
             lang_hint = "html"
         else:
-            lang_hint = "javascript"
+            lang_hint = "json"
 
         extracted = extract_code_block(response, lang_hint) or extract_code_block(response)
 

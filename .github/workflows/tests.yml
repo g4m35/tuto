@@ -53,7 +53,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: web/package-lock.json
 
@@ -75,8 +75,15 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_publishable_key
           CLERK_SECRET_KEY: sk_test_ci_secret_key
           NEXT_PUBLIC_CLERK_KEYLESS_DISABLED: "true"
+          NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
           NEXT_PUBLIC_API_BASE: http://127.0.0.1:8001
           DEEPTUTOR_URL: http://127.0.0.1:8001
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_ci_publishable_key
+          STRIPE_SECRET_KEY: sk_test_ci_secret_key
+          STRIPE_WEBHOOK_SECRET: whsec_ci_secret
+          STRIPE_PRO_PRICE_ID: price_ci_pro
+          STRIPE_TEAM_PRICE_ID: price_ci_team
         run: npm run build
 
   import-check:

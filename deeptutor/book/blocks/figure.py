@@ -82,7 +82,7 @@ class FigureGenerator(BlockGenerator):
         lang_tag = {
             "svg": "svg",
             "mermaid": "mermaid",
-            "chartjs": "javascript",
+            "chartjs": "json",
         }.get(render_type, "svg")
 
         return (

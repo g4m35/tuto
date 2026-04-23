@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { findLesson } from "@/lib/course-data";
 import { getCourseForUser, saveExercise, updateCourseProgress } from "@/lib/course-store";
+import { DatabaseConfigurationError } from "@/lib/db";
 import { recordUsage } from "@/lib/usage";
 import { DeepTutorClientError, generateExercise } from "@/lib/deeptutor";
 import { withUsageLimit } from "@/lib/withUsageLimit";
@@ -85,6 +86,16 @@ export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
         storedExercise.backendMode,
       );
     } catch (error) {
+      if (error instanceof DatabaseConfigurationError) {
+        return NextResponse.json(
+          {
+            error: "database_not_configured",
+            detail: error.message,
+          },
+          { status: 503 },
+        );
+      }
+
       if (error instanceof DeepTutorClientError) {
         return NextResponse.json(
           {

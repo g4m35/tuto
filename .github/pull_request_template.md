@@ -1,17 +1,20 @@
 <!--
-Thank you for contributing to DeepTutor! 🚀
-Please ensure your PR is ready for review and follows our contribution guidelines.
-For more details, see our [CONTRIBUTING.md](https://github.com/HKUDS/DeepTutor/blob/dev/CONTRIBUTING.md).
+Thank you for contributing to this fork of DeepTutor.
+Please ensure your PR is ready for review and follows the local contribution guidelines.
+For details, see CONTRIBUTING.md in this repository.
 -->
 
 ### Description
-*A clear and concise description of the changes.*
+
+_A clear and concise description of the changes._
 
 ### Related Issues
+
 - Closes #...
 - Related to #...
 
 ### Module(s) Affected
+
 - [ ] `agents`
 - [ ] `api`
 - [ ] `config`
@@ -28,7 +31,8 @@ For more details, see our [CONTRIBUTING.md](https://github.com/HKUDS/DeepTutor/b
 - [ ] Other: `...`
 
 ### Checklist
-- [ ] I have read and followed the [contribution guidelines](https://github.com/HKUDS/DeepTutor/blob/dev/CONTRIBUTING.md).
+
+- [ ] I have read and followed the contribution guidelines in `CONTRIBUTING.md`.
 - [ ] My code follows the project's coding standards.
 - [ ] I have run `pre-commit run --all-files` and fixed any issues.
 - [ ] I have added relevant tests for my changes.
@@ -36,4 +40,5 @@ For more details, see our [CONTRIBUTING.md](https://github.com/HKUDS/DeepTutor/b
 - [ ] My changes do not introduce any new security vulnerabilities.
 
 ### Additional Notes
-*Add any other context or screenshots about the pull request here.*
+
+_Add any other context or screenshots about the pull request here._

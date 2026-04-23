@@ -24,12 +24,15 @@ WORKDIR /app/web
 
 # Accept build argument for backend port
 ARG BACKEND_PORT=8001
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_PLACEHOLDER__"
 
 # Application version (e.g. "v1.2.3"). Passed by CI from the release tag
 # and inlined into the Next.js bundle via NEXT_PUBLIC_APP_VERSION so the
 # sidebar version badge can compare it with the latest GitHub release.
 ARG APP_VERSION=""
-ENV APP_VERSION=$APP_VERSION
+ENV APP_VERSION=$APP_VERSION \
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY \
+    NEXT_PUBLIC_CLERK_KEYLESS_DISABLED=true
 
 # Copy package files first for better caching
 COPY web/package.json web/package-lock.json* ./
@@ -44,11 +47,15 @@ COPY web/ ./
 
 # Create .env.local with placeholder that will be replaced at runtime
 # Use a unique placeholder that can be safely replaced
-RUN echo "NEXT_PUBLIC_API_BASE=__NEXT_PUBLIC_API_BASE_PLACEHOLDER__" > .env.local
+RUN printf '%s\n' \
+    "NEXT_PUBLIC_API_BASE=__NEXT_PUBLIC_API_BASE_PLACEHOLDER__" \
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_PLACEHOLDER__" \
+    "NEXT_PUBLIC_CLERK_KEYLESS_DISABLED=true" \
+    > .env.local
 
 # Build Next.js for production with standalone output
 # This allows runtime environment variable injection
-RUN npm run build
+RUN CLERK_SECRET_KEY=sk_test_docker_build_placeholder npm run build
 
 # ============================================
 # Stage 1b: Node Runtime for Target Platform
@@ -265,6 +272,13 @@ echo "[Frontend] 🚀 Starting Next.js frontend on port ${FRONTEND_PORT}..."
 # This is necessary because NEXT_PUBLIC_* vars are inlined at build time
 find /app/web/.next -type f \( -name "*.js" -o -name "*.json" \) -exec \
     sed -i "s|__NEXT_PUBLIC_API_BASE_PLACEHOLDER__|${API_BASE}|g" {} \; 2>/dev/null || true
+
+if [ -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
+    find /app/web/.next -type f \( -name "*.js" -o -name "*.json" \) -exec \
+        sed -i "s|__NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_PLACEHOLDER__|${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}|g" {} \; 2>/dev/null || true
+else
+    echo "[Frontend] ⚠️  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is not set; Clerk auth UI may not initialize correctly"
+fi
 
 # Start Next.js standalone server
 # The standalone server reads PORT and HOSTNAME from environment variables

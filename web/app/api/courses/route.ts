@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { toLessonId } from "@/lib/course-data";
 import { getCourseForUser, listCoursesForUser, saveCourse } from "@/lib/course-store";
+import { DatabaseConfigurationError } from "@/lib/db";
 import { checkLimit, recordUsage } from "@/lib/usage";
 import { DeepTutorClientError, generateCourse, ingestDocument } from "@/lib/deeptutor";
 import { withUsageLimit } from "@/lib/withUsageLimit";
@@ -27,8 +28,19 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const courses = await listCoursesForUser(userId);
-  return NextResponse.json({ courses });
+  try {
+    const courses = await listCoursesForUser(userId);
+    return NextResponse.json({ courses });
+  } catch (error) {
+    if (error instanceof DatabaseConfigurationError) {
+      return NextResponse.json(
+        { error: "database_not_configured", detail: error.message },
+        { status: 503 },
+      );
+    }
+
+    throw error;
+  }
 }
 
 export const POST = withUsageLimit("course_created", async (request, { clerkId }) => {
@@ -147,6 +159,16 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
       course.backendMode,
     );
   } catch (error) {
+    if (error instanceof DatabaseConfigurationError) {
+      return NextResponse.json(
+        {
+          error: "database_not_configured",
+          detail: error.message,
+        },
+        { status: 503 },
+      );
+    }
+
     if (error instanceof DeepTutorClientError) {
       return NextResponse.json(
         {

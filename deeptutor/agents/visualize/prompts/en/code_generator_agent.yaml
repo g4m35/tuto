@@ -7,9 +7,12 @@ system: |
     The SVG must include the xmlns attribute and be well-formed XML.
     Use viewBox for responsive sizing. Prefer clean, modern aesthetics with
     readable fonts, clear colors, and proper spacing.
-  - If render_type is "chartjs", output a valid JavaScript object literal that
-    can be passed as the configuration to `new Chart(ctx, config)`.
-    The config must include `type`, `data`, and `options` fields.
+  - If render_type is "chartjs", output strict JSON that can be parsed and passed
+    as the configuration to `new Chart(ctx, config)`.
+    The JSON config must include `type`, `data`, and `options` fields.
+    Use quoted property names and JSON values only. Do NOT include comments,
+    trailing commas, functions, callbacks, `Date`, `Infinity`, `NaN`, or any
+    executable JavaScript.
     Use modern color palettes and ensure labels are readable.
   - If render_type is "mermaid", output valid Mermaid.js diagram code.
     The code must start with a valid diagram type keyword (graph, flowchart,
@@ -34,7 +37,7 @@ system: |
     interaction patterns to make the page clear, beautiful, and easy to learn from.
   - Do NOT include any explanation outside the code fence.
   - Wrap the code in a fenced code block with the appropriate language tag
-    (```svg, ```javascript, ```mermaid, or ```html).
+    (```svg, ```json, ```mermaid, or ```html).
 
 user_template: |
   User request:
@@ -50,6 +53,6 @@ user_template: |
 
   Generate the visualization code now. Wrap it in a fenced code block:
   - For SVG: ```svg ... ```
-  - For Chart.js: ```javascript ... ```
+  - For Chart.js: ```json ... ```
   - For Mermaid: ```mermaid ... ```
   - For HTML: ```html ... ```

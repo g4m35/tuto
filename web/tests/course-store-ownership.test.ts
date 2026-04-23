@@ -86,3 +86,35 @@ test("course-store file fallback keeps courses scoped to the owning user", async
     process.chdir(previousCwd);
   }
 });
+
+test("course-store refuses ephemeral fallback in production without a database", async () => {
+  const env = process.env as Record<string, string | undefined>;
+  const previousNodeEnv = env.NODE_ENV;
+  const previousDatabaseUrl = env.DATABASE_URL;
+  const previousPostgresUrl = env.POSTGRES_URL;
+
+  env.NODE_ENV = "production";
+  delete env.DATABASE_URL;
+  delete env.POSTGRES_URL;
+
+  try {
+    const store = await importFresh<typeof import("../lib/course-store")>("../lib/course-store");
+
+    await assert.rejects(
+      () => store.listCoursesForUser("user-prod"),
+      /Course storage requires a configured database\./,
+    );
+  } finally {
+    env.NODE_ENV = previousNodeEnv;
+    if (previousDatabaseUrl === undefined) {
+      delete env.DATABASE_URL;
+    } else {
+      env.DATABASE_URL = previousDatabaseUrl;
+    }
+    if (previousPostgresUrl === undefined) {
+      delete env.POSTGRES_URL;
+    } else {
+      env.POSTGRES_URL = previousPostgresUrl;
+    }
+  }
+});

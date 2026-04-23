@@ -198,3 +198,32 @@ test("customer.subscription.updated switches a customer between paid tiers", asy
     },
   ]);
 });
+
+test("unknown recurring prices fail closed instead of downgrading to free", async () => {
+  process.env.STRIPE_PRO_PRICE_ID = "price_pro";
+  process.env.STRIPE_TEAM_PRICE_ID = "price_team";
+
+  await assert.rejects(
+    () =>
+      processStripeWebhookEvent(
+        asWebhookEvent({
+          type: "customer.subscription.updated",
+          data: {
+            object: createSubscription({
+              customer: "cus_unknown",
+              status: "active",
+              priceId: "price_unknown",
+            }),
+          },
+        }),
+        {
+          retrieveSubscription: async () => {
+            throw new Error("should not retrieve subscription for subscription.updated events");
+          },
+          getUserByStripeCustomerId: async () => null,
+          syncSubscriptionState: async () => undefined,
+        },
+      ),
+    /Unrecognized Stripe recurring price id: price_unknown/,
+  );
+});

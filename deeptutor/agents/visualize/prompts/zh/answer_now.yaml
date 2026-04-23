@@ -3,7 +3,8 @@ system: |
   请直接输出最终可渲染的代码。
   严格输出 JSON：{"render_type": "svg|chartjs|mermaid",
   "code": "..."}。
-  code 字段是可直接渲染的源代码（SVG 标签 / Chart.js JS 代码 / Mermaid 文本）。
+  code 字段是可直接渲染的源代码（SVG 标签 / 严格 JSON 的 Chart.js 配置 / Mermaid 文本）。
+  chartjs 的 code 必须是严格 JSON：不要包含注释、尾随逗号、函数、回调或任何可执行 JavaScript。
 
 user_template: |
   用户请求：{original}

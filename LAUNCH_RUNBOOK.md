@@ -1,20 +1,45 @@
-# Vercel Launch Runbook
+# Production Launch Runbook
 
 ## Required hosted configuration
 
-- Create a Vercel project from `/Users/jheller/Desktop/tuto/tuto/web`
+- Create a web deployment from the `web/` directory.
+- Use Node 22.x for install, build, and runtime. The repo includes `web/.nvmrc` and `web/package.json` engines for this.
 - Set preview and production env vars:
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
   - `CLERK_SECRET_KEY`
+  - `NEXT_PUBLIC_CLERK_KEYLESS_DISABLED=true`
   - `DATABASE_URL` or `POSTGRES_URL`
   - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
   - `STRIPE_SECRET_KEY`
   - `STRIPE_WEBHOOK_SECRET`
   - `STRIPE_PRO_PRICE_ID`
   - `STRIPE_TEAM_PRICE_ID`
+  - `DEEPTUTOR_URL`
 - In Clerk, bind the deployed domain and set sign-in/sign-up redirects to `/dashboard`
 - In Stripe, point the webhook endpoint to `/api/webhooks/stripe`
 - Apply `web/migrations/*.sql` to the hosted Postgres database
+
+## Local verification before deploy
+
+```bash
+cd web
+nvm use
+npm ci
+npm run typecheck
+npm run test:node
+npm run build
+```
+
+## Railway web deployment notes
+
+- `web/railway.toml` uses Railpack and starts the Next standalone server.
+- Railway should run from the `web/` directory so `npm ci`, `npm run build`, and `.next/standalone/server.js` resolve correctly.
+- Keep `DATABASE_URL` or `POSTGRES_URL` on the web service, not only on the backend service.
+
+## Fail-closed production checks
+
+- If `DATABASE_URL` or `POSTGRES_URL` is missing in production, `/api/courses` and usage-limited APIs return `database_not_configured`.
+- If Stripe sends a subscription event with an unknown recurring price ID, webhook processing returns a 500 so the delivery can be retried after configuration is corrected.
 
 ## Launch smoke checks
 

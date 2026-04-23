@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getTierLimits, hasUnlimitedAllowance, type BillingTier } from "@/lib/limits";
-import { isDatabaseConfigured, query } from "@/lib/db";
+import { assertDatabaseConfigured, isDatabaseConfigured, query } from "@/lib/db";
 
 export type UsageEventType = "message" | "doc_upload" | "course_created";
 
@@ -109,12 +109,7 @@ export async function checkLimit(clerkId: string, eventType: UsageEventType): Pr
   const { monthStart, resetsAt } = getMonthWindow();
 
   if (!isDatabaseConfigured()) {
-    return {
-      allowed: true,
-      current: 0,
-      limit: Number.POSITIVE_INFINITY,
-      resetsAt,
-    };
+    assertDatabaseConfigured("Usage limits");
   }
 
   const tier = await getUserTier(clerkId);

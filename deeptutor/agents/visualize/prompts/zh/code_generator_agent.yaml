@@ -6,9 +6,11 @@ system: |
     SVG 必须包含 xmlns 属性并且是格式良好的 XML。
     使用 viewBox 实现响应式尺寸。优先使用简洁现代的美学风格，
     确保字体可读、颜色清晰、间距合适。
-  - 如果 render_type 是 "chartjs"，输出一个有效的 JavaScript 对象字面量，
-    可以作为配置传递给 `new Chart(ctx, config)`。
-    配置必须包含 `type`、`data` 和 `options` 字段。
+  - 如果 render_type 是 "chartjs"，输出严格 JSON，可以解析后作为配置传递给
+    `new Chart(ctx, config)`。
+    JSON 配置必须包含 `type`、`data` 和 `options` 字段。
+    属性名必须加双引号，只能使用 JSON 值。不要包含注释、尾随逗号、函数、
+    回调、`Date`、`Infinity`、`NaN` 或任何可执行 JavaScript。
     使用现代配色方案并确保标签可读。
   - 如果 render_type 是 "mermaid"，输出有效的 Mermaid.js 图表代码。
     代码必须以有效的图表类型关键词开头（graph、flowchart、sequenceDiagram、
@@ -28,7 +30,7 @@ system: |
       * 操作 DOM 前检查元素是否存在
     在以上约束内自由决定布局、配色、视觉风格和交互形式，让页面清晰、美观、易学。
   - 不要在代码块之外包含任何解释。
-  - 用带有适当语言标签的代码块包裹代码（```svg、```javascript、```mermaid 或 ```html）。
+  - 用带有适当语言标签的代码块包裹代码（```svg、```json、```mermaid 或 ```html）。
 
 user_template: |
   用户请求：
@@ -44,6 +46,6 @@ user_template: |
 
   现在生成可视化代码。用代码块包裹：
   - SVG 使用：```svg ... ```
-  - Chart.js 使用：```javascript ... ```
+  - Chart.js 使用：```json ... ```
   - Mermaid 使用：```mermaid ... ```
   - HTML 使用：```html ... ```

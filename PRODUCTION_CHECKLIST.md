@@ -10,6 +10,8 @@ This is the shortest practical path from the current local build to a paid, supp
 - Course creation now creates real knowledge bases and grounds guided sessions with `kb_name`.
 - Backend dev startup was hardened so `python -m deeptutor.api.run_server` works reliably from clean worktrees.
 - CI now runs web launch typecheck plus targeted billing and ownership node tests alongside the backend smoke suite.
+- Production course storage and usage limits now require Postgres instead of silently falling back to local files.
+- Stripe webhooks now fail closed on unknown recurring price IDs and return a 500 when processing fails after signature verification.
 
 ## Launch Slice
 
@@ -47,6 +49,8 @@ Minimum required environment:
 - embedding provider credentials
 - database/storage configuration if production differs from local defaults
 
+For the SaaS web fork, `DATABASE_URL` or `POSTGRES_URL` is mandatory in production. Without it, course APIs and usage-limited APIs return `database_not_configured`.
+
 Gemini-only shortcut:
 
 - Set `LLM_BINDING=gemini`
@@ -81,6 +85,7 @@ Pass when all are true:
 - existing paid users can open the billing portal and return to the app
 - successful Stripe webhooks update tier state within minutes
 - failed or missing webhook processing is visible in logs
+- unknown recurring Stripe price IDs fail closed instead of downgrading users to `free`
 - free users cannot exceed paid-only limits
 - canceled subscriptions downgrade correctly
 
@@ -180,7 +185,7 @@ curl -f http://localhost:8001/api/v1/guide/health
 
 These are the items most likely to block a real paid launch:
 
-- production deployment and rollback runbook
+- production deployment and rollback dry run
 - end-to-end billing verification in a production-like environment
 - finalized cancellation and downgrade behavior for paid plans
 - auth and ownership audit across all user-data routes

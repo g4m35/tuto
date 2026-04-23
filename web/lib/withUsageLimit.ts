@@ -2,7 +2,7 @@ import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { DatabaseConfigurationError, query } from "@/lib/db";
 import type { BillingTier } from "@/lib/limits";
 import { checkLimit, type UsageEventType } from "@/lib/usage";
 
@@ -45,7 +45,22 @@ export function withUsageLimit<TContext = unknown>(
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const usage = await checkLimit(userId, eventType);
+    let usage;
+    try {
+      usage = await checkLimit(userId, eventType);
+    } catch (error) {
+      if (error instanceof DatabaseConfigurationError) {
+        return NextResponse.json(
+          {
+            error: "database_not_configured",
+            detail: error.message,
+          },
+          { status: 503 },
+        );
+      }
+
+      throw error;
+    }
 
     if (!usage.allowed) {
       const tier = await getUserTier(userId);

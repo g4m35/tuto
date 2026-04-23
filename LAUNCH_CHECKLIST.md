@@ -2,7 +2,7 @@
 
 This checklist is for the SaaS-facing fork in this repository, not for the upstream open-source DeepTutor demo alone.
 
-Date reviewed: 2026-04-22
+Date reviewed: 2026-04-23
 
 ## Current Status
 
@@ -17,13 +17,14 @@ Date reviewed: 2026-04-22
 - [x] Per-user course persistence is wired in [`web/lib/course-store.ts`](web/lib/course-store.ts) with SQL schema in [`web/migrations/003_courses.sql`](web/migrations/003_courses.sql).
 - [x] KB-backed upload flow now creates a knowledge base, waits for readiness, persists `kb_name`, and starts guided learning against that KB via [`web/lib/deeptutor.ts`](web/lib/deeptutor.ts), [`web/app/api/courses/route.ts`](web/app/api/courses/route.ts), [`deeptutor/api/routers/guide.py`](deeptutor/api/routers/guide.py), and [`deeptutor/agents/guide/guide_manager.py`](deeptutor/agents/guide/guide_manager.py).
 - [x] CI now gates the web launch slice with a web typecheck plus targeted billing and course-ownership node tests in [`.github/workflows/tests.yml`](.github/workflows/tests.yml) and [`.github/workflows/upstream-sync-test.yml`](.github/workflows/upstream-sync-test.yml).
+- [x] Production course storage and usage limits fail closed when `DATABASE_URL` or `POSTGRES_URL` is missing, so paid launch cannot silently run on local ephemeral files.
 
 ### Stop-ship gaps
 
 - [ ] The billing portal now exists, but paid-plan management still needs full staging verification for upgrade, cancel, and downgrade behavior.
 - [ ] The pricing, checkout, and billing-management flows still need final plan validation and copy polish before broad launch.
 - [ ] The Docker deployment files are geared toward the upstream all-in-one OSS app and do not yet wire the fork's Clerk, Stripe, or Postgres requirements.
-- [ ] The release workflow still targets `ghcr.io/hkuds/deeptutor` in [`.github/workflows/docker-release.yml`](.github/workflows/docker-release.yml), not this fork's own registry/image.
+- [ ] The release workflow publishes to this fork's GHCR namespace, but the all-in-one image still needs a production dry run with this fork's Clerk, Stripe, and Postgres configuration.
 - [ ] CI now covers backend import/smoke checks plus web launch typecheck and targeted node tests, but it still does not exercise a signed-in purchase path or end-to-end course creation.
 - [ ] There is no built-in monitoring/alerting stack beyond logs and basic health endpoints.
 
@@ -93,6 +94,7 @@ Date reviewed: 2026-04-22
 
 - The web app uses Postgres when `DATABASE_URL` or `POSTGRES_URL` is set via [`web/lib/db.ts`](web/lib/db.ts).
 - If no database is configured, course data falls back to the local file store in [`web/lib/course-store.ts`](web/lib/course-store.ts). That fallback is useful for local dev, not for production.
+- In production, the local file fallback is disabled and affected APIs return `database_not_configured` until Postgres is configured.
 - SQL schema files exist in:
   - [`web/migrations/001_users.sql`](web/migrations/001_users.sql)
   - [`web/migrations/002_usage.sql`](web/migrations/002_usage.sql)
@@ -150,12 +152,12 @@ psql "$DATABASE_URL" -f web/migrations/003_courses.sql
 
 - The all-in-one Docker setup in [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml), and [`docker-compose.ghcr.yml`](docker-compose.ghcr.yml) is written for the upstream app and its Python-first environment.
 - Those files do not currently document or pass through the fork's Clerk, Stripe, or Postgres web settings.
-- The GHCR workflow in [`.github/workflows/docker-release.yml`](.github/workflows/docker-release.yml) still pushes `ghcr.io/hkuds/deeptutor`. Do not rely on that image for this fork's SaaS launch.
+- The GHCR workflow in [`.github/workflows/docker-release.yml`](.github/workflows/docker-release.yml) publishes under `${{ github.repository }}`. For this fork, that means `ghcr.io/g4m35/tuto` after a GitHub Release is published.
 
 ### Launch requirements
 
 - [ ] Choose the real production deployment target for this fork.
-- [ ] Publish your own image or deployment artifact for this fork.
+- [ ] Publish and smoke-test your own image or deployment artifact for this fork.
 - [ ] Inject production values for:
   - Clerk
   - Stripe
