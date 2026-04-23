@@ -55,6 +55,8 @@ export function TopNav() {
               const active =
                 item.id === "courses"
                   ? pathname === "/dashboard" && hash === "#courses"
+                  : item.id === "dashboard"
+                    ? pathname === "/dashboard" && hash !== "#courses"
                   : pathname === item.href || pathname.startsWith(`${item.href}/`)
 
               return (
