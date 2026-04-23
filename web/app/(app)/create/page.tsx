@@ -146,7 +146,7 @@ export default function CreateCoursePage() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          {createModes.map((item) => {
+          {createModes.map((item, index) => {
             const active = mode === item.id
             const Icon = item.icon
 
@@ -159,7 +159,8 @@ export default function CreateCoursePage() {
                   setError(null)
                 }}
                 className={cn(
-                  "editorial-card text-left px-5 py-5",
+                  "editorial-card hover-lift text-left px-5 py-5",
+                  index === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
                   active
                     ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
                     : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
@@ -173,7 +174,7 @@ export default function CreateCoursePage() {
           })}
         </div>
 
-        <div className="editorial-card p-6 sm:p-7">
+        <div className="editorial-card animate-rise-in p-6 sm:p-7">
           <div className="space-y-6">
             <div className="space-y-2">
               <p className="eyebrow">What do you want to learn?</p>
@@ -286,7 +287,7 @@ export default function CreateCoursePage() {
           </p>
         </div>
 
-        <div className="editorial-card min-h-[28rem] p-6">
+        <div className="editorial-card animate-rise-in-delay-2 min-h-[28rem] p-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
               <span>Draft</span>

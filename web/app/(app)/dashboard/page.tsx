@@ -12,13 +12,15 @@ function DashboardMetric({
   label,
   value,
   detail,
+  className,
 }: {
   label: string
   value: string
   detail?: string
+  className?: string
 }) {
   return (
-    <div className="editorial-stat p-5">
+    <div className={cn("editorial-stat hover-lift p-5", className)}>
       <p className="eyebrow">{label}</p>
       <p className="mt-4 text-[2rem] font-medium leading-none tracking-[-0.04em] text-[var(--text)]">
         {value}
@@ -54,7 +56,7 @@ export default async function DashboardPage() {
         <DeepTutorStatusBanner hasStubCourses={hasStubCourses} />
 
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_340px] xl:items-end">
-          <div className="space-y-6">
+          <div className="animate-rise-in space-y-6">
             <p className="eyebrow">This week</p>
             <div className="space-y-4">
               <h1 className="serif max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-[var(--text)] sm:text-6xl">
@@ -87,7 +89,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <aside className="surface-card p-6">
+          <aside className="surface-card animate-rise-in-delay-1 p-6">
             <p className="eyebrow">Last 7 days</p>
             <div className="mt-5 space-y-4">
               <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
@@ -124,6 +126,7 @@ export default async function DashboardPage() {
             label="Courses"
             value={String(dashboard.courses.length)}
             detail="currently active"
+            className="animate-rise-in-delay-1"
           />
           <DashboardMetric
             label="Mastered"
@@ -132,16 +135,19 @@ export default async function DashboardPage() {
               1
             )}`}
             detail="lessons complete"
+            className="animate-rise-in-delay-2"
           />
           <DashboardMetric
             label="Streak"
             value={`${dashboard.streakDays} days`}
             detail="steady momentum"
+            className="animate-rise-in-delay-3"
           />
           <DashboardMetric
             label="Focus"
             value={dashboard.insightTopic}
             detail="current weak spot"
+            className="animate-rise-in-delay-4"
           />
         </section>
 
@@ -164,7 +170,7 @@ export default async function DashboardPage() {
                 <Link
                   key={course.id}
                   href={`/courses/${course.id}`}
-                  className="group editorial-card relative overflow-hidden px-5 py-5 sm:px-6"
+                  className="group editorial-card hover-lift animate-rise-in relative overflow-hidden px-5 py-5 sm:px-6"
                 >
                   <span
                     className="absolute left-0 top-4 bottom-4 w-px rounded-full bg-[var(--accent)]/60 transition-opacity group-hover:opacity-100"

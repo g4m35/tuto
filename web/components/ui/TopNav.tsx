@@ -46,7 +46,7 @@ export function TopNav() {
               const Icon = item.icon
               const active =
                 item.id === "courses"
-                  ? pathname === "/dashboard" && hash === "#courses"
+                  ? pathname.startsWith("/courses") || (pathname === "/dashboard" && hash === "#courses")
                   : item.id === "dashboard"
                     ? pathname === "/dashboard" && hash !== "#courses"
                   : pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -55,6 +55,13 @@ export function TopNav() {
                 <Link
                   key={item.id}
                   href={item.href}
+                  onClick={() => {
+                    if (item.id === "courses") {
+                      setHash("#courses")
+                    } else if (item.id === "dashboard") {
+                      setHash("")
+                    }
+                  }}
                   className={cn(
                     "relative inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.83rem] font-medium text-[var(--text-dim)]",
                     active

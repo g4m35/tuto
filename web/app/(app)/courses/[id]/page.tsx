@@ -61,7 +61,7 @@ export default async function CourseDetailPage({
         </Link>
 
         <section className="grid gap-10 xl:grid-cols-[minmax(0,1.35fr)_360px] xl:items-start">
-          <div className="space-y-6">
+          <div className="animate-rise-in space-y-6">
             <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
               <span>{course.subject}</span>
               <span className="size-1 rounded-full bg-[var(--text-faint)]" />
@@ -103,7 +103,7 @@ export default async function CourseDetailPage({
           </div>
 
           <aside className="space-y-4">
-            <div className="editorial-card p-6">
+            <div className="editorial-card animate-rise-in-delay-1 p-6">
               <div className="space-y-5">
                 <div className="flex items-end justify-between gap-4">
                   <div>
@@ -136,7 +136,7 @@ export default async function CourseDetailPage({
               </div>
             </div>
 
-            <div className="editorial-card p-5">
+            <div className="editorial-card animate-rise-in-delay-2 p-5">
               <p className="eyebrow">Session rhythm</p>
               <div className="mt-4 space-y-3 text-sm text-[var(--text-dim)]">
                 <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
@@ -154,7 +154,7 @@ export default async function CourseDetailPage({
               </div>
             </div>
 
-            <div className="editorial-card p-5">
+            <div className="editorial-card animate-rise-in-delay-3 p-5">
               <p className="eyebrow">Source material</p>
               <div className="mt-4 space-y-3">
                 {course.materials.map((item) => (
@@ -245,7 +245,7 @@ export default async function CourseDetailPage({
               )
 
               const wrapperClassName = cn(
-                "editorial-card block overflow-hidden",
+                "editorial-card hover-lift animate-rise-in block overflow-hidden",
                 current && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
               )
 

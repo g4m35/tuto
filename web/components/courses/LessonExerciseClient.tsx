@@ -81,7 +81,7 @@ export function LessonExerciseClient({
           Close lesson
         </Link>
 
-        <section className="editorial-card px-7 py-8 sm:px-8">
+        <section className="editorial-card animate-rise-in px-7 py-8 sm:px-8">
           <p className="eyebrow">Composing</p>
           <h1 className="serif mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--text)]">
             Generating the next adaptive exercise.
@@ -105,7 +105,7 @@ export function LessonExerciseClient({
           Close lesson
         </Link>
 
-        <section className="editorial-card px-7 py-8 sm:px-8">
+        <section className="editorial-card animate-rise-in px-7 py-8 sm:px-8">
           <p className="eyebrow">Exercise unavailable</p>
           <h1 className="serif mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--text)]">
             We could not generate this lesson yet.
@@ -182,7 +182,7 @@ export function LessonExerciseClient({
                     setChecked(false)
                   }}
                   className={cn(
-                    "editorial-card w-full text-left px-5 py-5",
+                    "editorial-card hover-lift animate-rise-in w-full text-left px-5 py-5",
                     selected
                       ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
                       : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
@@ -223,7 +223,7 @@ export function LessonExerciseClient({
         </div>
 
         <aside className="space-y-4">
-          <div className="editorial-card p-5">
+          <div className="editorial-card animate-rise-in-delay-1 p-5">
             <p className="eyebrow">Session</p>
             <div className="mt-4 space-y-3 text-sm text-[var(--text-dim)]">
               <div className="flex items-center justify-between">
@@ -245,7 +245,7 @@ export function LessonExerciseClient({
             </div>
           </div>
 
-          <div className="editorial-card p-5">
+          <div className="editorial-card animate-rise-in-delay-2 p-5">
             <p className="eyebrow">Why this step</p>
             <p className="mt-4 text-sm leading-7 text-[var(--text-dim)]">
               The exercise is keeping the practice loop narrow, so you strengthen the current idea before the path opens wider.
