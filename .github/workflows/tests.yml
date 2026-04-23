@@ -140,6 +140,12 @@ jobs:
           logging:
             level: WARNING
           YAML
+          cat > data/user/settings/agents.yaml <<'YAML'
+          capabilities: {}
+          tools: {}
+          plugins: {}
+          diagnostics: {}
+          YAML
 
       - name: Run smoke tests
         run: |
