@@ -12,17 +12,19 @@ Date reviewed: 2026-04-22
 - [x] Stripe server helpers and webhook-based tier syncing are present in [`web/lib/billing.ts`](web/lib/billing.ts) and [`web/app/api/webhooks/stripe/route.ts`](web/app/api/webhooks/stripe/route.ts).
 - [x] A pricing surface now exists in [`web/app/pricing/page.tsx`](web/app/pricing/page.tsx), and the top-nav upgrade CTA routes there from [`web/components/ui/TopNav.tsx`](web/components/ui/TopNav.tsx).
 - [x] Stripe Checkout Session creation is wired in [`web/app/api/billing/checkout/route.ts`](web/app/api/billing/checkout/route.ts).
+- [x] A self-serve billing-portal route now exists in [`web/app/api/billing/portal/route.ts`](web/app/api/billing/portal/route.ts) for existing paid users.
 - [x] Usage-limit enforcement exists in [`web/lib/usage.ts`](web/lib/usage.ts), [`web/lib/limits.ts`](web/lib/limits.ts), and [`web/lib/withUsageLimit.ts`](web/lib/withUsageLimit.ts).
 - [x] Per-user course persistence is wired in [`web/lib/course-store.ts`](web/lib/course-store.ts) with SQL schema in [`web/migrations/003_courses.sql`](web/migrations/003_courses.sql).
 - [x] KB-backed upload flow now creates a knowledge base, waits for readiness, persists `kb_name`, and starts guided learning against that KB via [`web/lib/deeptutor.ts`](web/lib/deeptutor.ts), [`web/app/api/courses/route.ts`](web/app/api/courses/route.ts), [`deeptutor/api/routers/guide.py`](deeptutor/api/routers/guide.py), and [`deeptutor/agents/guide/guide_manager.py`](deeptutor/agents/guide/guide_manager.py).
+- [x] CI now gates the web launch slice with a web typecheck plus targeted billing and course-ownership node tests in [`.github/workflows/tests.yml`](.github/workflows/tests.yml) and [`.github/workflows/upstream-sync-test.yml`](.github/workflows/upstream-sync-test.yml).
 
 ### Stop-ship gaps
 
-- [ ] There is still no billing-portal or self-serve subscription-management flow for existing subscribers.
-- [ ] The pricing and checkout flow now exists, but it still needs final plan validation, copy polish, and paid-user management UX.
+- [ ] The billing portal now exists, but paid-plan management still needs full staging verification for upgrade, cancel, and downgrade behavior.
+- [ ] The pricing, checkout, and billing-management flows still need final plan validation and copy polish before broad launch.
 - [ ] The Docker deployment files are geared toward the upstream all-in-one OSS app and do not yet wire the fork's Clerk, Stripe, or Postgres requirements.
 - [ ] The release workflow still targets `ghcr.io/hkuds/deeptutor` in [`.github/workflows/docker-release.yml`](.github/workflows/docker-release.yml), not this fork's own registry/image.
-- [ ] CI currently covers backend import/smoke checks only; it does not gate the `web/` build, auth flow, billing flow, or purchase path.
+- [ ] CI now covers backend import/smoke checks plus web launch typecheck and targeted node tests, but it still does not exercise a signed-in purchase path or end-to-end course creation.
 - [ ] There is no built-in monitoring/alerting stack beyond logs and basic health endpoints.
 
 ## 1. Auth And Identity
@@ -53,12 +55,12 @@ Date reviewed: 2026-04-22
 ### What exists today
 
 - Stripe webhook parsing and user-tier updates exist in [`web/app/api/webhooks/stripe/route.ts`](web/app/api/webhooks/stripe/route.ts).
+- Self-serve billing management for paid users now exists in [`web/app/api/billing/portal/route.ts`](web/app/api/billing/portal/route.ts).
 - Tier limits exist in [`web/lib/limits.ts`](web/lib/limits.ts).
 - Usage recording and enforcement exist in [`web/lib/usage.ts`](web/lib/usage.ts) and [`web/lib/withUsageLimit.ts`](web/lib/withUsageLimit.ts).
 
-### Missing before charging customers
+### Remaining before charging customers
 
-- [ ] Add a billing-portal or cancellation-management flow for existing subscribers.
 - [ ] Decide and implement downgrade behavior after cancellation or failed payment.
 - [ ] Decide whether team billing is actually launch-ready; the code has a `team` tier, but no visible team-management UX.
 - [ ] Validate that the current plan prices and Stripe product IDs match what you actually intend to sell.
@@ -75,6 +77,7 @@ Date reviewed: 2026-04-22
 
 - [ ] A free user can hit a limit and gets a deterministic upgrade response.
 - [ ] The `/pricing` page can start a Stripe checkout redirect for both `pro` and `team`.
+- [ ] An existing paid user can open the Stripe billing portal from `/pricing` and return to the app cleanly.
 - [ ] A successful Stripe checkout upgrades the user's `tier` within minutes through the webhook path.
 - [ ] `invoice.payment_failed` moves the user into the intended degraded state.
 - [ ] Subscription cancellation returns the user to the intended plan at the intended time.
@@ -204,7 +207,8 @@ psql "$DATABASE_URL" -f web/migrations/003_courses.sql
 
 - [x] Backend import checks run in [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
 - [x] Backend smoke tests run in [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
-- [ ] No equivalent required GitHub Action currently verifies the `web/` production build for this fork.
+- [x] The web launch slice now runs a required typecheck and targeted node tests for billing helpers and course ownership in [`.github/workflows/tests.yml`](.github/workflows/tests.yml).
+- [x] Upstream-sync PR verification now runs web launch node tests, web typecheck, and the `web/` production build in [`.github/workflows/upstream-sync-test.yml`](.github/workflows/upstream-sync-test.yml).
 - [ ] No end-to-end purchase/auth/course-generation flow is currently enforced in CI.
 
 ### Must-test before launch
@@ -224,10 +228,10 @@ psql "$DATABASE_URL" -f web/migrations/003_courses.sql
 
 ## 8. Recommended Order Of Operations
 
-1. Finish the self-serve billing surface: portal/cancel flow plus final plan validation.
+1. Finish billing policy decisions: cancellation, downgrade timing, and whether `team` is truly launchable.
 2. Lock production deployment for this fork, not the upstream GHCR image.
 3. Provision Postgres and document migration execution.
 4. Add monitoring and alerting for web, backend, and Stripe webhooks.
-5. Run the full manual staging checklist above.
-6. Add CI coverage for web build and at least one happy-path end-to-end flow.
+5. Run the full manual staging checklist above, including checkout and billing-portal flows.
+6. Add at least one happy-path end-to-end auth + purchase + course-generation flow to CI.
 7. Soft-launch to a very small cohort before opening broader paid access.

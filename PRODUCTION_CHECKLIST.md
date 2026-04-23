@@ -6,9 +6,10 @@ This is the shortest practical path from the current local build to a paid, supp
 
 - Clerk auth is wired into the web app.
 - Stripe billing foundations and webhook handling are present.
-- A self-serve pricing page and Stripe Checkout Session route are now in place.
+- A self-serve pricing page, Stripe Checkout Session route, and billing-portal route are now in place.
 - Course creation now creates real knowledge bases and grounds guided sessions with `kb_name`.
 - Backend dev startup was hardened so `python -m deeptutor.api.run_server` works reliably from clean worktrees.
+- CI now runs web launch typecheck plus targeted billing and ownership node tests alongside the backend smoke suite.
 
 ## Launch Slice
 
@@ -20,6 +21,7 @@ Ship one narrow paid surface first:
 - generate guided learning content
 - enforce free-tier usage limits
 - upgrade with Stripe
+- manage an existing paid subscription
 - unlock usage after webhook processing
 
 Everything below is in service of that slice.
@@ -66,6 +68,7 @@ Focus files:
 Pass when all are true:
 
 - checkout/session creation works in production mode
+- existing paid users can open the billing portal and return to the app
 - successful Stripe webhooks update tier state within minutes
 - failed or missing webhook processing is visible in logs
 - free users cannot exceed paid-only limits
@@ -124,15 +127,16 @@ Run this before charging anyone:
 7. Hit the free limit.
 8. Upgrade through Stripe checkout.
 9. Confirm webhook updates the user tier.
-10. Retry the blocked action and confirm it is now allowed.
-11. Cancel or downgrade and confirm limits change back appropriately.
+10. Open the billing portal and confirm the Stripe customer can manage the subscription.
+11. Retry the blocked action and confirm it is now allowed.
+12. Cancel or downgrade and confirm limits change back appropriately.
 
 ## Recommended Order
 
 1. Deploy web and backend to a stable host with persistent storage.
 2. Configure production Clerk and Stripe settings.
 3. Run the manual smoke test above end-to-end.
-4. Add one automated happy-path test for sign in, course creation, and upgrade.
+4. Add one automated happy-path test for sign in, course creation, upgrade, and billing management.
 5. Soft-launch to a tiny cohort before broader rollout.
 
 ## Useful Commands
@@ -168,5 +172,6 @@ These are the items most likely to block a real paid launch:
 
 - production deployment and rollback runbook
 - end-to-end billing verification in a production-like environment
+- finalized cancellation and downgrade behavior for paid plans
 - auth and ownership audit across all user-data routes
 - one automated launch-path smoke test
