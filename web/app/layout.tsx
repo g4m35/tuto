@@ -6,6 +6,7 @@ import ThemeScript from "@/components/ThemeScript";
 import { AppShellProvider } from "@/context/AppShellContext";
 import { I18nClientBridge } from "@/i18n/I18nClientBridge";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/next";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -53,6 +54,7 @@ export default function RootLayout({
             </I18nClientBridge>
           </AppShellProvider>
         </ClerkProvider>
+        <Analytics />
       </body>
     </html>
   );
