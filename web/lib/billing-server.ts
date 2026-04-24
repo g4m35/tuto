@@ -62,6 +62,31 @@ export function getBaseUrl(request: Request) {
   return new URL(request.url).origin
 }
 
+function getHeaderOrigin(value: string | null): string | null {
+  if (!value) {
+    return null
+  }
+
+  try {
+    return new URL(value).origin
+  } catch {
+    return null
+  }
+}
+
+export function hasValidBillingRequestOrigin(request: Request) {
+  const expectedOrigin = new URL(getBaseUrl(request)).origin
+  const suppliedOrigin =
+    getHeaderOrigin(request.headers.get('origin')) ??
+    getHeaderOrigin(request.headers.get('referer'))
+
+  if (!suppliedOrigin) {
+    return process.env.NODE_ENV !== 'production'
+  }
+
+  return suppliedOrigin === expectedOrigin
+}
+
 function normalizeCurrentPeriodEnd(value: Date | string | null | undefined) {
   if (!value) {
     return null
@@ -161,12 +186,25 @@ export function getClerkEmailFromSessionClaims(sessionClaims: unknown) {
   }
 
   const claims = sessionClaims as Record<string, unknown>
-  if (typeof claims.email === 'string') {
-    return claims.email
-  }
+  const candidates = [
+    claims.email,
+    claims.email_address,
+    claims.primary_email_address,
+    typeof claims.primaryEmailAddress === 'object' && claims.primaryEmailAddress
+      ? (claims.primaryEmailAddress as Record<string, unknown>).emailAddress
+      : null,
+    Array.isArray(claims.email_addresses)
+      ? (claims.email_addresses[0] as Record<string, unknown> | undefined)?.email_address
+      : null,
+    Array.isArray(claims.emailAddresses)
+      ? (claims.emailAddresses[0] as Record<string, unknown> | undefined)?.emailAddress
+      : null,
+  ]
 
-  if (typeof claims.email_address === 'string') {
-    return claims.email_address
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate
+    }
   }
 
   return null
@@ -180,6 +218,7 @@ type CheckoutDependencies = {
   createOrReuseCustomer: typeof createOrReuseCustomer
   getStripeServerClient: typeof getStripeServerClient
   getBaseUrl: typeof getBaseUrl
+  hasValidBillingRequestOrigin: typeof hasValidBillingRequestOrigin
   getPriceIdForPlan: typeof getPriceIdForPlan
 }
 
@@ -198,8 +237,13 @@ export async function createCheckoutSessionResult(input: {
     createOrReuseCustomer,
     getStripeServerClient,
     getBaseUrl,
+    hasValidBillingRequestOrigin,
     getPriceIdForPlan,
     ...input.deps,
+  }
+
+  if (!deps.hasValidBillingRequestOrigin(input.request)) {
+    return { status: 403, body: { error: 'Invalid billing request origin.' } }
   }
 
   if (!deps.isDatabaseConfigured()) {
@@ -266,6 +310,7 @@ type PortalDependencies = {
   getBillingSummary: typeof getBillingSummary
   getStripeServerClient: typeof getStripeServerClient
   getBaseUrl: typeof getBaseUrl
+  hasValidBillingRequestOrigin: typeof hasValidBillingRequestOrigin
 }
 
 export async function createBillingPortalResult(input: {
@@ -278,7 +323,12 @@ export async function createBillingPortalResult(input: {
     getBillingSummary,
     getStripeServerClient,
     getBaseUrl,
+    hasValidBillingRequestOrigin,
     ...input.deps,
+  }
+
+  if (!deps.hasValidBillingRequestOrigin(input.request)) {
+    return { status: 403, body: { error: 'Invalid billing request origin.' } }
   }
 
   if (!deps.isDatabaseConfigured()) {

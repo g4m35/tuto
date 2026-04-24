@@ -33,6 +33,13 @@ interface StripeWebhookDeps {
   syncSubscriptionState: (input: SubscriptionStateInput) => Promise<void>;
 }
 
+class IgnoredStripeWebhookEventError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "IgnoredStripeWebhookEventError";
+  }
+}
+
 function formatWebhookError(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -79,17 +86,28 @@ function getTierForPriceId(priceId: string | null | undefined): BillingTier {
     return "pro";
   }
 
-  throw new Error(`Unrecognized Stripe recurring price id: ${priceId ?? "null"}`);
+  throw new IgnoredStripeWebhookEventError(
+    `Unrecognized Stripe recurring price id: ${priceId ?? "null"}`,
+  );
+}
+
+function getSingleRecurringSubscriptionItem(subscription: Stripe.Subscription) {
+  const recurringItems = subscription.items.data.filter((item) => item.price.type === "recurring");
+  if (recurringItems.length !== 1) {
+    throw new IgnoredStripeWebhookEventError(
+      `Expected exactly one recurring Stripe subscription item; received ${recurringItems.length}.`,
+    );
+  }
+
+  return recurringItems[0];
 }
 
 function getTierForSubscription(subscription: Stripe.Subscription): BillingTier {
-  const recurringItem = subscription.items.data.find((item) => item.price.type === "recurring");
-  return getTierForPriceId(recurringItem?.price.id);
+  return getTierForPriceId(getSingleRecurringSubscriptionItem(subscription).price.id);
 }
 
 function getCurrentPeriodEndForSubscription(subscription: Stripe.Subscription): Date | null {
-  const recurringItem = subscription.items.data.find((item) => item.price.type === "recurring");
-  return toDate(recurringItem?.current_period_end);
+  return toDate(getSingleRecurringSubscriptionItem(subscription).current_period_end);
 }
 
 async function getUserByStripeCustomerId(customerId: string): Promise<UserRow | null> {
@@ -213,6 +231,61 @@ const defaultWebhookDeps: StripeWebhookDeps = {
   syncSubscriptionState,
 };
 
+async function beginStripeWebhookEvent(event: Stripe.Event): Promise<boolean> {
+  const result = await query<{ event_id: string }>(
+    `
+      insert into stripe_webhook_events (
+        event_id,
+        event_type,
+        stripe_created_at,
+        status
+      )
+      values ($1, $2, $3, 'processing')
+      on conflict (event_id) do update
+      set status = 'processing',
+          error = null,
+          attempts = stripe_webhook_events.attempts + 1,
+          updated_at = now()
+      where stripe_webhook_events.status = 'failed'
+      returning event_id
+    `,
+    [
+      event.id,
+      event.type,
+      typeof event.created === "number" ? new Date(event.created * 1000) : null,
+    ],
+  );
+
+  return result.rowCount === 1;
+}
+
+async function markStripeWebhookEventProcessed(eventId: string, error: string | null = null) {
+  await query(
+    `
+      update stripe_webhook_events
+      set status = 'processed',
+          error = $2,
+          processed_at = now(),
+          updated_at = now()
+      where event_id = $1
+    `,
+    [eventId, error],
+  );
+}
+
+async function markStripeWebhookEventFailed(eventId: string, error: string) {
+  await query(
+    `
+      update stripe_webhook_events
+      set status = 'failed',
+          error = $2,
+          updated_at = now()
+      where event_id = $1
+    `,
+    [eventId, error],
+  );
+}
+
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session,
   deps: StripeWebhookDeps,
@@ -291,21 +364,30 @@ export async function processStripeWebhookEvent(
   event: Pick<Stripe.Event, "type" | "data">,
   deps: StripeWebhookDeps = defaultWebhookDeps,
 ) {
-  switch (event.type) {
-    case "checkout.session.completed":
-      await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session, deps);
-      break;
-    case "customer.subscription.updated":
-      await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, deps);
-      break;
-    case "customer.subscription.deleted":
-      await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, deps);
-      break;
-    case "invoice.payment_failed":
-      await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, deps);
-      break;
-    default:
-      break;
+  try {
+    switch (event.type) {
+      case "checkout.session.completed":
+        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session, deps);
+        break;
+      case "customer.subscription.updated":
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, deps);
+        break;
+      case "customer.subscription.deleted":
+        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, deps);
+        break;
+      case "invoice.payment_failed":
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, deps);
+        break;
+      default:
+        break;
+    }
+  } catch (error) {
+    if (error instanceof IgnoredStripeWebhookEventError) {
+      console.warn(error.message);
+      return;
+    }
+
+    throw error;
   }
 }
 
@@ -333,8 +415,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    const shouldProcess = await beginStripeWebhookEvent(event);
+    if (!shouldProcess) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
     await processStripeWebhookEvent(event);
+    await markStripeWebhookEventProcessed(event.id);
   } catch (error) {
+    await markStripeWebhookEventFailed(event.id, formatWebhookError(error)).catch(() => undefined);
     return NextResponse.json(
       { error: `Webhook processing failed: ${formatWebhookError(error)}` },
       { status: 500 },
