@@ -38,6 +38,17 @@ const nextConfig = {
   // Transpile mermaid and related packages for proper ESM handling
   transpilePackages: ["mermaid"],
 
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.tuto.chat" }],
+        destination: "https://tuto.chat/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {
