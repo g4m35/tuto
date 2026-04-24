@@ -8,9 +8,10 @@ export default function RefundPolicyPage() {
         </h1>
       </div>
       <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] p-6 text-sm leading-7 text-[var(--text-dim)]">
-        <p>First-time purchases are eligible for a refund request within 7 days when the service materially fails to deliver the billed launch slice.</p>
-        <p>To request a refund, email support@tuto.app from the billing email on the account and include the approximate purchase date.</p>
-        <p>Renewals, partial-period requests, and abuse-related suspensions are handled case by case.</p>
+        <p>Tuto does not offer routine convenience refunds, trial-style cancellations after use, or partial-period refunds.</p>
+        <p>A refund may be issued when the live web product materially breaks in a way that blocks normal use and we cannot resolve it in a reasonable time.</p>
+        <p>To request review, email <a className="underline" href="mailto:jacobheller32@gmail.com">jacobheller32@gmail.com</a> from the billing email on the account, include the approximate purchase date, and describe the web-breaking issue you hit.</p>
+        <p>Billing disputes tied to abuse, policy violations, or successful access to the paid service are not guaranteed a refund.</p>
       </div>
     </main>
   );

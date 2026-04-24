@@ -54,7 +54,7 @@ npm run build
 
 ## Billing support checks
 
-- Support inbox is `support@tuto.app`
+- Support inbox is `jacobheller32@gmail.com`
 - Refund terms live at `/refund-policy`
 - Terms live at `/terms`
 - Privacy policy lives at `/privacy`

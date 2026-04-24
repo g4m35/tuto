@@ -11,7 +11,7 @@ export default function PrivacyPage() {
         <p>We store account identifiers from Clerk, billing state tied to Stripe customer ids, and product usage records needed to enforce plan limits and support the service.</p>
         <p>Uploaded learning materials and generated course data are used to create and serve your courses. Operational logs may be retained for debugging, abuse prevention, and reliability.</p>
         <p>We do not sell personal data. Third-party processors currently include Clerk for authentication, Stripe for billing, and our hosting/database providers for app delivery.</p>
-        <p>To request account-related help or deletion support, email support@tuto.app.</p>
+        <p>To request account-related help or deletion support, email <a className="underline" href="mailto:jacobheller32@gmail.com">jacobheller32@gmail.com</a>.</p>
       </div>
     </main>
   );

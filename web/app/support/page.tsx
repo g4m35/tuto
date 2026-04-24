@@ -9,13 +9,15 @@ export default function SupportPage() {
           Launch support
         </h1>
         <p className="max-w-3xl text-lg leading-8 text-[var(--text-dim)]">
-          Early customers can reach us at <a className="underline" href="mailto:support@tuto.app">support@tuto.app</a>.
+          For the current launch, reach Tuto directly at{" "}
+          <a className="underline" href="mailto:jacobheller32@gmail.com">jacobheller32@gmail.com</a>.
           We aim to respond within one business day for billing, access, and course-generation issues.
         </p>
       </div>
       <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] p-6 text-sm leading-7 text-[var(--text-dim)]">
         <p>Best first message: include the email on your account, what you were trying to do, and any error you saw.</p>
         <p>For billing questions, add the approximate checkout time so we can line it up with Stripe events quickly.</p>
+        <p>Production access is served from the apex domain only: <span className="text-[var(--text)]">tuto.chat</span>.</p>
         <p>
           Related policies: <Link className="underline" href="/refund-policy">refunds</Link>,{" "}
           <Link className="underline" href="/terms">terms</Link>,{" "}
