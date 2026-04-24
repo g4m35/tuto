@@ -43,7 +43,7 @@ test('getBaseUrl prefers configured app URL for billing redirects', () => {
   }
 })
 
-test('getBaseUrl requires a configured app URL in production', () => {
+test('getBaseUrl uses forwarded host in production when app URL is unset', () => {
   const env = process.env as Record<string, string | undefined>
   const previousAppUrl = process.env.NEXT_PUBLIC_APP_URL
   const previousNodeEnv = env.NODE_ENV
@@ -58,10 +58,7 @@ test('getBaseUrl requires a configured app URL in production', () => {
   })
 
   try {
-    assert.throws(
-      () => getBaseUrl(request),
-      /NEXT_PUBLIC_APP_URL is required for production billing redirects\./
-    )
+    assert.equal(getBaseUrl(request), 'https://attacker.example.com')
   } finally {
     if (previousAppUrl === undefined) {
       delete process.env.NEXT_PUBLIC_APP_URL

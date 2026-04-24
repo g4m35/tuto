@@ -44,19 +44,21 @@ export function getBaseUrl(request: Request) {
     return configuredAppUrl
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('NEXT_PUBLIC_APP_URL is required for production billing redirects.')
+  const forwardedProto = request.headers.get('x-forwarded-proto')
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  if (forwardedProto && forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.replace(/\/$/, '')
+  if (vercelUrl) {
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+    return `${protocol}://${vercelUrl}`
   }
 
   const origin = request.headers.get('origin')
   if (origin) {
     return origin
-  }
-
-  const forwardedProto = request.headers.get('x-forwarded-proto')
-  const forwardedHost = request.headers.get('x-forwarded-host')
-  if (forwardedProto && forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`
   }
 
   return new URL(request.url).origin

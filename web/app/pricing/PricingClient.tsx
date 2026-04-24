@@ -36,7 +36,7 @@ const pricingCards: PricingCard[] = [
   {
     plan: "pro",
     name: "Pro",
-    price: "$24/mo",
+    price: "$20/mo",
     summary: "For individual learners who want more generation room and deeper practice.",
     features: [
       "Unlimited course creation",
@@ -47,7 +47,7 @@ const pricingCards: PricingCard[] = [
   {
     plan: "team",
     name: "Team",
-    price: "$79/mo",
+    price: "$60/mo",
     summary: "For small teams sharing a heavier workflow and more source material.",
     features: [
       "Unlimited document knowledge bases",
