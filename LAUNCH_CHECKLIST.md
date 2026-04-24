@@ -99,6 +99,8 @@ Date reviewed: 2026-04-23
   - [`web/migrations/001_users.sql`](web/migrations/001_users.sql)
   - [`web/migrations/002_usage.sql`](web/migrations/002_usage.sql)
   - [`web/migrations/003_courses.sql`](web/migrations/003_courses.sql)
+  - [`web/migrations/004_usage_reservations.sql`](web/migrations/004_usage_reservations.sql)
+  - [`web/migrations/005_stripe_webhook_events.sql`](web/migrations/005_stripe_webhook_events.sql)
 
 ### Launch requirements
 
@@ -113,9 +115,9 @@ Date reviewed: 2026-04-23
 Run these manually until the repo has a migration runner:
 
 ```bash
-psql "$DATABASE_URL" -f web/migrations/001_users.sql
-psql "$DATABASE_URL" -f web/migrations/002_usage.sql
-psql "$DATABASE_URL" -f web/migrations/003_courses.sql
+for migration in web/migrations/*.sql; do
+  psql "$DATABASE_URL" -f "$migration"
+done
 ```
 
 ## 4. KB-Backed Course Generation

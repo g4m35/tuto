@@ -15,6 +15,7 @@
   - `STRIPE_PRO_PRICE_ID`
   - `STRIPE_TEAM_PRICE_ID`
   - `DEEPTUTOR_URL`
+  - `DEEPTUTOR_API_KEY`
 - In Clerk, bind the deployed domain and set sign-in/sign-up redirects to `/dashboard`
 - In Stripe, point the webhook endpoint to `/api/webhooks/stripe`
 - Apply `web/migrations/*.sql` to the hosted Postgres database
