@@ -4,9 +4,14 @@ import { NextResponse } from "next/server";
 import { toLessonId } from "@/lib/course-data";
 import { getCourseForUser, listCoursesForUser, saveCourse } from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
-import { checkLimit, recordUsage } from "@/lib/usage";
+import {
+  commitUsageReservation,
+  recordUsage,
+  releaseUsageReservation,
+  reserveUsage,
+  type UsageReservation,
+} from "@/lib/usage";
 import { DeepTutorClientError, generateCourse, ingestDocument } from "@/lib/deeptutor";
-import { withUsageLimit } from "@/lib/withUsageLimit";
 
 export const runtime = "nodejs";
 
@@ -43,7 +48,15 @@ export async function GET() {
   }
 }
 
-export const POST = withUsageLimit("course_created", async (request, { clerkId }) => {
+export async function POST(request: Request) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  let uploadReservation: UsageReservation | null = null;
+
   try {
     const formData = await request.formData();
 
@@ -75,20 +88,28 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
         );
       }
 
-      const uploadLimit = await checkLimit(clerkId, "doc_upload");
-      if (!uploadLimit.allowed) {
+      const uploadLimit = await reserveUsage(userId, "doc_upload", {
+        metadata: {
+          fileName: file.name,
+          fileSize: file.size,
+        },
+      });
+      if (!uploadLimit.ok) {
         return NextResponse.json(
           {
             error: "limit_reached",
-            limit: uploadLimit.limit,
-            current: uploadLimit.current,
+            tier: uploadLimit.usage.tier,
+            limit: uploadLimit.usage.limit,
+            current: uploadLimit.usage.current,
             upgrade_url: "/pricing",
           },
           { status: 429 },
         );
       }
 
-      const ingested = await ingestDocument(file, clerkId);
+      uploadReservation = uploadLimit.reservation;
+
+      const ingested = await ingestDocument(file, userId);
       sourceIds = [ingested.id];
       knowledgeBaseName = ingested.knowledgeBaseName;
       backendMode = ingested.backendMode;
@@ -96,11 +117,11 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
         topicPrompt ||
         `Create a course from the uploaded source "${file.name}" and teach it step by step.`;
 
-      await recordUsage(clerkId, "doc_upload", {
+      uploadReservation.metadata = {
         sourceId: ingested.id,
         knowledgeBaseName: ingested.knowledgeBaseName,
         backendMode: ingested.backendMode,
-      });
+      };
     }
 
     const generated = await generateCourse(sourceIds, {
@@ -124,7 +145,7 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
 
     const course = await saveCourse({
       id: courseId,
-      clerkId,
+      clerkId: userId,
       title,
       subject,
       difficulty,
@@ -144,13 +165,21 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
       backendMode: generated.backendMode === "stub" ? "stub" : backendMode,
     });
 
-    await recordUsage(clerkId, "course_created", {
+    if (uploadReservation) {
+      await commitUsageReservation(uploadReservation, {
+        ...uploadReservation.metadata,
+        courseId: course.id,
+      });
+      uploadReservation = null;
+    }
+
+    await recordUsage(userId, "course_created", {
       courseId: course.id,
       backendMode: course.backendMode,
       sourceMode: course.sourceMode,
     });
 
-    const persisted = await getCourseForUser(clerkId, course.id);
+    const persisted = await getCourseForUser(userId, course.id);
 
     return attachStubHeader(
       NextResponse.json({
@@ -159,6 +188,8 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
       course.backendMode,
     );
   } catch (error) {
+    await releaseUsageReservation(uploadReservation);
+
     if (error instanceof DatabaseConfigurationError) {
       return NextResponse.json(
         {
@@ -186,4 +217,4 @@ export const POST = withUsageLimit("course_created", async (request, { clerkId }
       { status: 500 },
     );
   }
-});
+}

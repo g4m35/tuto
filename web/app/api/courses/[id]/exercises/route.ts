@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { findLesson } from "@/lib/course-data";
 import { getCourseForUser, saveExercise, updateCourseProgress } from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
-import { recordUsage } from "@/lib/usage";
 import { DeepTutorClientError, generateExercise } from "@/lib/deeptutor";
 import { withUsageLimit } from "@/lib/withUsageLimit";
 
@@ -21,7 +20,7 @@ function attachStubHeader(
 
 export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
   "message",
-  async (request, { clerkId, params }) => {
+  async (request, { clerkId, params, usageReservation }) => {
     try {
       const { id } = await params;
       const body = (await request.json().catch(() => ({}))) as {
@@ -72,11 +71,11 @@ export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
         deeptutorStatus: "learning",
       });
 
-      await recordUsage(clerkId, "message", {
+      usageReservation.metadata = {
         courseId: course.id,
         lessonId: body.lessonId,
         backendMode: generated.backendMode,
-      });
+      };
 
       return attachStubHeader(
         NextResponse.json({

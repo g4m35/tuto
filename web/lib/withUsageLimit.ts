@@ -2,36 +2,18 @@ import "server-only";
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { DatabaseConfigurationError, query } from "@/lib/db";
-import type { BillingTier } from "@/lib/limits";
-import { checkLimit, type UsageEventType } from "@/lib/usage";
-
-interface UserTierRow {
-  tier: BillingTier | string;
-}
-
-function isBillingTier(value: string): value is BillingTier {
-  return value === "free" || value === "pro" || value === "team";
-}
-
-async function getUserTier(clerkId: string): Promise<BillingTier> {
-  const result = await query<UserTierRow>(
-    `
-      select tier
-      from users
-      where clerk_id = $1
-      limit 1
-    `,
-    [clerkId],
-  );
-
-  const tier = result.rows[0]?.tier;
-  return tier && isBillingTier(tier) ? tier : "free";
-}
+import { DatabaseConfigurationError } from "@/lib/db";
+import {
+  commitUsageReservation,
+  releaseUsageReservation,
+  reserveUsage,
+  type UsageEventType,
+  type UsageReservation,
+} from "@/lib/usage";
 
 type UsageLimitedHandler<TContext> = (
   request: Request,
-  context: TContext & { clerkId: string },
+  context: TContext & { clerkId: string; usageReservation: UsageReservation },
 ) => Promise<Response>;
 
 export function withUsageLimit<TContext = unknown>(
@@ -45,9 +27,9 @@ export function withUsageLimit<TContext = unknown>(
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    let usage;
+    let reserved;
     try {
-      usage = await checkLimit(userId, eventType);
+      reserved = await reserveUsage(userId, eventType);
     } catch (error) {
       if (error instanceof DatabaseConfigurationError) {
         return NextResponse.json(
@@ -62,24 +44,37 @@ export function withUsageLimit<TContext = unknown>(
       throw error;
     }
 
-    if (!usage.allowed) {
-      const tier = await getUserTier(userId);
-
+    if (!reserved.ok) {
       return NextResponse.json(
         {
           error: "limit_reached",
-          tier,
-          limit: usage.limit,
-          current: usage.current,
+          tier: reserved.usage.tier,
+          limit: reserved.usage.limit,
+          current: reserved.usage.current,
           upgrade_url: "/pricing",
         },
         { status: 429 },
       );
     }
 
-    return handler(request, {
-      ...(context as TContext),
-      clerkId: userId,
-    });
+    const reservation = reserved.reservation;
+    try {
+      const response = await handler(request, {
+        ...(context as TContext),
+        clerkId: userId,
+        usageReservation: reservation,
+      });
+
+      if (response.status < 400) {
+        await commitUsageReservation(reservation);
+      } else {
+        await releaseUsageReservation(reservation);
+      }
+
+      return response;
+    } catch (error) {
+      await releaseUsageReservation(reservation);
+      throw error;
+    }
   };
 }

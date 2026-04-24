@@ -1,4 +1,4 @@
-import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
 
 type GlobalWithPgPool = typeof globalThis & {
   __tutoPgPool?: Pool;
@@ -63,4 +63,21 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   params: readonly unknown[] = [],
 ): Promise<QueryResult<T>> {
   return getPool().query<T>(text, [...params]);
+}
+
+export async function transaction<T>(
+  callback: (client: PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    const result = await callback(client);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback").catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
 }
