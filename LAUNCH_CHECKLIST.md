@@ -165,7 +165,7 @@ done
   - Stripe
   - `DATABASE_URL`
   - `DEEPTUTOR_URL`
-  - any proxy auth (`DEEPTUTOR_API_KEY`) if used
+  - `DEEPTUTOR_API_KEY`
 - [ ] Make persistent volumes or storage explicit for:
   - backend user data
   - backend knowledge bases
