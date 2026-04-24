@@ -921,7 +921,7 @@ function KnowledgePageContent() {
       return t("This knowledge base is currently {{status}} and cannot accept uploads yet.", { status: status.replaceAll("_", " ") });
     }
     return null;
-  }, [uploadTargetKb]);
+  }, [t, uploadTargetKb]);
 
   const uploadDisabled =
     !uploadTarget || !uploadFiles.length || !!uploadingKb || Boolean(uploadBlockedReason);
