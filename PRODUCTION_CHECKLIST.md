@@ -121,6 +121,7 @@ Pass when all are true:
 - there is a fast way to answer "is backend up?"
 - failed KB ingestion, Stripe webhook, and guided session startup errors are visible in logs
 - deploy rollback steps are written down and tested once
+- `/api/health` gives one place to check web, Postgres, Stripe config, recent webhook failures, and DeepTutor readiness
 
 Recommended checks:
 
@@ -128,6 +129,12 @@ Recommended checks:
 - backend root or router health probe
 - error log capture for webhook failures
 - restart and rollback commands documented for the chosen host
+- operator runbook and scripts:
+  - `./scripts/apply_web_migrations.sh`
+  - `./scripts/backup_postgres.sh`
+  - `./scripts/restore_postgres.sh`
+  - `./scripts/production_smoke.sh`
+  - `OPERATIONS_RUNBOOK.md`
 
 ## Manual Smoke Test
 

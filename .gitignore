@@ -198,6 +198,7 @@ $RECYCLE.BIN/
 *.backup
 *.swp
 *.swo
+.backups/
 
 # ============================================
 # Testing and Coverage

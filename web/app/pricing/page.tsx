@@ -40,6 +40,25 @@ export default async function PricingPage() {
         <Suspense>
           <PricingClient billingSummary={billingSummary} billingReady={billingReady} />
         </Suspense>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-4 text-sm text-[var(--text-dim)]">
+          <span>Questions before paying?</span>
+          <Link className="underline underline-offset-4 hover:text-[var(--text)]" href="/support">
+            Support
+          </Link>
+          <Link className="underline underline-offset-4 hover:text-[var(--text)]" href="/terms">
+            Terms
+          </Link>
+          <Link className="underline underline-offset-4 hover:text-[var(--text)]" href="/privacy">
+            Privacy
+          </Link>
+          <Link
+            className="underline underline-offset-4 hover:text-[var(--text)]"
+            href="/refund-policy"
+          >
+            Refunds
+          </Link>
+        </div>
       </div>
     </main>
   );

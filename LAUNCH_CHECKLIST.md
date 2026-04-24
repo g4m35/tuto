@@ -26,7 +26,7 @@ Date reviewed: 2026-04-23
 - [ ] The Docker deployment files are geared toward the upstream all-in-one OSS app and do not yet wire the fork's Clerk, Stripe, or Postgres requirements.
 - [ ] The release workflow publishes to this fork's GHCR namespace, but the all-in-one image still needs a production dry run with this fork's Clerk, Stripe, and Postgres configuration.
 - [ ] CI now covers backend import/smoke checks plus web launch typecheck and targeted node tests, but it still does not exercise a signed-in purchase path or end-to-end course creation.
-- [ ] There is no built-in monitoring/alerting stack beyond logs and basic health endpoints.
+- [ ] There is still no full monitoring/alerting stack, but the web app now exposes a consolidated launch-health endpoint at [`web/app/api/health/route.ts`](web/app/api/health/route.ts) and operator scripts in [`scripts/`](scripts/).
 
 ## 1. Auth And Identity
 
@@ -106,8 +106,9 @@ Date reviewed: 2026-04-23
 
 - [ ] Provision a production Postgres database.
 - [ ] Apply the web migrations in order before first traffic.
-- [ ] Write down the exact migration command and owner for deploy day.
-- [ ] Confirm backups and retention for the production database.
+- [x] The exact migration command is now scripted in [`scripts/apply_web_migrations.sh`](scripts/apply_web_migrations.sh).
+- [x] Backup and restore procedures are now written down and scripted in [`scripts/backup_postgres.sh`](scripts/backup_postgres.sh), [`scripts/restore_postgres.sh`](scripts/restore_postgres.sh), and [`OPERATIONS_RUNBOOK.md`](OPERATIONS_RUNBOOK.md).
+- [ ] Confirm backups and retention for the production database provider.
 - [ ] Confirm restores against a staging copy before launch.
 
 ### Operator commands
@@ -194,12 +195,13 @@ done
 
 - [ ] Uptime monitoring for web and backend.
 - [ ] Alerting for webhook failures, backend health failures, and repeated KB-processing failures.
+- [x] A single operator health endpoint now exists at `/api/health`.
 - [ ] A single place to inspect production logs.
 - [ ] An incident note covering who checks what first during an outage.
 
 ### Minimum incident runbook
 
-- [ ] Check web health endpoint.
+- [x] Check web health endpoint.
 - [ ] Check backend system status endpoint.
 - [ ] Check recent Stripe webhook deliveries.
 - [ ] Check recent deploys and environment-variable changes.
@@ -236,7 +238,7 @@ done
 1. Finish billing policy decisions: cancellation, downgrade timing, and whether `team` is truly launchable.
 2. Lock production deployment for this fork, not the upstream GHCR image.
 3. Provision Postgres and document migration execution.
-4. Add monitoring and alerting for web, backend, and Stripe webhooks.
+4. Add monitoring and alerting for web, backend, and Stripe webhooks on top of the new `/api/health` baseline.
 5. Run the full manual staging checklist above, including checkout and billing-portal flows.
 6. Add at least one happy-path end-to-end auth + purchase + course-generation flow to CI.
 7. Soft-launch to a very small cohort before opening broader paid access.

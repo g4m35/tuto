@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   "/terms(.*)",
   "/refund-policy(.*)",
   "/api/version(.*)",
+  "/api/health(.*)",
   "/api/health/deeptutor(.*)",
   "/api/webhooks(.*)",
 ]);
