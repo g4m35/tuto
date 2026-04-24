@@ -9,6 +9,8 @@ const isPublicRoute = createRouteMatcher([
   "/privacy(.*)",
   "/terms(.*)",
   "/refund-policy(.*)",
+  "/api/version(.*)",
+  "/api/health/deeptutor(.*)",
   "/api/webhooks(.*)",
 ]);
 
