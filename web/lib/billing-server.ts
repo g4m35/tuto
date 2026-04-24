@@ -6,7 +6,10 @@ import {
   isStripeCheckoutConfigured,
   isStripePortalConfigured,
 } from '@/lib/billing'
+import { getEffectiveBillingTier, isBillingTier } from '@/lib/billing-status'
 import type { BillingTier } from '@/lib/limits'
+
+export { isBillingTier } from '@/lib/billing-status'
 
 export interface UserBillingRow {
   clerk_id: string
@@ -34,10 +37,6 @@ export type CheckoutPlan = 'pro' | 'team'
 
 export function isCheckoutPlan(value: string): value is CheckoutPlan {
   return value === 'pro' || value === 'team'
-}
-
-export function isBillingTier(value: string): value is BillingTier {
-  return value === 'free' || value === 'pro' || value === 'team'
 }
 
 export function getPriceIdForPlan(plan: CheckoutPlan) {
@@ -149,11 +148,10 @@ export async function getUserBillingRow(clerkId: string): Promise<UserBillingRow
 
 export async function getBillingSummary(clerkId: string): Promise<BillingSummary> {
   const row = await getUserBillingRow(clerkId)
-  const tier = row?.tier
 
   return {
     billingEnabled: isDatabaseConfigured(),
-    tier: tier && isBillingTier(tier) ? tier : 'free',
+    tier: getEffectiveBillingTier(row?.tier, row?.subscription_status),
     stripeCustomerId: row?.stripe_customer_id ?? null,
     subscriptionStatus: row?.subscription_status ?? null,
     currentPeriodEnd: normalizeCurrentPeriodEnd(row?.current_period_end),
@@ -378,10 +376,10 @@ export async function createBillingPortalResult(input: {
   }
 
   const billingSummary = await deps.getBillingSummary(input.userId)
-  if (billingSummary.tier === 'free' || !billingSummary.stripeCustomerId) {
+  if (!billingSummary.stripeCustomerId) {
     return {
       status: 409,
-      body: { error: 'No active paid subscription is available to manage.' },
+      body: { error: 'No billing profile is available to manage.' },
     }
   }
 

@@ -325,7 +325,7 @@ test('createBillingPortalResult rejects free users', async () => {
   })
 
   assert.equal(result.status, 409)
-  assert.equal(result.body.error, 'No active paid subscription is available to manage.')
+  assert.equal(result.body.error, 'No billing profile is available to manage.')
 })
 
 test('createBillingPortalResult fails closed when Stripe portal is not configured', async () => {

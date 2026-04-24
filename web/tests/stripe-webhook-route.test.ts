@@ -117,7 +117,7 @@ test("customer.subscription.deleted downgrades a paid customer back to free", as
   ]);
 });
 
-test("invoice.payment_failed preserves the existing user tier when no subscription is attached", async () => {
+test("invoice.payment_failed downgrades access when no subscription is attached", async () => {
   const syncCalls: unknown[] = [];
 
   await processStripeWebhookEvent(
@@ -153,7 +153,7 @@ test("invoice.payment_failed preserves the existing user tier when no subscripti
     {
       clerkId: "clerk_existing",
       stripeCustomerId: "cus_existing",
-      tier: "team",
+      tier: "free",
       subscriptionStatus: "payment_failed",
       currentPeriodEnd: null,
     },
@@ -194,6 +194,45 @@ test("customer.subscription.updated switches a customer between paid tiers", asy
       stripeCustomerId: "cus_switch",
       tier: "team",
       subscriptionStatus: "active",
+      currentPeriodEnd: new Date("2026-05-08T00:00:00.000Z"),
+    },
+  ]);
+});
+
+test("customer.subscription.updated downgrades access for non-active paid subscriptions", async () => {
+  process.env.STRIPE_PRO_PRICE_ID = "price_pro";
+  process.env.STRIPE_TEAM_PRICE_ID = "price_team";
+
+  const syncCalls: unknown[] = [];
+
+  await processStripeWebhookEvent(
+    asWebhookEvent({
+      type: "customer.subscription.updated",
+      data: {
+        object: createSubscription({
+          customer: "cus_past_due",
+          status: "past_due",
+          priceId: "price_pro",
+          currentPeriodEnd: 1_778_198_400,
+        }),
+      },
+    }),
+    {
+      retrieveSubscription: async () => {
+        throw new Error("should not retrieve subscription for subscription.updated events");
+      },
+      getUserByStripeCustomerId: async () => null,
+      syncSubscriptionState: async (input) => {
+        syncCalls.push(input);
+      },
+    },
+  );
+
+  assert.deepEqual(syncCalls, [
+    {
+      stripeCustomerId: "cus_past_due",
+      tier: "free",
+      subscriptionStatus: "past_due",
       currentPeriodEnd: new Date("2026-05-08T00:00:00.000Z"),
     },
   ]);

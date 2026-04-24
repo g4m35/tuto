@@ -6,6 +6,7 @@ import {
   getStripeTeamPriceId,
   getStripeWebhookSecret,
 } from "@/lib/billing";
+import { getEffectiveBillingTier } from "@/lib/billing-status";
 import { query } from "@/lib/db";
 import type { BillingTier } from "@/lib/limits";
 
@@ -301,20 +302,24 @@ async function handleCheckoutSessionCompleted(
       ? await deps.getUserByStripeCustomerId(session.customer)
       : null;
 
+  const subscriptionStatus = subscription.status;
+
   await deps.syncSubscriptionState({
     clerkId: getClerkIdFromCheckoutSession(session) ?? existingUser?.clerk_id ?? null,
     stripeCustomerId: getCustomerId(session.customer),
-    tier: getTierForSubscription(subscription),
-    subscriptionStatus: subscription.status,
+    tier: getEffectiveBillingTier(getTierForSubscription(subscription), subscriptionStatus),
+    subscriptionStatus,
     currentPeriodEnd: getCurrentPeriodEndForSubscription(subscription),
   });
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription, deps: StripeWebhookDeps) {
+  const subscriptionStatus = subscription.status;
+
   await deps.syncSubscriptionState({
     stripeCustomerId: getCustomerId(subscription.customer),
-    tier: getTierForSubscription(subscription),
-    subscriptionStatus: subscription.status,
+    tier: getEffectiveBillingTier(getTierForSubscription(subscription), subscriptionStatus),
+    subscriptionStatus,
     currentPeriodEnd: getCurrentPeriodEndForSubscription(subscription),
   });
 }
@@ -344,7 +349,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice, deps: StripeW
     await deps.syncSubscriptionState({
       clerkId: existingUser?.clerk_id ?? null,
       stripeCustomerId,
-      tier: getTierForSubscription(subscription),
+      tier: "free",
       subscriptionStatus: "payment_failed",
       currentPeriodEnd: getCurrentPeriodEndForSubscription(subscription),
     });
@@ -354,7 +359,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice, deps: StripeW
   await deps.syncSubscriptionState({
     clerkId: existingUser?.clerk_id ?? null,
     stripeCustomerId,
-    tier: existingUser?.tier ?? "free",
+    tier: "free",
     subscriptionStatus: "payment_failed",
     currentPeriodEnd: null,
   });

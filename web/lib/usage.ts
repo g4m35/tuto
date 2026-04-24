@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import type { PoolClient, QueryResultRow } from "pg";
+import { getEffectiveBillingTier } from "@/lib/billing-status";
 import { getTierLimits, hasUnlimitedAllowance, type BillingTier } from "@/lib/limits";
 import { assertDatabaseConfigured, isDatabaseConfigured, query, transaction } from "@/lib/db";
 
@@ -9,6 +10,7 @@ export type UsageEventType = "message" | "doc_upload" | "course_created";
 
 interface UserTierRow extends QueryResultRow {
   tier: BillingTier | string;
+  subscription_status: string | null;
 }
 
 interface UsageCounterRow extends QueryResultRow {
@@ -48,10 +50,6 @@ export interface UsageReservation {
 export type UsageReservationResult =
   | { ok: true; reservation: UsageReservation }
   | { ok: false; reason: "limit_reached"; usage: UsageSnapshot };
-
-function isBillingTier(value: string): value is BillingTier {
-  return value === "free" || value === "pro" || value === "team";
-}
 
 function getMonthWindow(now = new Date()) {
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
@@ -111,6 +109,7 @@ async function getUserTier(clerkId: string, client: PoolClient | null = null): P
     client,
     `
       select tier
+           , subscription_status
       from users
       where clerk_id = $1
       limit 1
@@ -118,8 +117,8 @@ async function getUserTier(clerkId: string, client: PoolClient | null = null): P
     [clerkId],
   );
 
-  const tier = result.rows[0]?.tier;
-  return tier && isBillingTier(tier) ? tier : "free";
+  const row = result.rows[0];
+  return getEffectiveBillingTier(row?.tier, row?.subscription_status);
 }
 
 async function releaseExpiredReservations(
