@@ -125,7 +125,7 @@ It covers the parts that differ from the upstream OSS app, especially:
 
 Do not assume the upstream GHCR image or the OSS Docker docs are sufficient for this fork's paid launch without reviewing that checklist first.
 
-For this fork's web app, use Node 22.x. From a fresh checkout:
+For this fork's web app, use Node 24.x. From a fresh checkout:
 
 ```bash
 cd web
@@ -160,7 +160,7 @@ Before you begin, make sure the following are installed on your system:
 | :------------------------------------------ | :------ | :----------------- | :----------------------------------- |
 | [Git](https://git-scm.com/)                 | Any     | `git --version`    | For cloning the repository           |
 | [Python](https://www.python.org/downloads/) | 3.11+   | `python --version` | Backend runtime                      |
-| [Node.js](https://nodejs.org/)              | 22.x    | `node --version`   | Frontend build and the SaaS web fork |
+| [Node.js](https://nodejs.org/)              | 24.x    | `node --version`   | Frontend build and the SaaS web fork |
 | [npm](https://www.npmjs.com/)               | 10+     | `npm --version`    | Bundled with Node.js                 |
 
 You'll also need an **API key** from at least one LLM provider (e.g. [OpenAI](https://platform.openai.com/api-keys), [DeepSeek](https://platform.deepseek.com/), [Anthropic](https://console.anthropic.com/)). The Setup Tour will walk you through entering it.
