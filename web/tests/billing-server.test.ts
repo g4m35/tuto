@@ -145,6 +145,7 @@ test('createCheckoutSessionResult returns manage hint for paid users', async () 
     payload: { plan: 'pro' },
     deps: {
       isDatabaseConfigured: () => true,
+      isStripeCheckoutConfigured: () => true,
       getBillingSummary: async () => ({
         billingEnabled: true,
         tier: 'pro',
@@ -174,6 +175,7 @@ test('createCheckoutSessionResult creates a Stripe checkout session for free use
     payload: { plan: 'pro' },
     deps: {
       isDatabaseConfigured: () => true,
+      isStripeCheckoutConfigured: () => true,
       getBillingSummary: async () => ({
         billingEnabled: true,
         tier: 'free',
@@ -216,6 +218,7 @@ test('createCheckoutSessionResult blocks team checkout until team billing is rea
     payload: { plan: 'team' },
     deps: {
       isDatabaseConfigured: () => true,
+      isStripeCheckoutConfigured: () => true,
       getBillingSummary: async () => ({
         billingEnabled: true,
         tier: 'free',
@@ -230,6 +233,34 @@ test('createCheckoutSessionResult blocks team checkout until team billing is rea
   assert.equal(result.body.error, 'Team billing is not publicly available yet. Start with Pro for now.')
 })
 
+test('createCheckoutSessionResult fails closed when Stripe checkout is not configured', async () => {
+  const request = new Request('http://localhost:3000/api/billing/checkout', {
+    method: 'POST',
+    headers: { origin: 'http://localhost:3000' },
+  })
+
+  const result = await createCheckoutSessionResult({
+    request,
+    userId: 'user_free',
+    sessionClaims: { email: 'free@example.com' },
+    payload: { plan: 'pro' },
+    deps: {
+      isDatabaseConfigured: () => true,
+      isStripeCheckoutConfigured: () => false,
+      getBillingSummary: async () => ({
+        billingEnabled: true,
+        tier: 'free',
+        stripeCustomerId: null,
+        subscriptionStatus: 'inactive',
+        currentPeriodEnd: null,
+      }),
+    },
+  })
+
+  assert.equal(result.status, 503)
+  assert.equal(result.body.error, 'Billing checkout is unavailable until Stripe is configured.')
+})
+
 test('createBillingPortalResult returns a portal session for paid users', async () => {
   const request = new Request('http://localhost:3000/api/billing/portal', {
     method: 'POST',
@@ -242,6 +273,7 @@ test('createBillingPortalResult returns a portal session for paid users', async 
     userId: 'user_paid',
     deps: {
       isDatabaseConfigured: () => true,
+      isStripePortalConfigured: () => true,
       getBillingSummary: async () => ({
         billingEnabled: true,
         tier: 'pro',
@@ -281,6 +313,7 @@ test('createBillingPortalResult rejects free users', async () => {
     userId: 'user_free',
     deps: {
       isDatabaseConfigured: () => true,
+      isStripePortalConfigured: () => true,
       getBillingSummary: async () => ({
         billingEnabled: true,
         tier: 'free',
@@ -293,4 +326,29 @@ test('createBillingPortalResult rejects free users', async () => {
 
   assert.equal(result.status, 409)
   assert.equal(result.body.error, 'No active paid subscription is available to manage.')
+})
+
+test('createBillingPortalResult fails closed when Stripe portal is not configured', async () => {
+  const request = new Request('http://localhost:3000/api/billing/portal', {
+    method: 'POST',
+  })
+
+  const result = await createBillingPortalResult({
+    request,
+    userId: 'user_paid',
+    deps: {
+      isDatabaseConfigured: () => true,
+      isStripePortalConfigured: () => false,
+      getBillingSummary: async () => ({
+        billingEnabled: true,
+        tier: 'pro',
+        stripeCustomerId: 'cus_paid',
+        subscriptionStatus: 'active',
+        currentPeriodEnd: '2026-05-01T00:00:00.000Z',
+      }),
+    },
+  })
+
+  assert.equal(result.status, 503)
+  assert.equal(result.body.error, 'Billing portal is unavailable until Stripe is configured.')
 })

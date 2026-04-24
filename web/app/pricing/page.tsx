@@ -2,12 +2,14 @@ import { auth } from "@clerk/nextjs/server";
 import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { isStripeCheckoutConfigured } from "@/lib/billing";
 import { getBillingSummary } from "@/lib/billing-server";
 import { PricingClient } from "./PricingClient";
 
 export default async function PricingPage() {
   const { userId } = await auth();
   const billingSummary = userId ? await getBillingSummary(userId) : null;
+  const billingReady = isStripeCheckoutConfigured();
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -36,7 +38,7 @@ export default async function PricingPage() {
         </div>
 
         <Suspense>
-          <PricingClient billingSummary={billingSummary} />
+          <PricingClient billingSummary={billingSummary} billingReady={billingReady} />
         </Suspense>
       </div>
     </main>

@@ -1,5 +1,11 @@
 import { query, isDatabaseConfigured } from '@/lib/db'
-import { getStripeProPriceId, getStripeServerClient, getStripeTeamPriceId } from '@/lib/billing'
+import {
+  getStripeProPriceId,
+  getStripeServerClient,
+  getStripeTeamPriceId,
+  isStripeCheckoutConfigured,
+  isStripePortalConfigured,
+} from '@/lib/billing'
 import type { BillingTier } from '@/lib/limits'
 
 export interface UserBillingRow {
@@ -218,6 +224,7 @@ export function getClerkEmailFromSessionClaims(sessionClaims: unknown) {
 
 type CheckoutDependencies = {
   isDatabaseConfigured: typeof isDatabaseConfigured
+  isStripeCheckoutConfigured: typeof isStripeCheckoutConfigured
   isCheckoutPlan: typeof isCheckoutPlan
   isLaunchReadyCheckoutPlan: typeof isLaunchReadyCheckoutPlan
   getBillingSummary: typeof getBillingSummary
@@ -238,6 +245,7 @@ export async function createCheckoutSessionResult(input: {
 }): Promise<{ status: number; body: CheckoutResultBody }> {
   const deps: CheckoutDependencies = {
     isDatabaseConfigured,
+    isStripeCheckoutConfigured,
     isCheckoutPlan,
     isLaunchReadyCheckoutPlan,
     getBillingSummary,
@@ -258,6 +266,13 @@ export async function createCheckoutSessionResult(input: {
     return {
       status: 503,
       body: { error: 'Billing is unavailable until the database is configured.' },
+    }
+  }
+
+  if (!deps.isStripeCheckoutConfigured()) {
+    return {
+      status: 503,
+      body: { error: 'Billing checkout is unavailable until Stripe is configured.' },
     }
   }
 
@@ -322,6 +337,7 @@ export async function createCheckoutSessionResult(input: {
 
 type PortalDependencies = {
   isDatabaseConfigured: typeof isDatabaseConfigured
+  isStripePortalConfigured: typeof isStripePortalConfigured
   getBillingSummary: typeof getBillingSummary
   getStripeServerClient: typeof getStripeServerClient
   getBaseUrl: typeof getBaseUrl
@@ -335,6 +351,7 @@ export async function createBillingPortalResult(input: {
 }): Promise<{ status: number; body: CheckoutResultBody }> {
   const deps: PortalDependencies = {
     isDatabaseConfigured,
+    isStripePortalConfigured,
     getBillingSummary,
     getStripeServerClient,
     getBaseUrl,
@@ -350,6 +367,13 @@ export async function createBillingPortalResult(input: {
     return {
       status: 503,
       body: { error: 'Billing is unavailable until the database is configured.' },
+    }
+  }
+
+  if (!deps.isStripePortalConfigured()) {
+    return {
+      status: 503,
+      body: { error: 'Billing portal is unavailable until Stripe is configured.' },
     }
   }
 

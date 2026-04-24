@@ -19,6 +19,7 @@ interface PricingCard {
 }
 
 interface PricingClientProps {
+  billingReady: boolean;
   billingSummary: {
     billingEnabled: boolean;
     tier: BillingTier;
@@ -63,7 +64,7 @@ const pricingCards: PricingCard[] = [
   },
 ];
 
-export function PricingClient({ billingSummary }: PricingClientProps) {
+export function PricingClient({ billingReady, billingSummary }: PricingClientProps) {
   const searchParams = useSearchParams();
   const [loadingPlan, setLoadingPlan] = useState<CheckoutPlan | null>(null);
   const [managingBilling, setManagingBilling] = useState(false);
@@ -81,7 +82,7 @@ export function PricingClient({ billingSummary }: PricingClientProps) {
   }, [searchParams]);
 
   const hasPaidPlan = billingSummary?.tier === "pro" || billingSummary?.tier === "team";
-  const billingUnavailable = billingSummary?.billingEnabled === false;
+  const billingUnavailable = !billingReady || billingSummary?.billingEnabled === false;
 
   async function openBillingPortal() {
     setManagingBilling(true);
