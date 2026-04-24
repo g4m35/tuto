@@ -17,13 +17,13 @@ interface CourseRow {
   difficulty: string;
   description: string;
   source_mode: "topic" | "upload";
-  source_ids: string[] | string;
+  source_ids: string[];
   knowledge_base_name: string | null;
   deeptutor_session_id: string;
   deeptutor_status: string;
   current_lesson_index: number;
   current_lesson_id: string | null;
-  guide_payload: StoredCourse["guidePayload"] | string;
+  guide_payload: StoredCourse["guidePayload"];
   backend_mode: "live" | "stub";
   created_at: Date | string;
   updated_at: Date | string;
@@ -34,7 +34,7 @@ interface ExerciseRow {
   course_id: string;
   clerk_id: string;
   lesson_id: string;
-  exercise_payload: StoredExercise["payload"] | string;
+  exercise_payload: StoredExercise["payload"];
   backend_mode: "live" | "stub";
   created_at: Date | string;
 }
@@ -54,14 +54,6 @@ function toIsoString(value: Date | string) {
   return typeof value === "string" ? value : value.toISOString();
 }
 
-function normalizeJson<T>(value: T | string): T {
-  if (typeof value === "string") {
-    return JSON.parse(value) as T;
-  }
-
-  return value;
-}
-
 function mapCourseRow(row: CourseRow): StoredCourse {
   return {
     id: row.id,
@@ -71,15 +63,13 @@ function mapCourseRow(row: CourseRow): StoredCourse {
     difficulty: row.difficulty,
     description: row.description,
     sourceMode: row.source_mode,
-    sourceIds: Array.isArray(row.source_ids)
-      ? row.source_ids
-      : normalizeJson<string[]>(row.source_ids),
+    sourceIds: row.source_ids,
     knowledgeBaseName: row.knowledge_base_name,
     deeptutorSessionId: row.deeptutor_session_id,
     deeptutorStatus: row.deeptutor_status,
     currentLessonIndex: row.current_lesson_index,
     currentLessonId: row.current_lesson_id,
-    guidePayload: normalizeJson<StoredCourse["guidePayload"]>(row.guide_payload),
+    guidePayload: row.guide_payload,
     backendMode: row.backend_mode,
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
@@ -92,7 +82,7 @@ function mapExerciseRow(row: ExerciseRow): StoredExercise {
     courseId: row.course_id,
     clerkId: row.clerk_id,
     lessonId: row.lesson_id,
-    payload: normalizeJson<StoredExercise["payload"]>(row.exercise_payload),
+    payload: row.exercise_payload,
     backendMode: row.backend_mode,
     createdAt: toIsoString(row.created_at),
   };

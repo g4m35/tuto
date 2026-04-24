@@ -31,6 +31,25 @@ export function assertDatabaseConfigured(feature: string): void {
   }
 }
 
+function getPoolMax() {
+  const configured = Number(process.env.DATABASE_POOL_MAX ?? process.env.PGPOOL_MAX);
+  return Number.isFinite(configured) && configured > 0 ? configured : 5;
+}
+
+function getStatementTimeoutMillis() {
+  const configured = Number(process.env.DATABASE_STATEMENT_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0 ? configured : 15_000;
+}
+
+function shouldUseSsl(connectionString: string) {
+  const sslMode = new URL(connectionString).searchParams.get("sslmode") ?? process.env.PGSSLMODE;
+  if (sslMode === "disable") {
+    return false;
+  }
+
+  return sslMode === "require" || process.env.DATABASE_SSL === "true";
+}
+
 function getPool(): Pool {
   if (pool) {
     return pool;
@@ -49,11 +68,14 @@ function getPool(): Pool {
 
   pool = new Pool({
     connectionString,
+    max: getPoolMax(),
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
+    statement_timeout: getStatementTimeoutMillis(),
+    ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : undefined,
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPg.__tutoPgPool = pool;
-  }
+  globalForPg.__tutoPgPool = pool;
 
   return pool;
 }
