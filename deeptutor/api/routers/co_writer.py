@@ -1,7 +1,8 @@
 import asyncio
-import traceback
-from datetime import datetime
 from dataclasses import asdict
+from datetime import datetime
+import json
+import traceback
 from typing import AsyncGenerator, Literal
 import uuid
 
@@ -9,8 +10,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
-import json
-
+from deeptutor.agents.chat.agentic_pipeline import AgenticChatPipeline
 from deeptutor.co_writer.edit_agent import (
     TOOL_CALLS_DIR,
     EditAgent,
@@ -24,7 +24,6 @@ from deeptutor.co_writer.storage import (
     CoWriterDocumentSummary,
     get_co_writer_storage,
 )
-from deeptutor.agents.chat.agentic_pipeline import AgenticChatPipeline
 from deeptutor.core.context import UnifiedContext
 from deeptutor.core.stream_bus import StreamBus
 from deeptutor.logging import get_logger

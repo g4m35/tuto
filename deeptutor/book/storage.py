@@ -21,11 +21,11 @@ Layout (relative to ``data/user/workspace/book/``)::
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import json
 import os
-import shutil
-from datetime import datetime
 from pathlib import Path
+import shutil
 from typing import Any
 
 from deeptutor.logging import get_logger

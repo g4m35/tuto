@@ -6,14 +6,13 @@ import argparse
 from dataclasses import dataclass
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
 import textwrap
 import urllib.error
 import urllib.request
-from pathlib import Path
-
 
 CHANGELOG_VERSION_RE = re.compile(r"^\|\s*(v[0-9A-Za-z.\-]+)\s*\|", re.MULTILINE)
 ENV_VAR_LINE_RE = re.compile(r"^[+-]\s*[A-Z][A-Z0-9_]{2,}\s*=", re.MULTILINE)

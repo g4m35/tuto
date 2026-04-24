@@ -118,13 +118,14 @@ async def connect_mcp_servers(
                     sse_client(cfg.url, httpx_client_factory=httpx_client_factory)
                 )
             elif transport_type == "streamableHttp":
-                # Always provide an explicit httpx client so MCP HTTP transport does not
-                # inherit httpx's default 5s timeout and preempt the higher-level tool timeout.
+                # Keep the client timeout above the per-tool timeout so the tool wrapper
+                # remains responsible for cancelling long-running calls.
+                client_timeout = httpx.Timeout(float(cfg.tool_timeout) + 5.0, connect=10.0)
                 http_client = await stack.enter_async_context(
                     httpx.AsyncClient(
                         headers=cfg.headers or None,
                         follow_redirects=True,
-                        timeout=None,
+                        timeout=client_timeout,
                     )
                 )
                 read, write, _ = await stack.enter_async_context(

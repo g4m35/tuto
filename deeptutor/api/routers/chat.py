@@ -8,8 +8,8 @@ REST endpoints for session operations.
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
-from deeptutor.api.security import require_websocket_auth
 from deeptutor.agents.chat import ChatAgent, SessionManager
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.logging import get_logger
 from deeptutor.services.config import PROJECT_ROOT, load_config_with_main
 from deeptutor.services.llm.config import get_llm_config

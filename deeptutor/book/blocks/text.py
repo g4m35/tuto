@@ -16,7 +16,6 @@ from ._prompts import get_book_prompt, load_book_prompts
 from ._rag_helpers import optional_rag_lookup
 from .base import BlockContext, BlockGenerator
 
-
 _NONE_LABEL = {"zh": "(无)", "en": "(none)"}
 
 

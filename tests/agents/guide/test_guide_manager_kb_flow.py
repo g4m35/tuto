@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from deeptutor.agents.guide.guide_manager import GuideManager, GuidedSession
+from deeptutor.agents.guide.guide_manager import GuidedSession, GuideManager
 
 
 class _FakeRAGService:

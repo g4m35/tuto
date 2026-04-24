@@ -7,13 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from deeptutor.services.session.context_builder import (
-    ContextBuildResult,
     ContextBuilder,
+    ContextBuildResult,
     build_history_text,
     count_tokens,
     format_messages_as_transcript,
 )
-
 
 # ---------------------------------------------------------------------------
 # count_tokens

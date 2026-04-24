@@ -5,14 +5,14 @@ SQLite-backed unified chat session store.
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import json
 import os
+from pathlib import Path
 import sqlite3
 import time
-import uuid
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
+import uuid
 
 from deeptutor.services.path_service import get_path_service
 
@@ -1008,8 +1008,9 @@ class SQLiteSessionStore:
         set_clause = ", ".join(f"{k} = ?" for k in fields)
         values = list(fields.values()) + [entry_id]
         with self._connect() as conn:
+            # Fields are restricted to the local allowlist above; values remain parameterized.
             cur = conn.execute(
-                f"UPDATE notebook_entries SET {set_clause} WHERE id = ?",
+                f"UPDATE notebook_entries SET {set_clause} WHERE id = ?",  # nosec B608
                 tuple(values),
             )
             conn.commit()

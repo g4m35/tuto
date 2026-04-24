@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import tarfile
 import tempfile
 import zipfile
@@ -70,6 +71,8 @@ class TexDownloader:
 
         if not arxiv_id:
             return TexDownloadResult(success=False, error="Unable to extract ArXiv ID")
+        if not self._is_safe_arxiv_id(arxiv_id):
+            return TexDownloadResult(success=False, error="Invalid ArXiv ID")
 
         try:
             # Build source download URL
@@ -130,10 +133,14 @@ class TexDownloader:
 
     def _extract_arxiv_id(self, url: str) -> str | None:
         """Extract ArXiv ID from URL"""
-        match = re.search(r"arxiv\.org/(?:abs|pdf)/(\d+\.\d+)", url)
+        match = re.search(r"arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5}(?:v\d+)?)", url)
         if match:
             return match.group(1)
         return None
+
+    @staticmethod
+    def _is_safe_arxiv_id(arxiv_id: str) -> bool:
+        return re.fullmatch(r"\d{4}\.\d{4,5}(?:v\d+)?", arxiv_id) is not None
 
     def _is_tar_file(self, file_path: Path) -> bool:
         """Check if file is a tar file"""
@@ -152,29 +159,56 @@ class TexDownloader:
             return False
 
     def _extract_tar(self, tar_path: Path, extract_dir: Path):
-        """Extract tar file safely (prevent ZipSlip/TarSlip)"""
+        """Extract regular files from a tar archive without allowing path traversal."""
         with tarfile.open(tar_path, "r:*") as tar:
-            # Safe extraction filter
-            def is_within_directory(directory, target):
-                abs_directory = os.path.abspath(directory)
-                abs_target = os.path.abspath(target)
-                prefix = os.path.commonprefix([abs_directory, abs_target])
-                return prefix == abs_directory
-
-            def safe_members(members):
-                for member in members:
-                    member_path = os.path.join(extract_dir, member.name)
-                    if not is_within_directory(extract_dir, member_path):
-                        print(f"Suspicious file path in tar: {member.name}. Skipping.")
-                        continue
-                    yield member
-
-            tar.extractall(extract_dir, members=safe_members(tar))
+            for member in tar.getmembers():
+                target = self._safe_archive_path(extract_dir, member.name)
+                if target is None:
+                    print(f"Suspicious file path in tar: {member.name}. Skipping.")
+                    continue
+                if member.isdir():
+                    target.mkdir(parents=True, exist_ok=True)
+                    continue
+                if not member.isfile():
+                    print(f"Unsupported tar member type: {member.name}. Skipping.")
+                    continue
+                source = tar.extractfile(member)
+                if source is None:
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with source, target.open("wb") as dest:
+                    shutil.copyfileobj(source, dest)
 
     def _extract_zip(self, zip_path: Path, extract_dir: Path):
-        """Extract zip file"""
+        """Extract regular files from a zip archive without allowing path traversal."""
         with zipfile.ZipFile(zip_path, "r") as zip_file:
-            zip_file.extractall(extract_dir)
+            for member in zip_file.infolist():
+                target = self._safe_archive_path(extract_dir, member.filename)
+                if target is None:
+                    print(f"Suspicious file path in zip: {member.filename}. Skipping.")
+                    continue
+                if member.is_dir():
+                    target.mkdir(parents=True, exist_ok=True)
+                    continue
+                mode = member.external_attr >> 16
+                if stat.S_IFMT(mode) == stat.S_IFLNK:
+                    print(f"Unsupported zip member type: {member.filename}. Skipping.")
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with zip_file.open(member) as source, target.open("wb") as dest:
+                    shutil.copyfileobj(source, dest)
+
+    @staticmethod
+    def _safe_archive_path(extract_dir: Path, member_name: str) -> Path | None:
+        root = extract_dir.resolve()
+        target = (root / member_name).resolve()
+        try:
+            common_path = os.path.commonpath([str(root), str(target)])
+        except ValueError:
+            return None
+        if common_path != str(root):
+            return None
+        return target
 
     def _find_main_tex(self, directory: Path) -> Path | None:
         """

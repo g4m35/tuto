@@ -15,10 +15,10 @@ is injected verbatim into the chat system prompt when the skill is active.
 
 from __future__ import annotations
 
-import re
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
+import re
+import shutil
 from typing import Any
 
 import yaml

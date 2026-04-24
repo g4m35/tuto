@@ -14,7 +14,7 @@ from typing import Any
 from deeptutor.agents.base_agent import BaseAgent
 from deeptutor.utils.json_parser import parse_json_response
 
-from ..models import BookProposal, Chapter, ContentType, Spine, SourceAnchor
+from ..models import BookProposal, Chapter, ContentType, SourceAnchor, Spine
 
 
 def _clip(text: str, limit: int) -> str:

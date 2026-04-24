@@ -13,7 +13,6 @@ from deeptutor.services.session.turn_runtime import (
     _should_capture_assistant_content,
 )
 
-
 # ---------------------------------------------------------------------------
 # _should_capture_assistant_content
 # ---------------------------------------------------------------------------

@@ -12,14 +12,14 @@ import json
 from pathlib import Path
 from typing import Optional
 
-import typer
 from rich.console import Console
 from rich.table import Table
+import typer
 
 from deeptutor.knowledge.manager import KnowledgeBaseManager
 from deeptutor.services.path_service import get_path_service
-from deeptutor.services.rag.file_routing import FileTypeRouter
 from deeptutor.services.rag.factory import DEFAULT_PROVIDER
+from deeptutor.services.rag.file_routing import FileTypeRouter
 
 console = Console()
 

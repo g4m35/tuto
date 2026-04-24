@@ -12,8 +12,8 @@ Generators are stateless and are looked up by ``BlockType`` via
 
 from __future__ import annotations
 
-import asyncio
 from abc import ABC, abstractmethod
+import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 

@@ -14,13 +14,12 @@ Pydantic models that describe the persistent state of a Book:
 
 from __future__ import annotations
 
-import time
-import uuid
 from enum import Enum
+import time
 from typing import Any
+import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Enums

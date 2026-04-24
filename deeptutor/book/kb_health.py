@@ -13,11 +13,10 @@ recurring failures – useful for maintenance dashboards.
 
 from __future__ import annotations
 
-import hashlib
-import re
 from dataclasses import dataclass, field
-from datetime import datetime
+import hashlib
 from pathlib import Path
+import re
 
 from deeptutor.knowledge import KnowledgeBaseManager
 from deeptutor.logging import get_logger
@@ -62,7 +61,7 @@ def fingerprint_kb(kb_name: str, manager: KnowledgeBaseManager | None = None) ->
             parts.append(token)
     if not parts:
         return ""
-    digest = hashlib.sha1("|".join(parts).encode("utf-8")).hexdigest()
+    digest = hashlib.sha1("|".join(parts).encode("utf-8"), usedforsecurity=False).hexdigest()
     return digest
 
 

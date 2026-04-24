@@ -88,10 +88,8 @@ class TavilyProvider(BaseSearchProvider):
         if exclude_domains:
             payload["exclude_domains"] = exclude_domains
 
-        request_kwargs: dict[str, Any] = {"json": payload, "timeout": timeout}
-        if self.proxy:
-            request_kwargs["proxies"] = {"http": self.proxy, "https": self.proxy}
-        response = requests.post(self.BASE_URL, **request_kwargs)
+        proxies = {"http": self.proxy, "https": self.proxy} if self.proxy else None
+        response = requests.post(self.BASE_URL, json=payload, timeout=timeout, proxies=proxies)
 
         if response.status_code != 200:
             try:

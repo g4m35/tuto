@@ -491,12 +491,13 @@ async def websocket_question_generate(websocket: WebSocket):
 
             # Log additional context if available
             try:
-                if "result" in locals():
+                result_context = locals().get("result")
+                if result_context is not None:
                     logger.error(
-                        f"Result type: {type(result)}, result keys: {result.keys() if isinstance(result, dict) else 'N/A'}"
+                        f"Result type: {type(result_context)}, result keys: {result_context.keys() if isinstance(result_context, dict) else 'N/A'}"
                     )
-                    if isinstance(result, dict) and "validation" in result:
-                        validation = result["validation"]
+                    if isinstance(result_context, dict) and "validation" in result_context:
+                        validation = result_context["validation"]
                         logger.error(f"Validation type: {type(validation)}")
                         if isinstance(validation, dict):
                             logger.error(f"Validation keys: {validation.keys()}")

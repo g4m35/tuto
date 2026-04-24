@@ -48,10 +48,8 @@ class SearxngProvider(BaseSearchProvider):
             "q": query,
             "format": "json",
         }
-        request_kwargs: dict[str, Any] = {"params": params, "timeout": timeout}
-        if self.proxy:
-            request_kwargs["proxies"] = {"http": self.proxy, "https": self.proxy}
-        resp = requests.get(endpoint, **request_kwargs)
+        proxies = {"http": self.proxy, "https": self.proxy} if self.proxy else None
+        resp = requests.get(endpoint, params=params, timeout=timeout, proxies=proxies)
         if resp.status_code != 200:
             raise Exception(f"SearXNG API error: {resp.status_code} - {resp.text}")
         payload = resp.json()
@@ -90,4 +88,3 @@ class SearxngProvider(BaseSearchProvider):
             search_results=search_results,
             metadata={"finish_reason": "stop"},
         )
-

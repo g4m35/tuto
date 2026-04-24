@@ -1005,7 +1005,7 @@ class ReportingAgent(BaseAgent):
         sources = citation.get("sources", [])
 
         # Tool name display
-        result = f"**RAG**"
+        result = "**RAG**"
         if kb_name:
             result += f" (KB: {kb_name})"
         result += "\n\n"

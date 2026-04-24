@@ -41,7 +41,6 @@ from deeptutor.core.context import UnifiedContext
 from deeptutor.core.stream import StreamEvent, StreamEventType
 from deeptutor.core.stream_bus import StreamBus
 
-
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
@@ -544,14 +543,14 @@ class TestMathAnimatorAnswerNow:
     async def test_skips_analysis_design_summary_but_calls_codegen_and_render(
         self,
     ) -> None:
+        # Skip the whole test cleanly when manim isn't available, since
+        # math_animator.run() short-circuits before we can patch anything.
+        import importlib.util as _ilu
+
         from deeptutor.agents.math_animator.models import (
             GeneratedCode,
             RenderResult,
         )
-
-        # Skip the whole test cleanly when manim isn't available, since
-        # math_animator.run() short-circuits before we can patch anything.
-        import importlib.util as _ilu
 
         if _ilu.find_spec("manim") is None:
             pytest.skip("manim not installed; math_animator answer-now test skipped")

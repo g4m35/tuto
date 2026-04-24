@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import logging
 
-from pydantic import BaseModel, Field, field_validator
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field, field_validator
 
 from deeptutor.services.session import get_sqlite_session_store
 

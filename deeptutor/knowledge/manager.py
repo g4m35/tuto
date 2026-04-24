@@ -15,9 +15,8 @@ import shutil
 import sys
 
 from deeptutor.logging import get_logger
-from deeptutor.services.rag.file_routing import FileTypeRouter
-
 from deeptutor.services.rag.factory import DEFAULT_PROVIDER
+from deeptutor.services.rag.file_routing import FileTypeRouter
 
 logger = get_logger("KnowledgeBaseManager")
 

@@ -10,20 +10,24 @@ This is the single source of truth for agent base functionality across:
 """
 
 from abc import ABC, abstractmethod
+import inspect
 import os
 import time
-import inspect
 from typing import Any, AsyncGenerator, Awaitable, Callable
 
 from deeptutor.config.settings import settings
 from deeptutor.logging import LLMStats, get_logger
-from deeptutor.services.provider_registry import canonical_provider_name, find_by_name
 from deeptutor.services.config import get_agent_params
 from deeptutor.services.llm import complete as llm_complete
-from deeptutor.services.llm import get_llm_config, get_token_limit_kwargs, supports_response_format
-from deeptutor.services.llm import prepare_multimodal_messages, supports_vision
+from deeptutor.services.llm import (
+    get_llm_config,
+    get_token_limit_kwargs,
+    prepare_multimodal_messages,
+    supports_response_format,
+)
 from deeptutor.services.llm import stream as llm_stream
 from deeptutor.services.prompt import get_prompt_manager
+from deeptutor.services.provider_registry import canonical_provider_name, find_by_name
 
 
 class BaseAgent(ABC):

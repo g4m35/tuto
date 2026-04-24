@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import textwrap
 from pathlib import Path
+import textwrap
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -12,7 +12,6 @@ import yaml
 
 from deeptutor.services.config import loader as loader_module
 from deeptutor.services.config.loader import get_agent_params
-
 
 # ---------------------------------------------------------------------------
 # get_agent_params("llm_probe") — reads diagnostics.llm_probe from agents.yaml
@@ -87,9 +86,9 @@ class TestLlmProbeUsesAgentsYaml:
     @pytest.mark.asyncio
     @pytest.mark.usefixtures("_patch_project_root")
     async def test_probe_passes_configured_max_tokens(self, monkeypatch):
+        from deeptutor.services import llm as llm_module
         from deeptutor.services.config import test_runner as test_runner_module
         from deeptutor.services.config.test_runner import ConfigTestRunner, TestRun
-        from deeptutor.services import llm as llm_module
 
         captured_kwargs: dict[str, Any] = {}
 
@@ -117,9 +116,9 @@ class TestLlmProbeUsesAgentsYaml:
         project_root = _write_agents_yaml(tmp_path, {"capabilities": {}})
         monkeypatch.setattr(loader_module, "PROJECT_ROOT", project_root)
 
+        from deeptutor.services import llm as llm_module
         from deeptutor.services.config import test_runner as test_runner_module
         from deeptutor.services.config.test_runner import ConfigTestRunner, TestRun
-        from deeptutor.services import llm as llm_module
 
         captured_kwargs: dict[str, Any] = {}
 

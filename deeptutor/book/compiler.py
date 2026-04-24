@@ -21,8 +21,8 @@ re-generation requests.
 from __future__ import annotations
 
 import asyncio
-import time
 from dataclasses import dataclass
+import time
 
 from deeptutor.logging import get_logger
 

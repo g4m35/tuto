@@ -208,7 +208,6 @@ class DeepQuestionCapability(BaseCapability):
         with ``qa_pair`` items) so the existing ``QuizViewer`` renders it
         without changes.
         """
-        import json
 
         from deeptutor.capabilities._answer_now import (
             build_answer_now_trace_metadata,
