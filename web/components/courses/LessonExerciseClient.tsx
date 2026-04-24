@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ArrowRight, ChevronLeft, Lightbulb, Sparkles } from "lucide-react"
+import { ArrowRight, ChevronLeft, Check, Lightbulb, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import type { ExerciseData } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -11,6 +11,56 @@ interface LessonExerciseClientProps {
   courseId: string
   lessonId: string
   initialExercise: ExerciseData | null
+}
+
+function LessonVisualPanel() {
+  return (
+    <div className="editorial-card relative overflow-hidden px-6 py-6">
+      <div className="absolute inset-x-6 top-4 flex items-center justify-between text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
+        <span>Intuition layer</span>
+        <span>same vector · new frame</span>
+      </div>
+      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-6">
+          <svg viewBox="-120 -120 240 240" className="h-[18rem] w-[18rem]" aria-hidden="true">
+            <defs>
+              <pattern
+                id="lesson-grid"
+                width="22"
+                height="22"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(28)"
+              >
+                <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" />
+              </pattern>
+            </defs>
+            <rect x="-120" y="-120" width="240" height="240" fill="url(#lesson-grid)" />
+            <line x1="-90" y1="0" x2="90" y2="0" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+            <line x1="0" y1="-90" x2="0" y2="90" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
+            <line x1="0" y1="0" x2="70" y2="-42" stroke="currentColor" strokeWidth="3" className="text-[var(--accent)]" strokeLinecap="round" />
+            <circle cx="70" cy="-42" r="4" fill="currentColor" className="text-[var(--accent)]" />
+            <line x1="0" y1="0" x2="54" y2="34" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" />
+            <line x1="0" y1="0" x2="-34" y2="72" stroke="rgba(255,255,255,0.28)" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <div className="space-y-4">
+          <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
+            <p className="eyebrow">What stays fixed</p>
+            <p className="mt-3 text-sm leading-7 text-[var(--text-dim)]">
+              The object itself does not move. Only the coordinates shift when the frame changes.
+            </p>
+          </div>
+          <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
+            <p className="eyebrow">Watch for</p>
+            <p className="mt-3 text-sm leading-7 text-[var(--text-dim)]">
+              Eliminate answers that confuse a property of the basis with a property of the vector.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function LessonExerciseClient({
@@ -24,6 +74,8 @@ export function LessonExerciseClient({
   const [checked, setChecked] = useState(false)
   const [loading, setLoading] = useState(!initialExercise)
   const [error, setError] = useState<string | null>(null)
+  const selectedBody =
+    exercise?.options.find((option) => option.id === selectedOption)?.body ?? null
 
   useEffect(() => {
     if (exercise) return
@@ -162,12 +214,10 @@ export function LessonExerciseClient({
               <p className="max-w-3xl text-xl leading-8 text-[var(--text-dim)] italic">
                 {exercise.prompt}
               </p>
+              </div>
             </div>
-          </div>
 
-          <div className="editorial-card flex min-h-72 items-center justify-center px-6 py-6 text-center text-sm text-[var(--text-dim)]">
-            Visual workspace placeholder for the adaptive explanation layer.
-          </div>
+          <LessonVisualPanel />
 
           <div className="space-y-3">
             {exercise.options.map((option, index) => {
@@ -187,6 +237,7 @@ export function LessonExerciseClient({
                       ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
                       : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
                   )}
+                  style={{ animationDelay: `${index * 70}ms` }}
                 >
                   <div className="flex items-start gap-4">
                     <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] font-medium text-[var(--text-dim)]">
@@ -203,6 +254,20 @@ export function LessonExerciseClient({
               )
             })}
           </div>
+
+          {checked && selectedBody ? (
+            <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
+              <div className="flex items-start gap-3">
+                <Check className="mt-1 size-4 text-[var(--accent)]" />
+                <div>
+                  <p className="text-sm font-medium text-[var(--text)]">Answer recorded</p>
+                  <p className="mt-1">
+                    You picked <span className="text-[var(--text)]">{selectedBody}</span>. Use the hint if you want one last nudge before moving on.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {showHint ? (
             <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
@@ -249,6 +314,13 @@ export function LessonExerciseClient({
             <p className="eyebrow">Why this step</p>
             <p className="mt-4 text-sm leading-7 text-[var(--text-dim)]">
               The exercise is keeping the practice loop narrow, so you strengthen the current idea before the path opens wider.
+            </p>
+          </div>
+
+          <div className="editorial-card animate-rise-in-delay-3 p-5">
+            <p className="eyebrow">Next unlock</p>
+            <p className="mt-4 text-sm leading-7 text-[var(--text-dim)]">
+              Once this concept is stable, Tuto opens the next step instead of widening the scope too early.
             </p>
           </div>
         </aside>
