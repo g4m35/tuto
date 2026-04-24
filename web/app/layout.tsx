@@ -1,27 +1,30 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Fraunces, Geist } from "next/font/google";
+import { Instrument_Serif, Inter } from "next/font/google";
 import "./globals.css";
 import ThemeScript from "@/components/ThemeScript";
 import { AppShellProvider } from "@/context/AppShellContext";
 import { I18nClientBridge } from "@/i18n/I18nClientBridge";
 import { cn } from "@/lib/utils";
 
-const fontSans = Geist({
+const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const fontSerif = Fraunces({
+const fontSerif = Instrument_Serif({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-serif",
-  style: ["italic", "normal"],
+  style: ["italic"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
-  title: "DeepTutor",
-  description: "Agent-native intelligent learning companion",
+  title: "Tuto",
+  description: "AI tutoring that keeps the subject in focus.",
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },

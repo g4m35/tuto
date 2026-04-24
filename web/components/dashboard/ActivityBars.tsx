@@ -6,10 +6,10 @@ export function ActivityBars({ bars = defaultBars }: { bars?: number[] }) {
       {bars.map((value, index) => (
         <div
           key={`${value}-${index}`}
-          className="flex h-14 items-end rounded-full bg-[var(--bg-soft)] p-1"
+          className="flex h-14 items-end rounded-[var(--radius-sm)] bg-[var(--bg-soft)] p-1"
         >
           <span
-            className="block w-full rounded-full bg-[var(--accent)]/90 animate-rise-in"
+            className="block w-full rounded-[var(--radius-sm)] bg-[var(--accent)] animate-rise-in"
             style={{ height: `${value}px`, animationDelay: `${index * 60}ms` }}
           />
         </div>

@@ -9,6 +9,16 @@ import { toDashboardViewData } from "@/lib/course-data"
 import { listCoursesForUser } from "@/lib/course-store"
 import { cn } from "@/lib/utils"
 
+function Eyebrow({ index, children }: { index: number; children: React.ReactNode }) {
+  return (
+    <p className="t-eyebrow">
+      <span className="t-eyebrow__num">{String(index).padStart(2, "0")}</span>
+      <span className="t-eyebrow__rule" aria-hidden="true" />
+      <span>{children}</span>
+    </p>
+  )
+}
+
 function DashboardMetric({
   label,
   value,
@@ -21,13 +31,13 @@ function DashboardMetric({
   className?: string
 }) {
   return (
-    <div className={cn("editorial-stat hover-lift p-5", className)}>
-      <p className="eyebrow">{label}</p>
-      <p className="mt-4 text-[2rem] font-medium leading-none tracking-[-0.04em] text-[var(--text)]">
+    <div className={cn("editorial-stat t-lift p-5", className)}>
+      <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">{label}</p>
+      <p className="mt-4 font-[var(--font-sans)] text-[34px] font-semibold leading-[1.15] tracking-[-0.015em] text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">
         {value}
       </p>
       {detail ? (
-        <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
+        <p className="mt-3 text-[12px] leading-[1.4] text-[var(--text-dim)]">
           {detail}
         </p>
       ) : null}
@@ -58,14 +68,14 @@ export default async function DashboardPage() {
 
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_360px] xl:items-end">
           <div className="animate-rise-in space-y-6">
-            <p className="eyebrow">Study loop</p>
+            <Eyebrow index={1}>Study loop</Eyebrow>
             <div className="space-y-4">
-              <h1 className="serif max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-[var(--text)] sm:text-6xl">
+              <h1 className="max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-[-0.02em] text-[var(--text)] sm:text-[56px]">
                 {continueCourse
                   ? "Welcome back. Pick up where the idea still feels unstable."
                   : "Welcome back. The dashboard is ready to start taking shape."}
               </h1>
-              <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
+              <p className="max-w-2xl text-[14px] leading-[1.55] text-[var(--text-dim)] sm:text-base">
                 {continueCourse
                   ? `You were last working on ${dashboard.insightTopic}. The next session is already shaped around that weak spot, so you can stay inside the thread instead of starting over.`
                   : "Create a course from a topic or source document, and the next session will start taking form here."}
@@ -90,26 +100,26 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <aside className="surface-card animate-rise-in-delay-1 p-6">
-            <p className="eyebrow">Last 7 days</p>
+          <aside className="surface-card animate-rise-in-delay-1 p-5">
+            <Eyebrow index={2}>Last 7 days</Eyebrow>
             <div className="mt-5">
               <ActivityBars />
             </div>
             <div className="mt-5 grid grid-cols-3 gap-3 text-sm text-[var(--text-dim)]">
               <div>
-                <p className="text-[var(--text)]">{dashboard.courses.length}</p>
+                <p className="text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">{dashboard.courses.length}</p>
                 <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Courses</p>
               </div>
               <div>
-                <p className="text-[var(--text)]">{completedLessons}</p>
+                <p className="text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">{completedLessons}</p>
                 <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Lessons</p>
               </div>
               <div>
-                <p className="text-[var(--text)]">{dashboard.streakDays}d</p>
+                <p className="text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">{dashboard.streakDays}d</p>
                 <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Streak</p>
               </div>
             </div>
-            <div className="mt-6 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
+            <div className="mt-6 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-elev-2)] px-4 py-4">
               <div className="flex items-start gap-3">
                 <Flame className="mt-0.5 size-4 text-[var(--accent)]" />
                 <div className="space-y-1">
@@ -158,8 +168,8 @@ export default async function DashboardPage() {
         <section id="courses" className="scroll-mt-28 space-y-5">
           <div className="flex items-end justify-between gap-4">
             <div className="space-y-2">
-              <p className="eyebrow">Your courses</p>
-              <h2 className="serif text-[2.25rem] font-semibold tracking-[-0.05em] text-[var(--text)]">
+              <Eyebrow index={3}>Your courses</Eyebrow>
+              <h2 className="text-[22px] font-medium leading-[1.3] tracking-[-0.01em] text-[var(--text)]">
                 Keep moving the tracks that matter.
               </h2>
             </div>
@@ -174,20 +184,20 @@ export default async function DashboardPage() {
                 <Link
                   key={course.id}
                   href={`/courses/${course.id}`}
-                  className="group editorial-card hover-lift animate-rise-in relative overflow-hidden px-5 py-5 sm:px-6"
+                  className="group editorial-card t-lift animate-rise-in relative overflow-hidden px-5 py-5 sm:px-6"
                 >
                   <span
-                    className="absolute left-0 top-4 bottom-4 w-px rounded-full bg-[var(--accent)]/60 transition-opacity group-hover:opacity-100"
+                    className="absolute bottom-4 left-0 top-4 w-1 rounded-r-[1px] bg-[var(--accent)]/90 transition-opacity group-hover:opacity-100"
                     aria-hidden="true"
                   />
                   <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px_120px] lg:items-center">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
                         <span>{String(index + 1).padStart(2, "0")}</span>
-                        <span className="size-1 rounded-full bg-[var(--text-faint)]" />
+                        <span className="size-[5px] rounded-[1px] bg-[var(--text-dim)]" />
                         <span>{course.subject}</span>
                       </div>
-                      <h3 className="text-xl font-medium tracking-[-0.03em] text-[var(--text)]">
+                      <h3 className="text-[16px] font-medium leading-[1.4] text-[var(--text)]">
                         {course.title}
                       </h3>
                       <p className="text-sm text-[var(--text-dim)]">
@@ -232,8 +242,8 @@ export default async function DashboardPage() {
   } catch (error) {
     return (
       <div className="editorial-card px-8 py-8">
-        <p className="eyebrow">Dashboard unavailable</p>
-        <h1 className="serif mt-4 text-4xl font-semibold tracking-[-0.04em] text-[var(--text)]">
+        <Eyebrow index={1}>Dashboard unavailable</Eyebrow>
+        <h1 className="mt-4 text-[34px] font-semibold leading-[1.15] tracking-[-0.015em] text-[var(--text)]">
           We could not load your courses.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">

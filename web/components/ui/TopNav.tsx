@@ -19,12 +19,12 @@ export function TopNav() {
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[color:color-mix(in_srgb,var(--bg)_82%,transparent)] backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4 px-5 py-4 sm:px-8">
+    <header className="sticky top-0 z-40 h-16 border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(20,17,14,0.85),rgba(20,17,14,0.72))] backdrop-blur-[14px]">
+      <div className="mx-auto flex h-full w-full max-w-[1200px] items-center justify-between gap-4 px-5 sm:px-7">
         <div className="flex items-center gap-8">
           <Link
             href="/dashboard"
-            className="[font-family:var(--font-serif)] text-[1.95rem] font-medium italic tracking-tight text-[var(--text)]"
+            className="[font-family:var(--font-serif)] text-[2rem] font-normal italic leading-none tracking-normal text-[var(--text)]"
           >
             tuto.
           </Link>
@@ -40,10 +40,10 @@ export function TopNav() {
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "relative inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[0.83rem] font-medium text-[var(--text-dim)]",
+                    "relative inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13px] font-medium text-[var(--text-faint)]",
                     active
                       ? "text-[var(--text)]"
-                      : "hover:bg-[var(--bg-soft)] hover:text-[var(--text)]"
+                      : "hover:text-[var(--text-dim)]"
                   )}
                 >
                   <Icon className="size-3.5" />
@@ -59,7 +59,7 @@ export function TopNav() {
 
         <div className="flex items-center gap-3">
           <CommandPalette />
-          <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3 py-2 text-sm text-[var(--text-dim)] lg:inline-flex">
+          <div className="hidden h-[30px] items-center gap-2 rounded-full border border-[var(--border)] px-3 text-[12px] text-[var(--text-dim)] lg:inline-flex">
             <Flame className="size-4 text-[var(--accent)]" />
             <span>12 day streak</span>
           </div>
