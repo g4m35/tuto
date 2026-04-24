@@ -8,12 +8,15 @@ import {
   hasValidBillingRequestOrigin,
   isBillingTier,
   isCheckoutPlan,
+  isLaunchReadyCheckoutPlan,
 } from '../lib/billing-server'
 
 test('billing helpers validate expected plan and tier values', () => {
   assert.equal(isCheckoutPlan('pro'), true)
   assert.equal(isCheckoutPlan('team'), true)
   assert.equal(isCheckoutPlan('free'), false)
+  assert.equal(isLaunchReadyCheckoutPlan('pro'), true)
+  assert.equal(isLaunchReadyCheckoutPlan('team'), false)
 
   assert.equal(isBillingTier('free'), true)
   assert.equal(isBillingTier('pro'), true)
@@ -198,6 +201,33 @@ test('createCheckoutSessionResult creates a Stripe checkout session for free use
   assert.equal(result.body.url, 'https://checkout.stripe.test/session_123')
   assert.equal(createCall?.['customer'], 'cus_123')
   assert.equal(createCall?.['success_url'], 'http://localhost:3000/dashboard?billing=success')
+})
+
+test('createCheckoutSessionResult blocks team checkout until team billing is ready', async () => {
+  const request = new Request('http://localhost:3000/api/billing/checkout', {
+    method: 'POST',
+    headers: { origin: 'http://localhost:3000' },
+  })
+
+  const result = await createCheckoutSessionResult({
+    request,
+    userId: 'user_free',
+    sessionClaims: { email: 'free@example.com' },
+    payload: { plan: 'team' },
+    deps: {
+      isDatabaseConfigured: () => true,
+      getBillingSummary: async () => ({
+        billingEnabled: true,
+        tier: 'free',
+        stripeCustomerId: null,
+        subscriptionStatus: 'inactive',
+        currentPeriodEnd: null,
+      }),
+    },
+  })
+
+  assert.equal(result.status, 409)
+  assert.equal(result.body.error, 'Team billing is not publicly available yet. Start with Pro for now.')
 })
 
 test('createBillingPortalResult returns a portal session for paid users', async () => {

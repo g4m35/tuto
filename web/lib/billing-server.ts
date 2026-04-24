@@ -38,6 +38,10 @@ export function getPriceIdForPlan(plan: CheckoutPlan) {
   return plan === 'team' ? getStripeTeamPriceId() : getStripeProPriceId()
 }
 
+export function isLaunchReadyCheckoutPlan(plan: CheckoutPlan) {
+  return plan === 'pro'
+}
+
 export function getBaseUrl(request: Request) {
   const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
   if (configuredAppUrl) {
@@ -215,6 +219,7 @@ export function getClerkEmailFromSessionClaims(sessionClaims: unknown) {
 type CheckoutDependencies = {
   isDatabaseConfigured: typeof isDatabaseConfigured
   isCheckoutPlan: typeof isCheckoutPlan
+  isLaunchReadyCheckoutPlan: typeof isLaunchReadyCheckoutPlan
   getBillingSummary: typeof getBillingSummary
   getClerkEmailFromSessionClaims: typeof getClerkEmailFromSessionClaims
   createOrReuseCustomer: typeof createOrReuseCustomer
@@ -234,6 +239,7 @@ export async function createCheckoutSessionResult(input: {
   const deps: CheckoutDependencies = {
     isDatabaseConfigured,
     isCheckoutPlan,
+    isLaunchReadyCheckoutPlan,
     getBillingSummary,
     getClerkEmailFromSessionClaims,
     createOrReuseCustomer,
@@ -261,6 +267,13 @@ export async function createCheckoutSessionResult(input: {
       : ''
   if (!deps.isCheckoutPlan(plan)) {
     return { status: 400, body: { error: 'Invalid billing plan.' } }
+  }
+
+  if (!deps.isLaunchReadyCheckoutPlan(plan)) {
+    return {
+      status: 409,
+      body: { error: 'Team billing is not publicly available yet. Start with Pro for now.' },
+    }
   }
 
   const billingSummary = await deps.getBillingSummary(input.userId)

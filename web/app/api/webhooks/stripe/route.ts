@@ -364,30 +364,21 @@ export async function processStripeWebhookEvent(
   event: Pick<Stripe.Event, "type" | "data">,
   deps: StripeWebhookDeps = defaultWebhookDeps,
 ) {
-  try {
-    switch (event.type) {
-      case "checkout.session.completed":
-        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session, deps);
-        break;
-      case "customer.subscription.updated":
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, deps);
-        break;
-      case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, deps);
-        break;
-      case "invoice.payment_failed":
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, deps);
-        break;
-      default:
-        break;
-    }
-  } catch (error) {
-    if (error instanceof IgnoredStripeWebhookEventError) {
-      console.warn(error.message);
-      return;
-    }
-
-    throw error;
+  switch (event.type) {
+    case "checkout.session.completed":
+      await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session, deps);
+      break;
+    case "customer.subscription.updated":
+      await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, deps);
+      break;
+    case "customer.subscription.deleted":
+      await handleSubscriptionDeleted(event.data.object as Stripe.Subscription, deps);
+      break;
+    case "invoice.payment_failed":
+      await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice, deps);
+      break;
+    default:
+      break;
   }
 }
 

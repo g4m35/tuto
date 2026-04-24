@@ -14,6 +14,8 @@ interface PricingCard {
   price: string;
   summary: string;
   features: string[];
+  checkoutEnabled: boolean;
+  ctaLabel: string;
 }
 
 interface PricingClientProps {
@@ -43,17 +45,21 @@ const pricingCards: PricingCard[] = [
       "10 document knowledge bases",
       "Unlimited guided practice",
     ],
+    checkoutEnabled: true,
+    ctaLabel: "Choose Pro",
   },
   {
     plan: "team",
     name: "Team",
-    price: "$60/mo",
-    summary: "For small teams sharing a heavier workflow and more source material.",
+    price: "$65/mo",
+    summary: "For operator-led cohorts and teams. We are keeping this gated until shared billing is fully ready.",
     features: [
-      "Unlimited document knowledge bases",
-      "Shared billing tier for operator accounts",
-      "Priority launch support runway",
+      "Reserved launch pricing while Team is in rollout",
+      "Priority migration once shared billing ships",
+      "Direct setup support for early operators",
     ],
+    checkoutEnabled: false,
+    ctaLabel: "Team coming soon",
   },
 ];
 
@@ -192,6 +198,12 @@ export function PricingClient({ billingSummary }: PricingClientProps) {
       <div className="grid gap-4 xl:grid-cols-2">
         {pricingCards.map((card) => {
           const loading = loadingPlan === card.plan;
+          const cardDisabled =
+            loading ||
+            managingBilling ||
+            billingUnavailable ||
+            hasPaidPlan ||
+            !card.checkoutEnabled;
 
           return (
             <section
@@ -221,17 +233,19 @@ export function PricingClient({ billingSummary }: PricingClientProps) {
                 <Button
                   size="lg"
                   className="w-full"
-                  disabled={loading || managingBilling || billingUnavailable || hasPaidPlan}
+                  disabled={cardDisabled}
                   onClick={() => startCheckout(card.plan)}
                 >
                   {loading ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                  {hasPaidPlan
+                  {!card.checkoutEnabled
+                    ? card.ctaLabel
+                    : hasPaidPlan
                     ? "Current plan active"
                     : loading
                       ? "Redirecting to Stripe"
                       : billingUnavailable
                         ? "Billing unavailable"
-                        : `Choose ${card.name}`}
+                        : card.ctaLabel}
                 </Button>
               </div>
             </section>
