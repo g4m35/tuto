@@ -1,5 +1,6 @@
 """Configuration helpers backed by runtime YAML and the project `.env` file."""
 
+from . import loader as loader
 from .env_store import ConfigSummary, EnvStore, get_env_store
 from .knowledge_base_config import (
     KnowledgeBaseConfigService,
@@ -23,6 +24,7 @@ __all__ = [
     "EnvStore",
     "get_env_store",
     # From loader.py
+    "loader",
     "PROJECT_ROOT",
     "get_runtime_settings_dir",
     "load_config_with_main",
