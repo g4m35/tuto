@@ -9,6 +9,7 @@ import traceback
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from deeptutor.agents.question import AgentCoordinator
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.api.utils.log_interceptor import LogInterceptor
 from deeptutor.api.utils.task_id_manager import TaskIDManager
 from deeptutor.logging import get_logger
@@ -58,6 +59,8 @@ async def websocket_mimic_generate(websocket: WebSocket):
         "max_questions": 5  // optional
     }
     """
+    if not await require_websocket_auth(websocket):
+        return
     await websocket.accept()
 
     pusher_task = None
@@ -323,6 +326,8 @@ async def websocket_mimic_generate(websocket: WebSocket):
 
 @router.websocket("/generate")
 async def websocket_question_generate(websocket: WebSocket):
+    if not await require_websocket_auth(websocket):
+        return
     await websocket.accept()
 
     # Get task ID manager

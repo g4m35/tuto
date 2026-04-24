@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from deeptutor.agents.vision_solver import VisionSolverAgent
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.logging import get_logger
 from deeptutor.services.llm import get_llm_config
 from deeptutor.services.settings.interface_settings import get_ui_language
@@ -144,6 +145,8 @@ async def websocket_vision_solve(websocket: WebSocket):
        - {"type": "text", "content": "..."}
        - {"type": "done"}
     """
+    if not await require_websocket_auth(websocket):
+        return
     await websocket.accept()
 
     connection_closed = asyncio.Event()

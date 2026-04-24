@@ -625,41 +625,43 @@ function KnowledgePageContent() {
     closeProgressSocket(kbName);
 
     const query = expectedTaskId ? `?task_id=${encodeURIComponent(expectedTaskId)}` : "";
-    const socket = new WebSocket(wsUrl(`/api/v1/knowledge/${kbName}/progress/ws${query}`));
-    socketsRef.current[kbName] = socket;
+    void wsUrl(`/api/v1/knowledge/${kbName}/progress/ws${query}`).then((url) => {
+      const socket = new WebSocket(url);
+      socketsRef.current[kbName] = socket;
 
-    socket.onmessage = (event) => {
-      try {
-        const rawData = JSON.parse(event.data) as {
-          type?: string;
-          data?: ProgressInfo;
-          message?: string;
-        };
-        const progress =
-          rawData?.type === "progress" && rawData.data ? rawData.data : (rawData as ProgressInfo);
-        if (!progress || typeof progress !== "object") return;
-        if (expectedTaskId && progress.task_id && progress.task_id !== expectedTaskId) return;
+      socket.onmessage = (event) => {
+        try {
+          const rawData = JSON.parse(event.data) as {
+            type?: string;
+            data?: ProgressInfo;
+            message?: string;
+          };
+          const progress =
+            rawData?.type === "progress" && rawData.data ? rawData.data : (rawData as ProgressInfo);
+          if (!progress || typeof progress !== "object") return;
+          if (expectedTaskId && progress.task_id && progress.task_id !== expectedTaskId) return;
 
-        setProgressMap((prev) => ({ ...prev, [kbName]: progress }));
-        const stage = progress.stage;
-        if (stage === "completed" || stage === "error") {
-          closeProgressSocket(kbName);
-          if (expectedTaskId) {
-            void loadAll();
+          setProgressMap((prev) => ({ ...prev, [kbName]: progress }));
+          const stage = progress.stage;
+          if (stage === "completed" || stage === "error") {
+            closeProgressSocket(kbName);
+            if (expectedTaskId) {
+              void loadAll();
+            }
           }
+        } catch {
+          // Ignore malformed progress events.
         }
-      } catch {
-        // Ignore malformed progress events.
-      }
-    };
+      };
 
-    socket.onerror = () => {
-      closeProgressSocket(kbName);
-    };
+      socket.onerror = () => {
+        closeProgressSocket(kbName);
+      };
 
-    socket.onclose = () => {
-      delete socketsRef.current[kbName];
-    };
+      socket.onclose = () => {
+        delete socketsRef.current[kbName];
+      };
+    });
   };
 
   const createKnowledgeBase = async () => {
@@ -919,7 +921,7 @@ function KnowledgePageContent() {
       return t("This knowledge base is currently {{status}} and cannot accept uploads yet.", { status: status.replaceAll("_", " ") });
     }
     return null;
-  }, [uploadTargetKb]);
+  }, [t, uploadTargetKb]);
 
   const uploadDisabled =
     !uploadTarget || !uploadFiles.length || !!uploadingKb || Boolean(uploadBlockedReason);

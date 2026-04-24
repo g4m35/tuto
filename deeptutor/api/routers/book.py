@@ -14,6 +14,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.book import (
     BlockType,
     BookProposal,
@@ -468,6 +469,8 @@ async def book_websocket(ws: WebSocket) -> None:
         {"type": "compile_page",     "book_id": "...", "page_id": "..."}
         {"type": "regenerate_block", "book_id": "...", "page_id": "...", "block_id": "...", "params_override": {}}
     """
+    if not await require_websocket_auth(ws):
+        return
     await ws.accept()
     closed = False
 

@@ -1,4 +1,4 @@
-import { Pool, type QueryResult, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
 
 type GlobalWithPgPool = typeof globalThis & {
   __tutoPgPool?: Pool;
@@ -31,6 +31,25 @@ export function assertDatabaseConfigured(feature: string): void {
   }
 }
 
+function getPoolMax() {
+  const configured = Number(process.env.DATABASE_POOL_MAX ?? process.env.PGPOOL_MAX);
+  return Number.isFinite(configured) && configured > 0 ? configured : 5;
+}
+
+function getStatementTimeoutMillis() {
+  const configured = Number(process.env.DATABASE_STATEMENT_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0 ? configured : 15_000;
+}
+
+function shouldUseSsl(connectionString: string) {
+  const sslMode = new URL(connectionString).searchParams.get("sslmode") ?? process.env.PGSSLMODE;
+  if (sslMode === "disable") {
+    return false;
+  }
+
+  return sslMode === "require" || process.env.DATABASE_SSL === "true";
+}
+
 function getPool(): Pool {
   if (pool) {
     return pool;
@@ -49,11 +68,14 @@ function getPool(): Pool {
 
   pool = new Pool({
     connectionString,
+    max: getPoolMax(),
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
+    statement_timeout: getStatementTimeoutMillis(),
+    ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : undefined,
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPg.__tutoPgPool = pool;
-  }
+  globalForPg.__tutoPgPool = pool;
 
   return pool;
 }
@@ -63,4 +85,21 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   params: readonly unknown[] = [],
 ): Promise<QueryResult<T>> {
   return getPool().query<T>(text, [...params]);
+}
+
+export async function transaction<T>(
+  callback: (client: PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    const result = await callback(client);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback").catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
 }

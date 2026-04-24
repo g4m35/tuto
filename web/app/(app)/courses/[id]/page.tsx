@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server"
 import { ArrowLeft, ArrowRight, Clock3, Flame, Layers3, LockKeyhole } from "lucide-react"
 import { buttonVariants } from "@/components/ui/Button"
 import { Progress } from "@/components/ui/progress"
+import { ProgressRing } from "@/components/ui/ProgressRing"
 import { findLesson, toCourseDetailData } from "@/lib/course-data"
 import { getCourseForUser } from "@/lib/course-store"
 import { cn } from "@/lib/utils"
@@ -53,7 +54,7 @@ export default async function CourseDetailPage({
     return (
       <div className="flex flex-col gap-10">
         <Link
-          href="/dashboard#courses"
+          href="/courses"
           className="inline-flex items-center gap-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
         >
           <ArrowLeft className="size-4" />
@@ -108,13 +109,20 @@ export default async function CourseDetailPage({
                 <div className="flex items-end justify-between gap-4">
                   <div>
                     <p className="eyebrow">Progress</p>
-                    <p className="mt-3 text-[3rem] font-medium leading-none tracking-[-0.06em] text-[var(--text)]">
-                      {course.progress}%
+                    <p className="mt-3 text-sm leading-7 text-[var(--text-dim)]">
+                      Breakdown of how far the path has moved.
                     </p>
                   </div>
-                  <div className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-2 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
-                    {course.learningPath.length} units
-                  </div>
+                  <ProgressRing value={course.progress} size={88} strokeWidth={4}>
+                    <div className="space-y-1">
+                      <p className="text-[1.4rem] font-medium leading-none tracking-[-0.05em] text-[var(--text)]">
+                        {course.progress}%
+                      </p>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                        done
+                      </p>
+                    </div>
+                  </ProgressRing>
                 </div>
 
                 <Progress value={course.progress} className="gap-2" />

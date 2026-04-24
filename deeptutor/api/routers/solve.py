@@ -12,6 +12,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
 from deeptutor.agents.solve import MainSolver, SolverSessionManager
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.api.utils.log_interceptor import LogInterceptor
 from deeptutor.capabilities.deep_solve import DeepSolveCapability
 from deeptutor.api.utils.task_id_manager import TaskIDManager
@@ -92,6 +93,8 @@ async def delete_solver_session(session_id: str):
 
 @router.websocket("/solve")
 async def websocket_solve(websocket: WebSocket):
+    if not await require_websocket_auth(websocket):
+        return
     await websocket.accept()
 
     task_manager = TaskIDManager.get_instance()

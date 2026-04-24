@@ -1,4 +1,3 @@
-/* eslint-disable i18n/no-literal-ui-text */
 "use client";
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";

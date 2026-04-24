@@ -132,6 +132,7 @@ export class UnifiedWSClient {
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private intentionalClose = false;
+  private connecting = false;
 
   private activeTurnId: string | null = null;
   private lastSeq = 0;
@@ -148,49 +149,60 @@ export class UnifiedWSClient {
   }
 
   connect(): void {
-    if (this.ws && this.ws.readyState <= WebSocket.OPEN) return;
+    if ((this.ws && this.ws.readyState <= WebSocket.OPEN) || this.connecting) return;
     this.intentionalClose = false;
+    this.connecting = true;
 
-    const url = wsUrl("/api/v1/ws");
-    this.ws = new WebSocket(url);
+    void wsUrl("/api/v1/ws")
+      .then((url) => {
+        if (this.intentionalClose) return;
+        this.ws = new WebSocket(url);
 
-    this.ws.onopen = () => {
-      this.reconnectAttempt = 0;
-      this.lastReceivedAt = Date.now();
-      this.startHeartbeat();
+        this.ws.onopen = () => {
+          this.reconnectAttempt = 0;
+          this.lastReceivedAt = Date.now();
+          this.startHeartbeat();
 
-      if (this.activeTurnId) {
-        this.send({
-          type: "resume_from",
-          turn_id: this.activeTurnId,
-          seq: this.lastSeq,
-        });
-      }
-    };
+          if (this.activeTurnId) {
+            this.send({
+              type: "resume_from",
+              turn_id: this.activeTurnId,
+              seq: this.lastSeq,
+            });
+          }
+        };
 
-    this.ws.onmessage = (ev) => {
-      this.lastReceivedAt = Date.now();
-      try {
-        const event: StreamEvent = JSON.parse(ev.data);
-        if (event.turn_id) this.activeTurnId = event.turn_id;
-        if (event.seq != null) this.lastSeq = Math.max(this.lastSeq, event.seq);
-        this.onEvent(event);
-      } catch {
-        console.warn("Unparseable WS message:", ev.data);
-      }
-    };
+        this.ws.onmessage = (ev) => {
+          this.lastReceivedAt = Date.now();
+          try {
+            const event: StreamEvent = JSON.parse(ev.data);
+            if (event.turn_id) this.activeTurnId = event.turn_id;
+            if (event.seq != null) this.lastSeq = Math.max(this.lastSeq, event.seq);
+            this.onEvent(event);
+          } catch {
+            console.warn("Unparseable WS message:", ev.data);
+          }
+        };
 
-    this.ws.onclose = () => {
-      this.ws = null;
-      this.stopHeartbeat();
-      if (!this.intentionalClose) {
-        this.attemptReconnect();
-      }
-    };
+        this.ws.onclose = () => {
+          this.ws = null;
+          this.stopHeartbeat();
+          if (!this.intentionalClose) {
+            this.attemptReconnect();
+          }
+        };
 
-    this.ws.onerror = (err) => {
-      console.error("WS error:", err);
-    };
+        this.ws.onerror = (err) => {
+          console.error("WS error:", err);
+        };
+      })
+      .catch((err) => {
+        console.error("Unable to authenticate WebSocket:", err);
+        if (!this.intentionalClose) this.attemptReconnect();
+      })
+      .finally(() => {
+        this.connecting = false;
+      });
   }
 
   send(msg: ChatMessage): void {

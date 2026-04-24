@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { buildExerciseData, type GuideKnowledgePoint } from "@/lib/course-data";
+import { getDeepTutorAuthHeaders, getDeepTutorUrl } from "@/lib/deeptutor-config";
 
 export interface IngestDocumentResult {
   id: string;
@@ -68,16 +69,10 @@ export class DeepTutorClientError extends Error {
   }
 }
 
-function getDeepTutorUrl() {
-  return process.env.DEEPTUTOR_URL?.replace(/\/$/, "") ?? "";
-}
-
 function getDeepTutorHeaders(contentType?: string) {
-  const apiKey = process.env.DEEPTUTOR_API_KEY;
-
   return {
     ...(contentType ? { "Content-Type": contentType } : {}),
-    ...(apiKey ? { Authorization: `Bearer ${apiKey}`, "X-API-Key": apiKey } : {}),
+    ...getDeepTutorAuthHeaders(),
   };
 }
 

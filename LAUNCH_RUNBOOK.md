@@ -3,7 +3,7 @@
 ## Required hosted configuration
 
 - Create a web deployment from the `web/` directory.
-- Use Node 22.x for install, build, and runtime. The repo includes `web/.nvmrc` and `web/package.json` engines for this.
+- Use Node 24.x for install, build, and runtime. The repo includes `web/.nvmrc` and `web/package.json` engines for this.
 - Set preview and production env vars:
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
   - `CLERK_SECRET_KEY`

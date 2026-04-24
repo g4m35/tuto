@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
-import { ArrowRight, BookOpen, Clock3, Flame, Sparkles } from "lucide-react"
+import { ArrowRight, BookOpen, Flame, Sparkles } from "lucide-react"
+import { ActivityBars } from "@/components/dashboard/ActivityBars"
 import { buttonVariants } from "@/components/ui/Button"
 import { DeepTutorStatusBanner } from "@/components/dashboard/DeepTutorStatusBanner"
 import { Progress } from "@/components/ui/progress"
@@ -55,19 +56,19 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-10">
         <DeepTutorStatusBanner hasStubCourses={hasStubCourses} />
 
-        <section className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_340px] xl:items-end">
+        <section className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_360px] xl:items-end">
           <div className="animate-rise-in space-y-6">
-            <p className="eyebrow">This week</p>
+            <p className="eyebrow">Study loop</p>
             <div className="space-y-4">
               <h1 className="serif max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-[var(--text)] sm:text-6xl">
                 {continueCourse
                   ? "Welcome back. Pick up where the idea still feels unstable."
-                  : "Welcome in. Tell Tuto what you want to learn next."}
+                  : "Welcome back. The dashboard is ready to start taking shape."}
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
                 {continueCourse
                   ? `You were last working on ${dashboard.insightTopic}. The next session is already shaped around that weak spot, so you can stay inside the thread instead of starting over.`
-                  : "Create a course from a topic or source document and the dashboard will start turning your materials into a paced learning path."}
+                  : "Create a course from a topic or source document, and the next session will start taking form here."}
               </p>
             </div>
 
@@ -91,18 +92,21 @@ export default async function DashboardPage() {
 
           <aside className="surface-card animate-rise-in-delay-1 p-6">
             <p className="eyebrow">Last 7 days</p>
-            <div className="mt-5 space-y-4">
-              <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
-                <span>Courses in motion</span>
-                <span className="text-[var(--text)]">{dashboard.courses.length}</span>
+            <div className="mt-5">
+              <ActivityBars />
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-3 text-sm text-[var(--text-dim)]">
+              <div>
+                <p className="text-[var(--text)]">{dashboard.courses.length}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Courses</p>
               </div>
-              <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
-                <span>Lessons completed</span>
-                <span className="text-[var(--text)]">{completedLessons}</span>
+              <div>
+                <p className="text-[var(--text)]">{completedLessons}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Lessons</p>
               </div>
-              <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
-                <span>Current streak</span>
-                <span className="text-[var(--text)]">{dashboard.streakDays} days</span>
+              <div>
+                <p className="text-[var(--text)]">{dashboard.streakDays}d</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Streak</p>
               </div>
             </div>
             <div className="mt-6 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
@@ -110,7 +114,7 @@ export default async function DashboardPage() {
                 <Flame className="mt-0.5 size-4 text-[var(--accent)]" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-[var(--text)]">
-                    {continueCourse ? `Next up: ${dashboard.insightTopic}` : "Ready for a first session"}
+                    {continueCourse ? `Continue ${continueCourse.title}` : "Ready for a first session"}
                   </p>
                   <p className="text-sm leading-6 text-[var(--text-dim)]">
                     {dashboard.continueCopy}
@@ -159,8 +163,8 @@ export default async function DashboardPage() {
                 Keep moving the tracks that matter.
               </h2>
             </div>
-            <Link href="/create" className="text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
-              Create a new course
+            <Link href="/courses" className="text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
+              See all courses
             </Link>
           </div>
 

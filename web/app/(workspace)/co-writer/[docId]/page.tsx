@@ -651,7 +651,7 @@ export default function CoWriterPage() {
     setMarkdown(CO_WRITER_SAMPLE_TEMPLATE);
     setStatus(t("Loaded example template."));
     setError("");
-  }, [markdown, pushUndo]);
+  }, [markdown, pushUndo, t]);
 
   const handleDownload = () => {
     const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
@@ -885,6 +885,7 @@ export default function CoWriterPage() {
     selectionInstruction,
     selectionMode,
     selectionTools,
+    t,
     updateSelectionTraceFromEvent,
   ]);
 

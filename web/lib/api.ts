@@ -1,117 +1,40 @@
-// API configuration and utility functions
+// Browser-safe helpers for the DeepTutor backend.
+//
+// HTTP and SSE traffic goes through a same-origin Next.js proxy so Clerk auth,
+// quotas, and the server-only DeepTutor API key are applied before forwarding.
+// WebSockets use a short-lived signed URL minted by that same Next.js app.
 
-// Get API base URL from environment variable.
-// The launcher injects NEXT_PUBLIC_API_BASE from the canonical project-root `.env`.
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE ?? null;
-
-function requireApiBaseUrl(): string {
-  if (API_BASE_URL) {
-    return API_BASE_URL;
-  }
-
-  if (typeof window !== "undefined") {
-    console.error("NEXT_PUBLIC_API_BASE is not set.");
-    console.error(
-      "Please configure NEXT_PUBLIC_API_BASE in your environment and restart the application.",
-    );
-    console.error("Run python scripts/start_tour.py to rebuild your local setup if needed.");
-  }
-
-  throw new Error(
-    "NEXT_PUBLIC_API_BASE is not configured. Please set it in your environment and restart.",
-  );
+interface DeepTutorWsTokenResponse {
+  url?: string;
+  error?: string;
 }
 
-// Hostnames that always refer to the local machine. When the build-time base
-// URL points to one of these, but the page is opened from a non-local origin,
-// we rewrite the hostname so requests reach the actual server.
-const LOOPBACK_HOSTS = new Set([
-  "localhost",
-  "127.0.0.1",
-  "0.0.0.0",
-  "::1",
-  "[::1]",
-]);
-
-let warnedAboutHostSwap = false;
-
-function isLoopbackHost(host: string): boolean {
-  return LOOPBACK_HOSTS.has(host.toLowerCase());
+function normalizePath(path: string): string {
+  return path.startsWith("/") ? path : `/${path}`;
 }
 
 /**
- * Resolve the effective API base URL at runtime.
- *
- * NEXT_PUBLIC_API_BASE is a build-time constant that is typically set to
- * http://localhost:<port>.  When another machine on the LAN opens the app that
- * constant still points at "localhost", which the remote browser resolves to
- * its *own* loopback address instead of the server.  We detect this situation
- * and swap the hostname for window.location.hostname so the request reaches
- * the actual server regardless of which machine opened the page.
- *
- * The full path/search is preserved (so deployments behind a reverse proxy
- * like `http://localhost:8001/api` continue to work after the rewrite).
- */
-export function resolveBase(): string {
-  const base = requireApiBaseUrl();
-  if (typeof window === "undefined") return base;
-  try {
-    const url = new URL(base);
-    const clientHost = window.location.hostname;
-    if (isLoopbackHost(url.hostname) && !isLoopbackHost(clientHost)) {
-      url.hostname = clientHost;
-      if (!warnedAboutHostSwap) {
-        warnedAboutHostSwap = true;
-        console.warn(
-          `[api] NEXT_PUBLIC_API_BASE points to "${base}" but the page is served from "${clientHost}"; ` +
-            `routing API/WebSocket calls to "${url.toString()}" instead.`,
-        );
-      }
-      // Use href (full URL) instead of origin so we keep any path/search.
-      return url.toString().replace(/\/+$/, "");
-    }
-  } catch {
-    // base is not a valid absolute URL – return as-is
-  }
-  return base;
-}
-
-/**
- * Construct a full API URL from a path
- * @param path - API path (e.g., '/api/v1/knowledge/list')
- * @returns Full URL (e.g., 'http://localhost:8001/api/v1/knowledge/list')
+ * Construct a same-origin proxy URL for the DeepTutor API.
+ * @param path - Backend path (for example, '/api/v1/knowledge/list')
  */
 export function apiUrl(path: string): string {
-  const apiBaseUrl = requireApiBaseUrl();
-
-  // Remove leading slash if present to avoid double slashes
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  // Prefer the runtime-resolved base so LAN clients do not get trapped
-  // on their own loopback interface when the build-time value is localhost.
-  const base = resolveBase();
-  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
-
-  return `${normalizedBase}${normalizedPath}`;
+  return `/api/deeptutor${normalizePath(path)}`;
 }
 
 /**
- * Construct a WebSocket URL from a path
- * @param path - WebSocket path (e.g., '/api/v1/solve')
- * @returns WebSocket URL (e.g., 'ws://localhost:8001/api/v1/ws')
+ * Mint a short-lived authenticated backend WebSocket URL.
+ * @param path - Backend WebSocket path (for example, '/api/v1/ws')
  */
-export function wsUrl(path: string): string {
-  const apiBaseUrl = requireApiBaseUrl();
+export async function wsUrl(path: string): Promise<string> {
+  const response = await fetch(
+    `/api/deeptutor/ws-token?path=${encodeURIComponent(normalizePath(path))}`,
+    { cache: "no-store" },
+  );
 
-  // Security Hardening: Convert http to ws and https to wss.
-  // In production environments (where API_BASE_URL starts with https), this ensures secure websockets.
-  const base = resolveBase().replace(/^http:/, "ws:").replace(/^https:/, "wss:");
+  const data = (await response.json().catch(() => ({}))) as DeepTutorWsTokenResponse;
+  if (!response.ok || !data.url) {
+    throw new Error(data.error || "Unable to open an authenticated DeepTutor WebSocket.");
+  }
 
-  // Remove leading slash if present to avoid double slashes
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  // Remove trailing slash from base URL if present
-  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
-
-  return `${normalizedBase}${normalizedPath}`;
+  return data.url;
 }

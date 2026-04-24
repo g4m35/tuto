@@ -199,31 +199,70 @@ test("customer.subscription.updated switches a customer between paid tiers", asy
   ]);
 });
 
-test("unknown recurring prices fail closed instead of downgrading to free", async () => {
+test("unknown recurring prices are ignored without downgrading or retrying", async () => {
   process.env.STRIPE_PRO_PRICE_ID = "price_pro";
   process.env.STRIPE_TEAM_PRICE_ID = "price_team";
 
-  await assert.rejects(
-    () =>
-      processStripeWebhookEvent(
-        asWebhookEvent({
-          type: "customer.subscription.updated",
-          data: {
-            object: createSubscription({
-              customer: "cus_unknown",
-              status: "active",
-              priceId: "price_unknown",
-            }),
-          },
+  let syncCalls = 0;
+
+  await processStripeWebhookEvent(
+    asWebhookEvent({
+      type: "customer.subscription.updated",
+      data: {
+        object: createSubscription({
+          customer: "cus_unknown",
+          status: "active",
+          priceId: "price_unknown",
         }),
-        {
-          retrieveSubscription: async () => {
-            throw new Error("should not retrieve subscription for subscription.updated events");
-          },
-          getUserByStripeCustomerId: async () => null,
-          syncSubscriptionState: async () => undefined,
-        },
-      ),
-    /Unrecognized Stripe recurring price id: price_unknown/,
+      },
+    }),
+    {
+      retrieveSubscription: async () => {
+        throw new Error("should not retrieve subscription for subscription.updated events");
+      },
+      getUserByStripeCustomerId: async () => null,
+      syncSubscriptionState: async () => {
+        syncCalls += 1;
+      },
+    },
   );
+
+  assert.equal(syncCalls, 0);
+});
+
+test("subscriptions with multiple recurring items are ignored instead of picking one", async () => {
+  process.env.STRIPE_PRO_PRICE_ID = "price_pro";
+  process.env.STRIPE_TEAM_PRICE_ID = "price_team";
+
+  let syncCalls = 0;
+  const subscription = createSubscription({
+    customer: "cus_multi",
+    status: "active",
+    priceId: "price_pro",
+  });
+  subscription.items.data.push({
+    current_period_end: 1_778_025_600,
+    price: {
+      id: "price_team",
+      type: "recurring",
+    },
+  } as Stripe.SubscriptionItem);
+
+  await processStripeWebhookEvent(
+    asWebhookEvent({
+      type: "customer.subscription.updated",
+      data: { object: subscription },
+    }),
+    {
+      retrieveSubscription: async () => {
+        throw new Error("should not retrieve subscription for subscription.updated events");
+      },
+      getUserByStripeCustomerId: async () => null,
+      syncSubscriptionState: async () => {
+        syncCalls += 1;
+      },
+    },
+  );
+
+  assert.equal(syncCalls, 0);
 });

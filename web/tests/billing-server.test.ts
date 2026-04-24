@@ -5,6 +5,7 @@ import {
   createCheckoutSessionResult,
   getBaseUrl,
   getClerkEmailFromSessionClaims,
+  hasValidBillingRequestOrigin,
   isBillingTier,
   isCheckoutPlan,
 } from '../lib/billing-server'
@@ -81,7 +82,55 @@ test('getClerkEmailFromSessionClaims extracts known email claim fields', () => {
     getClerkEmailFromSessionClaims({ email_address: 'fallback@example.com' }),
     'fallback@example.com'
   )
+  assert.equal(
+    getClerkEmailFromSessionClaims({ primary_email_address: 'primary@example.com' }),
+    'primary@example.com'
+  )
+  assert.equal(
+    getClerkEmailFromSessionClaims({
+      primaryEmailAddress: { emailAddress: 'nested@example.com' },
+    }),
+    'nested@example.com'
+  )
+  assert.equal(
+    getClerkEmailFromSessionClaims({
+      email_addresses: [{ email_address: 'array@example.com' }],
+    }),
+    'array@example.com'
+  )
   assert.equal(getClerkEmailFromSessionClaims({ foo: 'bar' }), null)
+})
+
+test('hasValidBillingRequestOrigin rejects mismatched origins', () => {
+  const previousAppUrl = process.env.NEXT_PUBLIC_APP_URL
+  process.env.NEXT_PUBLIC_APP_URL = 'https://app.example.com'
+
+  try {
+    assert.equal(
+      hasValidBillingRequestOrigin(
+        new Request('https://app.example.com/api/billing/checkout', {
+          method: 'POST',
+          headers: { origin: 'https://app.example.com' },
+        })
+      ),
+      true
+    )
+    assert.equal(
+      hasValidBillingRequestOrigin(
+        new Request('https://app.example.com/api/billing/checkout', {
+          method: 'POST',
+          headers: { origin: 'https://evil.example.com' },
+        })
+      ),
+      false
+    )
+  } finally {
+    if (previousAppUrl === undefined) {
+      delete process.env.NEXT_PUBLIC_APP_URL
+    } else {
+      process.env.NEXT_PUBLIC_APP_URL = previousAppUrl
+    }
+  }
 })
 
 test('createCheckoutSessionResult returns manage hint for paid users', async () => {
