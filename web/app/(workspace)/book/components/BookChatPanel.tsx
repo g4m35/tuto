@@ -50,7 +50,7 @@ export default function BookChatPanel({
     }
   }, [messages]);
 
-  function ensureSocket(): WebSocket {
+  async function ensureSocket(): Promise<WebSocket> {
     const existing = socketRef.current;
     if (existing && existing.readyState === WebSocket.OPEN) {
       return existing;
@@ -58,7 +58,7 @@ export default function BookChatPanel({
     if (existing && existing.readyState === WebSocket.CONNECTING) {
       return existing;
     }
-    const ws = new WebSocket(wsUrl("/api/v1/chat"));
+    const ws = new WebSocket(await wsUrl("/api/v1/chat"));
     socketRef.current = ws;
     ws.onmessage = (event) => {
       try {
@@ -144,7 +144,7 @@ export default function BookChatPanel({
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setBusy(true);
-    const ws = ensureSocket();
+    const ws = await ensureSocket();
     const payload = {
       message: text,
       session_id: sessionIdRef.current,

@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from deeptutor.agents.notebook import NotebookAnalysisAgent
 from deeptutor.agents.base_agent import BaseAgent
 from deeptutor.agents.guide.guide_manager import GuideManager
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.api.utils.task_id_manager import TaskIDManager
 from deeptutor.logging import get_logger
 from deeptutor.services.config import PROJECT_ROOT, load_config_with_main
@@ -380,6 +381,8 @@ async def websocket_guide(websocket: WebSocket, session_id: str):
     - fix_html: Fix HTML
     - get_session: Get session state
     """
+    if not await require_websocket_auth(websocket):
+        return
     await websocket.accept()
 
     task_manager = TaskIDManager.get_instance()

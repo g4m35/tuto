@@ -8,6 +8,7 @@ REST endpoints for session operations.
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.agents.chat import ChatAgent, SessionManager
 from deeptutor.logging import get_logger
 from deeptutor.services.config import PROJECT_ROOT, load_config_with_main
@@ -105,6 +106,8 @@ async def websocket_chat(websocket: WebSocket):
     - {"type": "result", "content": str}               # Final complete response
     - {"type": "error", "message": str}                # Error message
     """
+    if not await require_websocket_auth(websocket):
+        return
     await websocket.accept()
 
     try:

@@ -207,15 +207,31 @@ export type BookWsEvent =
 export function openBookSocket(
   onEvent: (event: BookWsEvent) => void,
   onError?: (error: Event) => void,
-): WebSocket {
-  const socket = new WebSocket(wsUrl(`${BASE}/ws`));
-  socket.onmessage = (event) => {
-    try {
-      onEvent(JSON.parse(event.data));
-    } catch {
-      // ignore malformed frames
-    }
+): { close: () => void } {
+  let socket: WebSocket | null = null;
+  let closed = false;
+
+  void wsUrl(`${BASE}/ws`)
+    .then((url) => {
+      if (closed) return;
+      socket = new WebSocket(url);
+      socket.onmessage = (event) => {
+        try {
+          onEvent(JSON.parse(event.data));
+        } catch {
+          // ignore malformed frames
+        }
+      };
+      if (onError) socket.onerror = onError;
+    })
+    .catch(() => {
+      // The caller's normal refresh/polling path can continue without live events.
+    });
+
+  return {
+    close: () => {
+      closed = true;
+      socket?.close();
+    },
   };
-  if (onError) socket.onerror = onError;
-  return socket;
 }

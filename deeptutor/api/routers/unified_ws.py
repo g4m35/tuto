@@ -30,12 +30,16 @@ from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from deeptutor.api.security import require_websocket_auth
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
 @router.websocket("/ws")
 async def unified_websocket(ws: WebSocket) -> None:
+    if not await require_websocket_auth(ws):
+        return
     await ws.accept()
     closed = False
     subscription_tasks: dict[str, asyncio.Task[None]] = {}

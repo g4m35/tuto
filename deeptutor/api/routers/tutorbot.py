@@ -11,6 +11,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ValidationError
 
+from deeptutor.api.security import require_websocket_auth
 from deeptutor.services.tutorbot import get_tutorbot_manager
 from deeptutor.services.tutorbot.manager import (
     BotConfig,
@@ -346,6 +347,8 @@ async def get_bot_history(bot_id: str, limit: int = 100):
 
 @router.websocket("/{bot_id}/ws")
 async def bot_chat_ws(ws: WebSocket, bot_id: str):
+    if not await require_websocket_auth(ws):
+        return
     # `disconnected` is the single source of truth for "client is gone".
     # Both task loops watch it so they can exit cooperatively without
     # raising exceptions back into manager code (which has broad

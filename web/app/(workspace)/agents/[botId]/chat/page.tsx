@@ -67,44 +67,57 @@ export default function BotChatPage() {
     if (!botId) {
       return;
     }
-    const ws = new WebSocket(wsUrl(`/api/v1/tutorbot/${botId}/ws`));
-    wsRef.current = ws;
+    let closed = false;
+    let ws: WebSocket | null = null;
 
-    ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      if (data.type === "thinking") {
-        thinkingRef.current = [...thinkingRef.current, data.content];
-        setThinking(thinkingRef.current);
-        scrollToBottom();
-      } else if (data.type === "content") {
-        const snap = thinkingRef.current;
-        setMessages((msgs) => [
-          ...msgs,
-          { role: "assistant", content: data.content, thinking: snap.length ? [...snap] : undefined },
-        ]);
-        thinkingRef.current = [];
-        setThinking([]);
-        scrollToBottom();
-      } else if (data.type === "done") {
+    const attachSocket = (socket: WebSocket) => {
+      ws = socket;
+      wsRef.current = socket;
+      socket.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.type === "thinking") {
+          thinkingRef.current = [...thinkingRef.current, data.content];
+          setThinking(thinkingRef.current);
+          scrollToBottom();
+        } else if (data.type === "content") {
+          const snap = thinkingRef.current;
+          setMessages((msgs) => [
+            ...msgs,
+            { role: "assistant", content: data.content, thinking: snap.length ? [...snap] : undefined },
+          ]);
+          thinkingRef.current = [];
+          setThinking([]);
+          scrollToBottom();
+        } else if (data.type === "done") {
+          setStreaming(false);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        } else if (data.type === "proactive") {
+          setMessages((msgs) => [...msgs, { role: "assistant", content: data.content }]);
+          scrollToBottom();
+        } else if (data.type === "error") {
+          setMessages((msgs) => [...msgs, { role: "assistant", content: `Error: ${data.content}` }]);
+          thinkingRef.current = [];
+          setThinking([]);
+          setStreaming(false);
+        }
+      };
+
+      socket.onclose = () => {
         setStreaming(false);
-        setTimeout(() => inputRef.current?.focus(), 50);
-      } else if (data.type === "proactive") {
-        setMessages((msgs) => [...msgs, { role: "assistant", content: data.content }]);
-        scrollToBottom();
-      } else if (data.type === "error") {
-        setMessages((msgs) => [...msgs, { role: "assistant", content: `Error: ${data.content}` }]);
-        thinkingRef.current = [];
-        setThinking([]);
-        setStreaming(false);
-      }
+      };
     };
 
-    ws.onclose = () => {
-      setStreaming(false);
-    };
+    void wsUrl(`/api/v1/tutorbot/${botId}/ws`)
+      .then((url) => {
+        if (!closed) attachSocket(new WebSocket(url));
+      })
+      .catch(() => {
+        setStreaming(false);
+      });
 
     return () => {
-      ws.close();
+      closed = true;
+      ws?.close();
       wsRef.current = null;
     };
   }, [botId, scrollToBottom]);

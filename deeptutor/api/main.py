@@ -1,10 +1,13 @@
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from deeptutor.api.security import request_has_valid_api_key
 from deeptutor.logging import get_logger
 from deeptutor.services.path_service import get_path_service
 
@@ -149,6 +152,15 @@ app = FastAPI(
 # Log only non-200 requests (uvicorn access_log is disabled in run_server.py)
 _access_logger = logging.getLogger("uvicorn.access")
 
+AUTH_EXEMPT_PATHS = {"/", "/docs", "/redoc", "/openapi.json"}
+
+
+@app.middleware("http")
+async def require_api_key(request, call_next):
+    if request.url.path not in AUTH_EXEMPT_PATHS and not request_has_valid_api_key(request):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    return await call_next(request)
+
 
 @app.middleware("http")
 async def selective_access_log(request, call_next):
@@ -165,10 +177,20 @@ async def selective_access_log(request, call_next):
     return response
 
 
+configured_origins = [
+    value.strip()
+    for value in (
+        os.environ.get("DEEPTUTOR_ALLOWED_ORIGINS")
+        or os.environ.get("NEXT_PUBLIC_APP_URL")
+        or ""
+    ).split(",")
+    if value.strip()
+]
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific frontend origin
+    allow_origins=configured_origins or ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
