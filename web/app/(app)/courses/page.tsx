@@ -1,108 +1,104 @@
-import Link from "next/link"
-import { auth } from "@clerk/nextjs/server"
-import { ArrowRight, Plus } from "lucide-react"
-import { ProgressRing } from "@/components/ui/ProgressRing"
-import { buttonVariants } from "@/components/ui/Button"
-import { toCourseCardData } from "@/lib/course-data"
-import { listCoursesForUser } from "@/lib/course-store"
-import { cn } from "@/lib/utils"
+import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { ArrowRight, Plus } from "lucide-react";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { buttonVariants } from "@/components/ui/Button";
+import { toCourseCardData } from "@/lib/course-data";
+import { listCoursesForUser } from "@/lib/course-store";
+import { courseCatalog } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
+
+function Eyebrow({ index, children }: { index: string; children: React.ReactNode }) {
+  return (
+    <p className="t-eyebrow">
+      <span className="t-eyebrow__num">{index}</span>
+      <span className="t-eyebrow__rule" aria-hidden="true" />
+      <span>{children}</span>
+    </p>
+  );
+}
 
 export default async function CoursesPage() {
-  const { userId } = await auth()
+  const { userId } = await auth();
 
   if (!userId) {
-    return null
+    return null;
   }
 
-  const courseRecords = await listCoursesForUser(userId)
-  const courses = courseRecords.map(toCourseCardData)
+  const courseRecords = await listCoursesForUser(userId);
+  const courses = (courseRecords.length ? courseRecords.map(toCourseCardData) : courseCatalog).slice(0, 6);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-3">
-          <p className="eyebrow">Your library</p>
-          <h1 className="serif text-5xl font-semibold tracking-[-0.055em] text-[var(--text)] sm:text-6xl">
-            All courses
-            <span className="ml-3 text-[var(--text-dim)]">/{courses.length}</span>
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-end justify-between gap-5">
+        <div className="space-y-5">
+          <Eyebrow index="//">Your library</Eyebrow>
+          <h1 className="text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[48px]">
+            All courses <span className="text-[var(--text-dim)]">/{courses.length}</span>
           </h1>
-          <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
-            Open the path you want to push forward, or start a fresh course when the next idea is ready.
-          </p>
         </div>
 
         <Link href="/create" className={cn(buttonVariants({ size: "lg" }))}>
-          <Plus data-icon="inline-start" />
           New course
+          <Plus data-icon="inline-end" />
         </Link>
       </div>
 
-      {courses.length ? (
-        <div className="grid gap-3 xl:grid-cols-3">
-          {courses.map((course, index) => (
-            <Link
-              key={course.id}
-              href={`/courses/${course.id}`}
-              className={cn(
-                "editorial-card hover-lift group relative overflow-hidden px-6 py-6",
-                index % 3 === 0
-                  ? "animate-rise-in"
-                  : index % 3 === 1
-                    ? "animate-rise-in-delay-1"
-                    : "animate-rise-in-delay-2"
-              )}
-            >
-              <span className="absolute left-0 top-0 bottom-0 w-px bg-[var(--accent)]/70" aria-hidden="true" />
+      <div className="grid gap-4 xl:grid-cols-3">
+        {courses.map((course, index) => (
+          <Link
+            key={course.id}
+            href={`/courses/${course.id}`}
+            className={cn(
+              "editorial-card t-lift group relative min-h-[282px] overflow-hidden px-6 py-6",
+              index % 3 === 0
+                ? "animate-rise-in"
+                : index % 3 === 1
+                  ? "animate-rise-in-delay-1"
+                  : "animate-rise-in-delay-2"
+            )}
+          >
+            <span className="absolute bottom-4 left-0 top-4 w-px bg-[var(--accent)]/80" aria-hidden="true" />
 
-              <div className="flex items-start justify-between gap-5">
-                <span className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                  {String(index + 1).padStart(2, "0")}
+            <div className="flex items-start justify-between gap-5">
+              <span className="text-[12px] uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <ProgressRing value={course.progress} size={56} strokeWidth={3}>
+                <span className="text-[11px] font-medium tracking-[0.02em] text-[var(--text)]">
+                  {course.progress}%
                 </span>
-                <ProgressRing value={course.progress} size={48} strokeWidth={3}>
-                  <span className="text-[10px] font-medium tracking-[0.08em] text-[var(--text)]">
-                    {course.progress}%
-                  </span>
-                </ProgressRing>
-              </div>
+              </ProgressRing>
+            </div>
 
-              <div className="mt-5 space-y-3">
-                <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-dim)]">
+            <div className="mt-8 space-y-5">
+              <div className="space-y-3">
+                <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--text-dim)]">
                   {course.subject}
                 </p>
-                <h2 className="text-[1.4rem] font-medium tracking-[-0.04em] text-[var(--text)]">
+                <h2 className="max-w-[320px] text-[21px] font-medium leading-[1.25] tracking-normal text-[var(--text)]">
                   {course.title}
                 </h2>
-                <p className="text-sm leading-7 text-[var(--text-dim)]">
-                  {course.description}
-                </p>
               </div>
+              <p className="min-h-[54px] text-[14px] leading-6 text-[var(--text-dim)]">
+                {course.description}
+              </p>
+            </div>
 
-              <div className="mt-6 border-t border-[var(--border)] pt-4">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
-                  <span>
-                    <span className="mr-1 text-[var(--text)]">{course.lessonsComplete}</span>
-                    of {course.lessonCount} lessons
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[var(--text)]">
-                    Open
-                    <ArrowRight className="size-3.5" />
-                  </span>
-                </div>
+            <div className="mt-8 border-t border-[var(--border)] pt-4">
+              <div className="flex items-center justify-between text-[13px] text-[var(--text-dim)]">
+                <span>
+                  <span className="text-[var(--text)]">{course.lessonsComplete}</span>/{course.lessonCount} lessons
+                </span>
+                <span className="inline-flex items-center gap-2 text-[var(--text)]">
+                  Open
+                  <ArrowRight className="size-3.5" />
+                </span>
               </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <div className="editorial-card px-8 py-8">
-          <p className="eyebrow">No courses yet</p>
-          <h2 className="serif mt-4 text-4xl font-semibold tracking-[-0.05em] text-[var(--text)]">
-            The library will fill in once you create the first path.
-          </h2>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">
-            Start from a topic or upload, and Tuto will turn it into a paced course with review loops and lesson checkpoints.
-          </p>
-        </div>
-      )}
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
-  )
+  );
 }

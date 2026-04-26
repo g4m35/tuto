@@ -50,10 +50,10 @@ export default function RootLayout({
       </head>
       <body className="bg-background text-foreground font-sans">
         <ClerkProvider
-          signInFallbackRedirectUrl="/chat"
-          signInForceRedirectUrl="/chat"
-          signUpFallbackRedirectUrl="/chat"
-          signUpForceRedirectUrl="/chat"
+          signInFallbackRedirectUrl="/dashboard"
+          signInForceRedirectUrl="/dashboard"
+          signUpFallbackRedirectUrl="/dashboard"
+          signUpForceRedirectUrl="/dashboard"
         >
           <AppShellProvider>
             <I18nClientBridge>

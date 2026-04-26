@@ -135,7 +135,7 @@ export function LessonExerciseClient({
 
         <section className="editorial-card animate-rise-in px-7 py-8 sm:px-8">
           <p className="eyebrow">Composing</p>
-          <h1 className="serif mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--text)]">
+          <h1 className="mt-4 text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)]">
             Generating the next adaptive exercise.
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
@@ -159,7 +159,7 @@ export function LessonExerciseClient({
 
         <section className="editorial-card animate-rise-in px-7 py-8 sm:px-8">
           <p className="eyebrow">Exercise unavailable</p>
-          <h1 className="serif mt-4 text-5xl font-semibold tracking-[-0.05em] text-[var(--text)]">
+          <h1 className="mt-4 text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)]">
             We could not generate this lesson yet.
           </h1>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
@@ -208,7 +208,7 @@ export function LessonExerciseClient({
             </div>
 
             <div className="space-y-4">
-              <h1 className="serif max-w-4xl text-5xl font-semibold tracking-[-0.05em] text-[var(--text)] sm:text-6xl">
+              <h1 className="max-w-4xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
                 {exercise.title}
               </h1>
               <p className="max-w-3xl text-xl leading-8 text-[var(--text-dim)] italic">
@@ -232,7 +232,7 @@ export function LessonExerciseClient({
                     setChecked(false)
                   }}
                   className={cn(
-                    "editorial-card hover-lift animate-rise-in w-full text-left px-5 py-5",
+                    "editorial-card t-lift animate-rise-in w-full text-left px-5 py-5",
                     selected
                       ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
                       : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"

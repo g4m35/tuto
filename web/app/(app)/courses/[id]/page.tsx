@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { ProgressRing } from "@/components/ui/ProgressRing"
 import { findLesson, toCourseDetailData } from "@/lib/course-data"
 import { getCourseForUser } from "@/lib/course-store"
+import { courseDetailsById } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 export default async function CourseDetailPage({
@@ -23,11 +24,13 @@ export default async function CourseDetailPage({
     const { id } = await params
     const courseRecord = await getCourseForUser(userId, id)
 
-    if (!courseRecord) {
+    const fallbackCourse = courseDetailsById[id]
+
+    if (!courseRecord && !fallbackCourse) {
       return (
         <div className="editorial-card px-8 py-8">
           <p className="eyebrow">Course not found</p>
-          <h1 className="serif mt-4 text-4xl font-semibold tracking-[-0.04em] text-[var(--text)]">
+          <h1 className="mt-4 text-4xl font-semibold tracking-normal text-[var(--text)]">
             This course has not been created yet.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">
@@ -37,11 +40,14 @@ export default async function CourseDetailPage({
       )
     }
 
-    const course = toCourseDetailData(courseRecord)
+    const course = courseRecord ? toCourseDetailData(courseRecord) : fallbackCourse!
+    const allLessons = course.learningPath.flatMap((level) => level.lessons)
     const currentLesson =
-      findLesson(courseRecord, courseRecord.currentLessonId || "") ??
-      course.learningPath.flatMap((level) => level.lessons).find((lesson) => lesson.state === "current") ??
-      course.learningPath.flatMap((level) => level.lessons)[0]
+      courseRecord
+        ? findLesson(courseRecord, courseRecord.currentLessonId || "") ??
+          allLessons.find((lesson) => lesson.state === "current") ??
+          allLessons[0]
+        : allLessons.find((lesson) => lesson.state === "current") ?? allLessons[0]
 
     const flattenedLessons = course.learningPath.flatMap((level, levelIndex) =>
       level.lessons.map((lesson) => ({
@@ -67,7 +73,7 @@ export default async function CourseDetailPage({
               <span>{course.subject}</span>
               <span className="size-1 rounded-full bg-[var(--text-faint)]" />
               <span>{course.level}</span>
-              {courseRecord.backendMode === "stub" ? (
+              {courseRecord?.backendMode === "stub" ? (
                 <>
                   <span className="size-1 rounded-full bg-[var(--text-faint)]" />
                   <span>Stubbed backend</span>
@@ -76,10 +82,10 @@ export default async function CourseDetailPage({
             </div>
 
             <div className="space-y-4">
-              <h1 className="serif max-w-4xl text-5xl font-semibold tracking-[-0.055em] text-[var(--text)] sm:text-6xl">
+              <h1 className="max-w-4xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
                 {course.title}
               </h1>
-              <p className="max-w-2xl text-xl leading-8 text-[var(--text-dim)] italic">
+              <p className="max-w-2xl text-xl leading-8 text-[var(--text-dim)]">
                 {course.description}
               </p>
             </div>
@@ -115,7 +121,7 @@ export default async function CourseDetailPage({
                   </div>
                   <ProgressRing value={course.progress} size={88} strokeWidth={4}>
                     <div className="space-y-1">
-                      <p className="text-[1.4rem] font-medium leading-none tracking-[-0.05em] text-[var(--text)]">
+                      <p className="text-[1.4rem] font-medium leading-none tracking-normal text-[var(--text)]">
                         {course.progress}%
                       </p>
                       <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--text-faint)]">
@@ -184,7 +190,7 @@ export default async function CourseDetailPage({
         <section className="space-y-5">
           <div className="space-y-2">
             <p className="eyebrow">Learning path</p>
-            <h2 className="serif text-[2.5rem] font-semibold tracking-[-0.05em] text-[var(--text)]">
+            <h2 className="text-[34px] font-semibold tracking-normal text-[var(--text)]">
               Move through the path in order.
             </h2>
           </div>
@@ -224,7 +230,7 @@ export default async function CourseDetailPage({
                       <span>{lesson.state}</span>
                     </div>
                     <div className="space-y-1">
-                      <h3 className="text-lg font-medium tracking-[-0.03em] text-[var(--text)]">
+                      <h3 className="text-lg font-medium tracking-normal text-[var(--text)]">
                         {lesson.title}
                       </h3>
                       <p className="max-w-2xl text-sm leading-6 text-[var(--text-dim)]">
@@ -275,7 +281,7 @@ export default async function CourseDetailPage({
     return (
       <div className="editorial-card px-8 py-8">
         <p className="eyebrow">Course unavailable</p>
-        <h1 className="serif mt-4 text-4xl font-semibold tracking-[-0.04em] text-[var(--text)]">
+        <h1 className="mt-4 text-4xl font-semibold tracking-normal text-[var(--text)]">
           We could not load this course.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">

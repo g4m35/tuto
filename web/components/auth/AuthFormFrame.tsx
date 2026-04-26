@@ -21,7 +21,7 @@ const clerkAppearance = {
     rootBox: "w-full max-w-[400px]",
     cardBox: "w-full shadow-none",
     card: "w-full rounded-[14px] border border-white/[0.07] bg-[#111111] p-5 shadow-none sm:p-6",
-    headerTitle: "text-[22px] font-medium tracking-[-0.01em] text-[#fafafa]",
+    headerTitle: "text-[22px] font-medium tracking-normal text-[#fafafa]",
     headerSubtitle: "text-[13px] leading-5 text-[#a3a3a3]",
     socialButtonsBlockButton:
       "h-[46px] rounded-full border-white/[0.16] bg-transparent text-[#fafafa] hover:bg-[#161616]",
@@ -85,14 +85,14 @@ export function AuthFormFrame({ mode }: { mode: "sign-in" | "sign-up" }) {
         {mode === "sign-in" ? (
           <SignIn
             appearance={clerkAppearance}
-            fallbackRedirectUrl="/chat"
-            signUpFallbackRedirectUrl="/chat"
+            fallbackRedirectUrl="/dashboard"
+            signUpFallbackRedirectUrl="/dashboard"
           />
         ) : (
           <SignUp
             appearance={clerkAppearance}
-            fallbackRedirectUrl="/chat"
-            signInFallbackRedirectUrl="/chat"
+            fallbackRedirectUrl="/dashboard"
+            signInFallbackRedirectUrl="/dashboard"
           />
         )}
       </ClerkLoaded>

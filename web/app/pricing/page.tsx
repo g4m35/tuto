@@ -29,11 +29,11 @@ export default async function PricingPage() {
             </div>
           </div>
           <Link
-            href="/chat"
+            href="/dashboard"
             className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-4 py-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
           >
             <ArrowLeft className="size-4" />
-            Back to chat
+            Back to dashboard
           </Link>
         </div>
 

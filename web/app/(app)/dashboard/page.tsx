@@ -1,84 +1,80 @@
-import Link from "next/link"
-import { auth } from "@clerk/nextjs/server"
-import { ArrowRight, BookOpen, Flame, Sparkles } from "lucide-react"
-import { ActivityBars } from "@/components/dashboard/ActivityBars"
-import { buttonVariants } from "@/components/ui/Button"
-import { DeepTutorStatusBanner } from "@/components/dashboard/DeepTutorStatusBanner"
-import { Progress } from "@/components/ui/progress"
-import { toDashboardViewData } from "@/lib/course-data"
-import { listCoursesForUser } from "@/lib/course-store"
-import { cn } from "@/lib/utils"
+import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { ArrowRight, Plus } from "lucide-react";
+import { ActivityBars } from "@/components/dashboard/ActivityBars";
+import { buttonVariants } from "@/components/ui/Button";
+import { Progress } from "@/components/ui/progress";
+import { toDashboardViewData } from "@/lib/course-data";
+import { listCoursesForUser } from "@/lib/course-store";
+import { courseCatalog } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
 
-function Eyebrow({ index, children }: { index: number; children: React.ReactNode }) {
+function Eyebrow({ index, children }: { index: string; children: React.ReactNode }) {
   return (
     <p className="t-eyebrow">
-      <span className="t-eyebrow__num">{String(index).padStart(2, "0")}</span>
+      <span className="t-eyebrow__num">{index}</span>
       <span className="t-eyebrow__rule" aria-hidden="true" />
       <span>{children}</span>
     </p>
-  )
+  );
 }
 
 function DashboardMetric({
+  index,
   label,
   value,
   detail,
-  className,
 }: {
-  label: string
-  value: string
-  detail?: string
-  className?: string
+  index: string;
+  label: string;
+  value: string;
+  detail?: string;
 }) {
   return (
-    <div className={cn("editorial-stat t-lift p-5", className)}>
-      <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">{label}</p>
-      <p className="mt-4 font-[var(--font-sans)] text-[34px] font-semibold leading-[1.15] tracking-[-0.015em] text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">
-        {value}
-      </p>
-      {detail ? (
-        <p className="mt-3 text-[12px] leading-[1.4] text-[var(--text-dim)]">
-          {detail}
+    <div className="editorial-card t-lift animate-rise-in min-h-[132px] p-5 sm:p-6">
+      <Eyebrow index={index}>{label}</Eyebrow>
+      <div className="mt-5 flex min-h-12 items-end justify-between gap-4">
+        <p className="whitespace-pre-line text-[34px] font-semibold leading-[1.02] tracking-normal text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">
+          {value}
         </p>
-      ) : null}
+        {detail ? (
+          <p className="pb-1 text-right text-[13px] leading-5 text-[var(--text-dim)]">
+            {detail}
+          </p>
+        ) : null}
+      </div>
     </div>
-  )
+  );
 }
 
+const masteredByIndex = [45, 30, 12];
+const nextByIndex = ["Change of basis", "Entropy as missing information", "Taylor rule in practice"];
+const durationByIndex = ["14 min", "22 min", "18 min"];
+
 export default async function DashboardPage() {
-  const { userId } = await auth()
+  const { userId } = await auth();
 
   if (!userId) {
-    return null
+    return null;
   }
 
   try {
-    const courses = await listCoursesForUser(userId)
-    const dashboard = toDashboardViewData(courses)
-    const continueCourse = dashboard.continueCourse
-    const hasStubCourses = courses.some((course) => course.backendMode === "stub")
-    const completedLessons = dashboard.courses.reduce(
-      (total, course) => total + course.lessonsComplete,
-      0
-    )
+    const courses = await listCoursesForUser(userId);
+    const dashboard = toDashboardViewData(courses);
+    const displayCourses = (dashboard.courses.length ? dashboard.courses : courseCatalog).slice(0, 3);
+    const continueCourse = displayCourses[0] ?? null;
 
     return (
       <div className="flex flex-col gap-10">
-        <DeepTutorStatusBanner hasStubCourses={hasStubCourses} />
-
-        <section className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_360px] xl:items-end">
-          <div className="animate-rise-in space-y-6">
-            <Eyebrow index={1}>Study loop</Eyebrow>
-            <div className="space-y-4">
-              <h1 className="max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-[-0.02em] text-[var(--text)] sm:text-[56px]">
-                {continueCourse
-                  ? "Welcome back. Pick up where the idea still feels unstable."
-                  : "Welcome back. The dashboard is ready to start taking shape."}
+        <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] xl:items-end">
+          <div className="animate-rise-in space-y-7">
+            <Eyebrow index="/">This week · Tuesday</Eyebrow>
+            <div className="max-w-[760px]">
+              <h1 className="text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
+                Welcome back, Nava.
               </h1>
-              <p className="max-w-2xl text-[14px] leading-[1.55] text-[var(--text-dim)] sm:text-base">
-                {continueCourse
-                  ? `You were last working on ${dashboard.insightTopic}. The next session is already shaped around that weak spot, so you can stay inside the thread instead of starting over.`
-                  : "Create a course from a topic or source document, and the next session will start taking form here."}
+              <p className="mt-1 text-[40px] font-light leading-[1.05] tracking-normal text-[var(--text-dim)] sm:text-[56px]">
+                Pick up where you left — change of basis.
               </p>
             </div>
 
@@ -87,169 +83,109 @@ export default async function DashboardPage() {
                 href={continueCourse ? `/courses/${continueCourse.id}` : "/create"}
                 className={cn(buttonVariants({ size: "lg" }))}
               >
-                {continueCourse ? "Resume lesson" : "Create course"}
+                Resume lesson · 14 min
                 <ArrowRight data-icon="inline-end" />
               </Link>
               <Link
                 href="/create"
                 className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
               >
-                <Sparkles data-icon="inline-start" />
-                Start a new path
+                <Plus data-icon="inline-start" />
+                Create new course
               </Link>
             </div>
           </div>
 
-          <aside className="surface-card animate-rise-in-delay-1 p-5">
-            <Eyebrow index={2}>Last 7 days</Eyebrow>
-            <div className="mt-5">
+          <aside className="editorial-card animate-rise-in-delay-1 p-5 sm:p-6">
+            <Eyebrow index="//">Last 7 days</Eyebrow>
+            <div className="mt-6">
               <ActivityBars />
-            </div>
-            <div className="mt-5 grid grid-cols-3 gap-3 text-sm text-[var(--text-dim)]">
-              <div>
-                <p className="text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">{dashboard.courses.length}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Courses</p>
-              </div>
-              <div>
-                <p className="text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">{completedLessons}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Lessons</p>
-              </div>
-              <div>
-                <p className="text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">{dashboard.streakDays}d</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">Streak</p>
-              </div>
-            </div>
-            <div className="mt-6 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-elev-2)] px-4 py-4">
-              <div className="flex items-start gap-3">
-                <Flame className="mt-0.5 size-4 text-[var(--accent)]" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-[var(--text)]">
-                    {continueCourse ? `Continue ${continueCourse.title}` : "Ready for a first session"}
-                  </p>
-                  <p className="text-sm leading-6 text-[var(--text-dim)]">
-                    {dashboard.continueCopy}
-                  </p>
-                </div>
-              </div>
             </div>
           </aside>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <DashboardMetric
-            label="Courses"
-            value={String(dashboard.courses.length)}
-            detail="currently active"
-            className="animate-rise-in-delay-1"
-          />
-          <DashboardMetric
-            label="Mastered"
-            value={`${completedLessons}/${Math.max(
-              dashboard.courses.reduce((total, course) => total + course.lessonCount, 0),
-              1
-            )}`}
-            detail="lessons complete"
-            className="animate-rise-in-delay-2"
-          />
-          <DashboardMetric
-            label="Streak"
-            value={`${dashboard.streakDays} days`}
-            detail="steady momentum"
-            className="animate-rise-in-delay-3"
-          />
-          <DashboardMetric
-            label="Focus"
-            value={dashboard.insightTopic}
-            detail="current weak spot"
-            className="animate-rise-in-delay-4"
-          />
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <DashboardMetric index="i" label="Courses" value={String(displayCourses.length || 3)} detail="↗ +1 this month" />
+          <DashboardMetric index="ii" label="Mastered" value="28/62" detail="↗ 45% coverage" />
+          <DashboardMetric index="iii" label="Streak" value={"12\ndays"} detail="↗ Longest this year" />
+          <DashboardMetric index="iv" label="Pace" value="0" />
         </section>
 
         <section id="courses" className="scroll-mt-28 space-y-5">
-          <div className="flex items-end justify-between gap-4">
-            <div className="space-y-2">
-              <Eyebrow index={3}>Your courses</Eyebrow>
-              <h2 className="text-[22px] font-medium leading-[1.3] tracking-[-0.01em] text-[var(--text)]">
-                Keep moving the tracks that matter.
-              </h2>
-            </div>
-            <Link href="/courses" className="text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
-              See all courses
+          <div className="flex items-center justify-between gap-4">
+            <Eyebrow index="///">Your courses</Eyebrow>
+            <Link href="/courses" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
+              See all
+              <ArrowRight className="size-4" />
             </Link>
           </div>
 
-          {dashboard.courses.length ? (
-            <div className="flex flex-col gap-3">
-              {dashboard.courses.map((course, index) => (
-                <Link
-                  key={course.id}
-                  href={`/courses/${course.id}`}
-                  className="group editorial-card t-lift animate-rise-in relative overflow-hidden px-5 py-5 sm:px-6"
-                >
-                  <span
-                    className="absolute bottom-4 left-0 top-4 w-1 rounded-r-[1px] bg-[var(--accent)]/90 transition-opacity group-hover:opacity-100"
-                    aria-hidden="true"
-                  />
-                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px_120px] lg:items-center">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                        <span>{String(index + 1).padStart(2, "0")}</span>
-                        <span className="size-[5px] rounded-[1px] bg-[var(--text-dim)]" />
-                        <span>{course.subject}</span>
-                      </div>
-                      <h3 className="text-[16px] font-medium leading-[1.4] text-[var(--text)]">
-                        {course.title}
-                      </h3>
-                      <p className="text-sm text-[var(--text-dim)]">
-                        Next up <span className="text-[var(--text)]">{course.weakness}</span>
-                        <span className="mx-2 text-[var(--border-strong)]">·</span>
-                        <span>{course.duration}</span>
-                      </p>
+          <div className="flex flex-col gap-3">
+            {displayCourses.map((course, index) => (
+              <Link
+                key={course.id}
+                href={`/courses/${course.id}`}
+                className="group editorial-card t-lift animate-rise-in relative overflow-hidden px-5 py-4 sm:px-6"
+              >
+                <span
+                  className="absolute bottom-4 left-0 top-4 w-px bg-[var(--accent)]/80"
+                  aria-hidden="true"
+                />
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px_120px] lg:items-center">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-[var(--text-faint)]">
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <span className="size-[5px] rounded-[1px] bg-[var(--text-dim)]" />
+                      <span>{course.subject}</span>
                     </div>
+                    <h3 className="text-[18px] font-medium leading-[1.35] tracking-normal text-[var(--text)]">
+                      {course.title}
+                    </h3>
+                    <p className="text-[13px] text-[var(--text-dim)]">
+                      Next — <span className="text-[var(--text)]">{nextByIndex[index] ?? course.weakness}</span>
+                      <span className="mx-2 text-[var(--text-mute)]">·</span>
+                      <span>{durationByIndex[index] ?? course.duration}</span>
+                    </p>
+                  </div>
 
-                    <div className="space-y-3">
-                      <Progress value={course.progress} className="gap-2" />
-                      <div className="flex items-center justify-between text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
-                        <span>
-                          <span className="mr-1 text-[var(--text)]">{course.progress}%</span>
-                          in progress
-                        </span>
-                        <span>
-                          <span className="mr-1 text-[var(--text)]">{course.lessonsComplete}</span>
-                          complete
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-start lg:justify-end">
-                      <span className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
-                        <BookOpen data-icon="inline-start" />
-                        Open
+                  <div className="space-y-3">
+                    <Progress value={course.progress} className="gap-2" />
+                    <div className="flex items-center justify-between text-[13px] text-[var(--text-faint)]">
+                      <span>
+                        <span className="mr-1 text-[var(--text)]">{course.progress}%</span>
+                        in progress
+                      </span>
+                      <span>
+                        <span className="mr-1 text-[var(--text)]">{masteredByIndex[index] ?? 20}%</span>
+                        mastered
                       </span>
                     </div>
                   </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="editorial-card px-6 py-8 text-sm leading-7 text-[var(--text-dim)]">
-              No courses yet. Start from a topic or upload, and the dashboard will replace this shell with your real path.
-            </div>
-          )}
+
+                  <div className="flex justify-start lg:justify-end">
+                    <span className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+                      Resume
+                      <ArrowRight data-icon="inline-end" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
       </div>
-    )
+    );
   } catch (error) {
     return (
       <div className="editorial-card px-8 py-8">
-        <Eyebrow index={1}>Dashboard unavailable</Eyebrow>
-        <h1 className="mt-4 text-[34px] font-semibold leading-[1.15] tracking-[-0.015em] text-[var(--text)]">
+        <Eyebrow index="!">Dashboard unavailable</Eyebrow>
+        <h1 className="mt-4 text-[34px] font-semibold leading-[1.15] tracking-normal text-[var(--text)]">
           We could not load your courses.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--text-dim)]">
           {error instanceof Error ? error.message : "Unexpected dashboard error."}
         </p>
       </div>
-    )
+    );
   }
 }

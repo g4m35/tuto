@@ -169,14 +169,14 @@
     animation: t-rise-lg 450ms var(--ease-signature) both;
   }
 
-  .t-btn {
-    transition:
-      color 150ms ease,
-      background-color 150ms ease,
-      border-color 150ms ease,
-      opacity 150ms ease,
-      transform 150ms ease;
-  }
+	  .t-btn {
+	    transition:
+	      color 200ms ease,
+	      background-color 200ms ease,
+	      border-color 200ms ease,
+	      opacity 200ms ease,
+	      transform 300ms var(--ease-signature);
+	  }
 
   .t-btn:hover {
     transform: translateY(-1px);

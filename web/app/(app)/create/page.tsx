@@ -133,15 +133,19 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_360px]">
-      <section className="space-y-8">
-        <div className="space-y-4">
-          <p className="eyebrow">Create a course</p>
-          <h1 className="serif max-w-3xl text-5xl font-semibold tracking-[-0.05em] text-[var(--text)] sm:text-6xl">
-            Tell Tuto what you want to learn. We&apos;ll build the shape of it.
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <section className="space-y-7">
+        <div className="space-y-5">
+          <p className="t-eyebrow">
+            <span className="t-eyebrow__num">{"///"}</span>
+            <span className="t-eyebrow__rule" aria-hidden="true" />
+            <span>Create</span>
+          </p>
+          <h1 className="max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[48px]">
+            Create new course
           </h1>
-          <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
-            Start from material you already have, or begin with a topic and let the first lesson path take form before you commit.
+          <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
+            Turn a source or a prompt into a quiet lesson path before you commit.
           </p>
         </div>
 
@@ -159,7 +163,7 @@ export default function CreateCoursePage() {
                   setError(null)
                 }}
                 className={cn(
-                  "editorial-card hover-lift text-left px-5 py-5",
+	                  "editorial-card t-lift text-left px-5 py-5",
                   index === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
                   active
                     ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
@@ -174,16 +178,16 @@ export default function CreateCoursePage() {
           })}
         </div>
 
-        <div className="editorial-card animate-rise-in p-6 sm:p-7">
+        <div className="editorial-card animate-rise-in p-5 sm:p-6">
           <div className="space-y-6">
             <div className="space-y-2">
-              <p className="eyebrow">What do you want to learn?</p>
+              <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">What do you want to learn?</p>
               <input
                 id="course-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Bayesian inference for builders"
-                className="w-full border-0 bg-transparent p-0 text-2xl font-medium tracking-[-0.03em] text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] sm:text-[2rem]"
+                className="w-full border-0 bg-transparent p-0 text-[28px] font-medium leading-tight tracking-normal text-[var(--text)] outline-none placeholder:text-[var(--text-faint)]"
               />
             </div>
 
@@ -203,7 +207,7 @@ export default function CreateCoursePage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex min-h-56 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-soft)] px-6 text-center"
+                  className="flex min-h-48 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius-md)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-soft)] px-6 text-center"
                 >
                   <div className="inline-flex size-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
                     <Upload className="size-5 text-[var(--text)]" />
@@ -222,7 +226,7 @@ export default function CreateCoursePage() {
                 value={topicPrompt}
                 onChange={(event) => setTopicPrompt(event.target.value)}
                 placeholder="Build a slow visual path through Bayesian inference, ending with a practical coding intuition."
-                className="min-h-56 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-soft)] px-5 py-5 text-base leading-7 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
+                className="min-h-48 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-5 py-5 text-base leading-7 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
               />
             )}
 
@@ -281,7 +285,11 @@ export default function CreateCoursePage() {
 
       <aside className="space-y-4">
         <div className="space-y-2">
-          <p className="eyebrow">Preview</p>
+          <p className="t-eyebrow">
+            <span className="t-eyebrow__num">iv</span>
+            <span className="t-eyebrow__rule" aria-hidden="true" />
+            <span>Preview</span>
+          </p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
             This is the shape of the draft before the real guide payload arrives.
           </p>
@@ -295,7 +303,7 @@ export default function CreateCoursePage() {
             </div>
 
             <div className="space-y-3">
-              <h2 className="text-2xl font-medium tracking-[-0.04em] text-[var(--text)]">
+              <h2 className="text-2xl font-medium tracking-normal text-[var(--text)]">
                 {title.trim() || "Your next course"}
               </h2>
               <p className="text-sm leading-6 text-[var(--text-dim)]">
