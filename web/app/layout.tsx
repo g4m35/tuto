@@ -49,7 +49,12 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="bg-background text-foreground font-sans">
-        <ClerkProvider>
+        <ClerkProvider
+          signInFallbackRedirectUrl="/chat"
+          signInForceRedirectUrl="/chat"
+          signUpFallbackRedirectUrl="/chat"
+          signUpForceRedirectUrl="/chat"
+        >
           <AppShellProvider>
             <I18nClientBridge>
               {children}

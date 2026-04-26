@@ -315,7 +315,7 @@ export async function createCheckoutSessionResult(input: {
         quantity: 1,
       },
     ],
-    success_url: `${deps.getBaseUrl(input.request)}/dashboard?billing=success`,
+    success_url: `${deps.getBaseUrl(input.request)}/chat?billing=success`,
     cancel_url: `${deps.getBaseUrl(input.request)}/pricing?billing=canceled`,
     client_reference_id: input.userId,
     allow_promotion_codes: true,

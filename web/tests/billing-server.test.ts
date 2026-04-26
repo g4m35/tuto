@@ -202,7 +202,7 @@ test('createCheckoutSessionResult creates a Stripe checkout session for free use
   assert.equal(result.status, 200)
   assert.equal(result.body.url, 'https://checkout.stripe.test/session_123')
   assert.equal(createCall?.['customer'], 'cus_123')
-  assert.equal(createCall?.['success_url'], 'http://localhost:3000/dashboard?billing=success')
+  assert.equal(createCall?.['success_url'], 'http://localhost:3000/chat?billing=success')
 })
 
 test('createCheckoutSessionResult blocks team checkout until team billing is ready', async () => {

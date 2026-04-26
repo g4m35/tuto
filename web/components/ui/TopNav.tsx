@@ -2,17 +2,18 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Brain, Flame, Grid2x2, BookOpen, Sparkles } from "lucide-react"
+import { BookOpen, Bot, Brain, Library, MessageSquare, PenLine } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/Button"
 import { CommandPalette } from "@/components/ui/CommandPalette"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { id: "dashboard", href: "/dashboard", label: "Dashboard", icon: Grid2x2 },
-  { id: "courses", href: "/courses", label: "Courses", icon: BookOpen },
-  { id: "create", href: "/create", label: "Create", icon: Sparkles },
-  { id: "review", href: "/review", label: "Review", icon: Brain },
+  { id: "chat", href: "/chat", label: "Chat", icon: MessageSquare },
+  { id: "agents", href: "/agents", label: "Agents", icon: Bot },
+  { id: "writer", href: "/co-writer", label: "Writer", icon: PenLine },
+  { id: "book", href: "/book", label: "Book", icon: Library },
+  { id: "memory", href: "/memory", label: "Memory", icon: Brain },
 ]
 
 export function TopNav() {
@@ -23,7 +24,7 @@ export function TopNav() {
       <div className="mx-auto flex h-full w-full max-w-[1200px] items-center justify-between gap-4 px-5 sm:px-7">
         <div className="flex items-center gap-8">
           <Link
-            href="/dashboard"
+            href="/chat"
             className="[font-family:var(--font-serif)] text-[2rem] font-normal italic leading-none tracking-normal text-[var(--text)]"
           >
             tuto.
@@ -31,16 +32,14 @@ export function TopNav() {
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => {
               const Icon = item.icon
-              const active = item.id === "dashboard"
-                ? pathname === "/dashboard"
-                : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
               return (
                 <Link
                   key={item.id}
                   href={item.href}
                   className={cn(
-                    "relative inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13px] font-medium text-[var(--text-faint)]",
+                    "relative inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[13px] font-medium text-[var(--text-faint)] transition-colors duration-200 ease-[var(--ease-signature)]",
                     active
                       ? "text-[var(--text)]"
                       : "hover:text-[var(--text-dim)]"
@@ -59,13 +58,9 @@ export function TopNav() {
 
         <div className="flex items-center gap-3">
           <CommandPalette />
-          <div className="hidden h-[30px] items-center gap-2 rounded-full border border-[var(--border)] px-3 text-[12px] text-[var(--text-dim)] lg:inline-flex">
-            <Flame className="size-4 text-[var(--accent)]" />
-            <span>12 day streak</span>
-          </div>
-          <Button variant="secondary" size="sm" render={<Link href="/pricing" />}>
-            <Sparkles data-icon="inline-start" />
-            Upgrade
+          <Button variant="secondary" size="sm" render={<Link href="/settings" />}>
+            <BookOpen data-icon="inline-start" />
+            Settings
           </Button>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] p-1">
             <UserButton />

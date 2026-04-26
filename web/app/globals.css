@@ -122,6 +122,12 @@
     border-radius: var(--radius-lg);
   }
 
+  .t-skeleton {
+    background: linear-gradient(90deg, var(--bg-elev) 0%, var(--bg-elev-2) 50%, var(--bg-elev) 100%);
+    background-size: 200% 100%;
+    animation: t-shimmer 1.4s linear infinite;
+  }
+
   .accent-ring {
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.18),

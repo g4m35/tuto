@@ -26,17 +26,17 @@ interface SessionListProps {
 function statusColor(status?: SessionRuntimeStatus): string {
   switch (status) {
     case "running":
-      return "bg-blue-500";
+      return "bg-[var(--accent)]";
     case "completed":
-      return "bg-emerald-400";
+      return "bg-[var(--text-dim)]";
     case "failed":
-      return "bg-rose-500";
+      return "bg-[var(--text-faint)]";
     case "rejected":
-      return "bg-fuchsia-500";
+      return "bg-[var(--text-faint)]";
     case "cancelled":
-      return "bg-amber-500";
+      return "bg-[var(--text-faint)]";
     default:
-      return "bg-[var(--muted-foreground)]/25";
+      return "bg-[var(--text-faint)]";
   }
 }
 
@@ -46,33 +46,33 @@ function StatusIndicator({ status }: { status?: SessionRuntimeStatus }) {
   if (status === "running") {
     return (
       <span className="relative ml-1.5 inline-flex shrink-0">
-        <span className="session-pulse absolute inline-flex h-2 w-2 rounded-full bg-blue-400/60" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+        <span className="absolute inline-flex h-2 w-2 animate-[t-pulse-soft_1.8s_ease-in-out_infinite] rounded-full bg-[var(--accent)]/50" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
       </span>
     );
   }
 
   if (status === "completed") {
     return (
-      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-400/50 ring-1 ring-emerald-400/10" />
+      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-[var(--text-dim)] ring-1 ring-[var(--border-strong)]" />
     );
   }
 
   if (status === "failed") {
     return (
-      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-rose-500/80 ring-1 ring-rose-500/20" />
+      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-[var(--text-faint)] ring-1 ring-[var(--border-strong)]" />
     );
   }
 
   if (status === "rejected") {
     return (
-      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-fuchsia-500/80 ring-1 ring-fuchsia-500/20" />
+      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-[var(--text-faint)] ring-1 ring-[var(--border-strong)]" />
     );
   }
 
   if (status === "cancelled") {
     return (
-      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-amber-500/70 ring-1 ring-amber-500/20" />
+      <span className="ml-1.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-[var(--text-faint)] ring-1 ring-[var(--border-strong)]" />
     );
   }
 
@@ -148,7 +148,7 @@ export default function SessionList({
       return (
         <div className="ml-5 space-y-1.5 border-l border-[var(--border)]/30 py-1 pl-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-4 w-3/4 animate-pulse rounded bg-[var(--muted)]/40" />
+            <div key={i} className="h-4 w-3/4 t-skeleton rounded-[var(--radius-sm)]" />
           ))}
         </div>
       );
@@ -156,7 +156,7 @@ export default function SessionList({
     return (
       <div className="space-y-2 px-1.5 py-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-10 animate-pulse rounded-md bg-[var(--muted)]/60" />
+          <div key={i} className="h-10 t-skeleton rounded-[var(--radius-sm)]" />
         ))}
       </div>
     );
@@ -165,7 +165,7 @@ export default function SessionList({
   if (sessions.length === 0) {
     if (compact) return null;
     return (
-      <div className="px-3 py-4 text-center text-[11px] text-[var(--muted-foreground)]/70">
+        <div className="px-3 py-4 text-center text-[11px] text-[var(--text-faint)]">
         {t("No conversations yet")}
       </div>
     );
@@ -180,7 +180,7 @@ export default function SessionList({
             {groupIdx > 0 && (
               <div className="my-1 ml-3 mr-2 border-t border-[var(--border)]/20" />
             )}
-            <div className="px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]/40">
+            <div className="px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-faint)]">
               {label}
             </div>
             {items.map((session) => {
@@ -198,14 +198,14 @@ export default function SessionList({
                   }}
                   role="button"
                   tabIndex={0}
-                  className={`group flex items-center gap-2 rounded-r-lg py-1 pl-3 pr-2 transition-colors ${
-                    active
-                      ? "bg-[var(--background)]/50 text-[var(--foreground)]"
-                      : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/40 hover:text-[var(--foreground)]"
-                  }`}
+	                  className={`group flex items-center gap-2 rounded-r-[var(--radius-sm)] py-1 pl-3 pr-2 transition-colors duration-200 ease-[var(--ease-signature)] ${
+	                    active
+	                      ? "bg-[var(--bg-elev-2)] text-[var(--text)]"
+	                      : "text-[var(--text-faint)] hover:bg-[var(--bg-elev)] hover:text-[var(--text-dim)]"
+	                  }`}
                 >
                   <span className={`block h-1.5 w-1.5 shrink-0 rounded-full ${
-                    active ? "bg-[var(--foreground)]/60" : statusColor(session.status)
+	                    active ? "bg-[var(--text)]/60" : statusColor(session.status)
                   }`} />
                   {isEditing ? (
                     <input
@@ -221,7 +221,7 @@ export default function SessionList({
                         }
                       }}
                       onClick={(event) => event.stopPropagation()}
-                      className="min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--background)] px-1.5 py-px text-[12px] text-[var(--foreground)] outline-none focus:ring-1 focus:ring-[var(--primary)]/40"
+	                      className="min-w-0 flex-1 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-elev)] px-1.5 py-px text-[12px] text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
                     />
                   ) : (
                     <span className={`min-w-0 flex-1 truncate text-[13px] ${active ? "font-medium" : ""}`}>
@@ -232,7 +232,7 @@ export default function SessionList({
                     {isEditing ? (
                       <button
                         onClick={(event) => { event.stopPropagation(); void commitEdit(); }}
-                        className="rounded p-0.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+	                        className="rounded p-0.5 text-[var(--text-faint)] hover:text-[var(--text)]"
                         aria-label={t("Save title")}
                       >
                         <Check size={10} />
@@ -240,7 +240,7 @@ export default function SessionList({
                     ) : (
                       <button
                         onClick={(event) => { event.stopPropagation(); startEdit(session); }}
-                        className="rounded p-0.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+	                        className="rounded p-0.5 text-[var(--text-faint)] hover:text-[var(--text)]"
                         aria-label={t("Rename chat")}
                       >
                         <Pencil size={10} />
@@ -248,7 +248,7 @@ export default function SessionList({
                     )}
                     <button
                       onClick={(event) => { event.stopPropagation(); void onDelete(session.session_id); }}
-                      className="rounded p-0.5 text-[var(--muted-foreground)] hover:text-[var(--destructive)]"
+	                      className="rounded p-0.5 text-[var(--text-faint)] hover:text-[var(--text)]"
                       aria-label={t("Delete chat")}
                     >
                       <Trash2 size={10} />
@@ -268,7 +268,7 @@ export default function SessionList({
     <div className="space-y-3">
       {grouped.map(([label, items]) => (
         <div key={label}>
-          <div className="mb-1 px-2 text-[11px] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
+	          <div className="mb-1 px-2 text-[11px] font-medium uppercase tracking-widest text-[var(--text-faint)]">
             {label}
           </div>
           <div className="space-y-px">
@@ -287,14 +287,14 @@ export default function SessionList({
                   }}
                   role="button"
                   tabIndex={0}
-                  className={`group relative w-full rounded-lg px-2.5 py-2 text-left transition-all duration-150 ${
-                    active
-                      ? "bg-[var(--background)]/70 text-[var(--foreground)]"
-                      : "text-[var(--muted-foreground)] hover:bg-[var(--background)]/50 hover:text-[var(--foreground)]"
-                  }`}
+	                  className={`group relative w-full rounded-[var(--radius-sm)] px-2.5 py-2 text-left transition-all duration-200 ease-[var(--ease-signature)] ${
+	                    active
+	                      ? "bg-[var(--bg-elev-2)] text-[var(--text)]"
+	                      : "text-[var(--text-faint)] hover:bg-[var(--bg-elev)] hover:text-[var(--text-dim)]"
+	                  }`}
                 >
                   {active && (
-                    <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--primary)]" />
+	                    <span className="absolute left-0 top-1/2 h-4 w-px -translate-y-1/2 bg-[var(--accent)]" />
                   )}
                   <div className="flex items-start gap-1.5">
                     <div className="min-w-0 flex-1">
@@ -312,7 +312,7 @@ export default function SessionList({
                             }
                           }}
                           onClick={(event) => event.stopPropagation()}
-                          className="w-full rounded border border-[var(--border)] bg-[var(--background)] px-2 py-0.5 text-[12px] text-[var(--foreground)] outline-none focus:ring-1 focus:ring-[var(--primary)]/40"
+	                          className="w-full rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-elev)] px-2 py-0.5 text-[12px] text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
                         />
                       ) : (
                         <div className="flex items-center">
@@ -327,7 +327,7 @@ export default function SessionList({
                         </div>
                       )}
                       {!isEditing && (
-                        <div className="mt-0.5 line-clamp-1 text-[11px] leading-tight text-[var(--muted-foreground)]">
+	                        <div className="mt-0.5 line-clamp-1 text-[11px] leading-tight text-[var(--text-faint)]">
                           {session.last_message || relativeTime(session.updated_at)}
                         </div>
                       )}
@@ -339,7 +339,7 @@ export default function SessionList({
                             event.stopPropagation();
                             void commitEdit();
                           }}
-                          className="rounded p-0.5 text-[var(--muted-foreground)] hover:bg-[var(--background)] hover:text-[var(--foreground)]"
+	                          className="rounded p-0.5 text-[var(--text-faint)] hover:bg-[var(--bg-elev)] hover:text-[var(--text)]"
                           aria-label={t("Save title")}
                         >
                           <Check size={12} />
@@ -350,7 +350,7 @@ export default function SessionList({
                             event.stopPropagation();
                             startEdit(session);
                           }}
-                          className="rounded p-0.5 text-[var(--muted-foreground)] hover:bg-[var(--background)] hover:text-[var(--foreground)]"
+	                          className="rounded p-0.5 text-[var(--text-faint)] hover:bg-[var(--bg-elev)] hover:text-[var(--text)]"
                           aria-label={t("Rename chat")}
                         >
                           <Pencil size={11} />
@@ -361,7 +361,7 @@ export default function SessionList({
                           event.stopPropagation();
                           void onDelete(session.session_id);
                         }}
-                        className="rounded p-0.5 text-[var(--muted-foreground)] hover:bg-[var(--background)] hover:text-[var(--destructive)]"
+	                        className="rounded p-0.5 text-[var(--text-faint)] hover:bg-[var(--bg-elev)] hover:text-[var(--text)]"
                         aria-label={t("Delete chat")}
                       >
                         <Trash2 size={11} />

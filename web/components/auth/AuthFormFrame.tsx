@@ -85,14 +85,14 @@ export function AuthFormFrame({ mode }: { mode: "sign-in" | "sign-up" }) {
         {mode === "sign-in" ? (
           <SignIn
             appearance={clerkAppearance}
-            fallbackRedirectUrl="/dashboard"
-            signUpFallbackRedirectUrl="/dashboard"
+            fallbackRedirectUrl="/chat"
+            signUpFallbackRedirectUrl="/chat"
           />
         ) : (
           <SignUp
             appearance={clerkAppearance}
-            fallbackRedirectUrl="/dashboard"
-            signInFallbackRedirectUrl="/dashboard"
+            fallbackRedirectUrl="/chat"
+            signInFallbackRedirectUrl="/chat"
           />
         )}
       </ClerkLoaded>

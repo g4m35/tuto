@@ -2,7 +2,7 @@
 
 import { type ComponentType, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, Grid2x2, Search, Sparkles, Brain, ArrowUpRight, X } from "lucide-react"
+import { BookOpen, Bot, Brain, Library, MessageSquare, PenLine, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type CommandItem = {
@@ -15,39 +15,46 @@ type CommandItem = {
 
 const commandItems: CommandItem[] = [
   {
-    id: "dashboard",
-    href: "/dashboard",
-    label: "Go to dashboard",
-    hint: "Route",
-    icon: Grid2x2,
+    id: "chat",
+    href: "/chat",
+    label: "Open chat",
+    hint: "Workspace",
+    icon: MessageSquare,
   },
   {
-    id: "courses",
-    href: "/courses",
-    label: "Open courses",
-    hint: "Route",
+    id: "agents",
+    href: "/agents",
+    label: "Open agents",
+    hint: "Workspace",
+    icon: Bot,
+  },
+  {
+    id: "writer",
+    href: "/co-writer",
+    label: "Open writer",
+    hint: "Workspace",
+    icon: PenLine,
+  },
+  {
+    id: "book",
+    href: "/book",
+    label: "Open book",
+    hint: "Workspace",
+    icon: Library,
+  },
+  {
+    id: "knowledge",
+    href: "/knowledge",
+    label: "Open knowledge",
+    hint: "Workspace",
     icon: BookOpen,
   },
   {
-    id: "create",
-    href: "/create",
-    label: "Create a new course",
-    hint: "Route",
-    icon: Sparkles,
-  },
-  {
-    id: "review",
-    href: "/review",
-    label: "Start review",
-    hint: "Route",
+    id: "memory",
+    href: "/memory",
+    label: "Open memory",
+    hint: "Workspace",
     icon: Brain,
-  },
-  {
-    id: "pricing",
-    href: "/pricing",
-    label: "View pricing",
-    hint: "Billing",
-    icon: ArrowUpRight,
   },
 ]
 
@@ -113,12 +120,12 @@ export function CommandPalette() {
             setQuery("")
             setOpen(true)
           }}
-          className="hidden min-w-[15rem] items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3.5 py-2 text-left text-sm text-[var(--text-dim)] hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:inline-flex"
+          className="hidden min-w-[15rem] items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3.5 py-2 text-left text-sm text-[var(--text-dim)] transition-all duration-200 ease-[var(--ease-signature)] hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:inline-flex"
         >
           <Search className="size-4 text-[var(--text-faint)]" />
           <span className="flex-1">Jump to anything</span>
           <span className="rounded border border-[var(--border)] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[var(--text-faint)]">
-            ⌘K
+            Cmd K
           </span>
         </button>
         <button
@@ -127,7 +134,7 @@ export function CommandPalette() {
             setQuery("")
             setOpen(true)
           }}
-          className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)] text-[var(--text-faint)] lg:hidden"
+          className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)] text-[var(--text-faint)] transition-all duration-200 ease-[var(--ease-signature)] hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:hidden"
           aria-label="Open command palette"
         >
           <Search className="size-4" />
@@ -136,13 +143,13 @@ export function CommandPalette() {
 
       {open ? (
         <div
-          className="fixed inset-0 z-[70] flex items-start justify-center bg-black/70 px-4 pt-28 backdrop-blur-md"
+          className="fixed inset-0 z-[70] flex animate-[t-fade_180ms_var(--ease-signature)_both] items-start justify-center bg-black/70 px-4 pt-28 backdrop-blur-md"
           onClick={() => {
             setOpen(false)
             setQuery("")
           }}
         >
-          <div className="surface-panel w-full max-w-2xl overflow-hidden" onClick={(event) => event.stopPropagation()}>
+          <div className="surface-panel w-full max-w-2xl animate-[t-scale-in_180ms_var(--ease-signature)_both] overflow-hidden" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-4">
               <Search className="size-4 text-[var(--text-faint)]" />
               <input
@@ -158,7 +165,7 @@ export function CommandPalette() {
                   setOpen(false)
                   setQuery("")
                 }}
-                className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] p-2 text-[var(--text-faint)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+                className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-elev)] p-2 text-[var(--text-faint)] transition-all duration-200 ease-[var(--ease-signature)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
                 aria-label="Close command palette"
               >
                 <X className="size-4" />
@@ -176,11 +183,11 @@ export function CommandPalette() {
                       type="button"
                       onClick={() => navigate(item)}
                       className={cn(
-                        "flex w-full items-center gap-4 rounded-[var(--radius-sm)] px-4 py-3 text-left hover:bg-[var(--bg-soft)]",
+                        "flex w-full items-center gap-4 rounded-[var(--radius-sm)] px-4 py-3 text-left transition-colors duration-200 ease-[var(--ease-signature)] hover:bg-[var(--bg-elev-2)]",
                         index === 0 && "animate-rise-in"
                       )}
                     >
-                      <span className="inline-flex size-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[var(--text-faint)]">
+                      <span className="inline-flex size-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)] text-[var(--text-faint)]">
                         <Icon className="size-4" />
                       </span>
                       <span className="flex-1">
