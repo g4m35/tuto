@@ -32,6 +32,14 @@ export const metadata: Metadata = {
   },
 };
 
+function getClerkProxyUrl() {
+  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const vercelAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
+  const appUrl = configuredAppUrl || vercelAppUrl || "http://localhost:3000";
+
+  return new URL("/__clerk", appUrl).toString();
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,6 +56,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background text-foreground font-sans">
         <ClerkProvider
+          proxyUrl={getClerkProxyUrl()}
           signInFallbackRedirectUrl="/dashboard"
           signInForceRedirectUrl="/dashboard"
           signUpFallbackRedirectUrl="/dashboard"
