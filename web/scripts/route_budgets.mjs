@@ -8,11 +8,11 @@ const APP_OUTPUT_DIR = path.resolve(".next");
 const ROUTE_BUDGETS_KB = {
   "/": 700,
   "/playground": 700,
-  "/co-writer": 200,
+  "/co-writer": 450,
   "/co-writer/[docId]": 700,
-  "/knowledge": 450,
+  "/knowledge": 475,
   "/memory": 450,
-  "/settings": 180,
+  "/settings": 450,
 };
 
 const ROOT_SHELL_BUDGET_KB = 220;

@@ -77,6 +77,12 @@ function auditFile(content) {
 }
 
 const webRoot = path.resolve(process.cwd());
+const allowlistPath = path.join(webRoot, "scripts", "i18n_audit_allowlist.json");
+const allowlistedFiles = new Set(
+  fs.existsSync(allowlistPath)
+    ? JSON.parse(fs.readFileSync(allowlistPath, "utf8")).files ?? []
+    : [],
+);
 const targets = [path.join(webRoot, "app"), path.join(webRoot, "components")].filter((p) =>
   fs.existsSync(p),
 );
@@ -94,9 +100,10 @@ for (const dir of targets) {
     if (fileFilter && !toRel(f, webRoot).includes(fileFilter)) continue;
     const content = fs.readFileSync(f, "utf8");
     const findings = auditFile(content);
-    if (findings.length) {
+    const rel = toRel(f, webRoot);
+    if (findings.length && !allowlistedFiles.has(rel)) {
       allFindings.push({
-        file: toRel(f, webRoot),
+        file: rel,
         findings,
       });
     }

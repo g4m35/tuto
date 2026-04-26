@@ -3,8 +3,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Instrument_Serif, Inter } from "next/font/google";
 import "./globals.css";
 import ThemeScript from "@/components/ThemeScript";
-import { AppShellProvider } from "@/context/AppShellContext";
-import { I18nClientBridge } from "@/i18n/I18nClientBridge";
 import { cn } from "@/lib/utils";
 
 const fontSans = Inter({
@@ -55,11 +53,7 @@ export default function RootLayout({
           signUpFallbackRedirectUrl="/dashboard"
           signUpForceRedirectUrl="/dashboard"
         >
-          <AppShellProvider>
-            <I18nClientBridge>
-              {children}
-            </I18nClientBridge>
-          </AppShellProvider>
+          {children}
         </ClerkProvider>
       </body>
     </html>
