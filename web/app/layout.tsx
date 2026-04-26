@@ -7,14 +7,6 @@ import { AppShellProvider } from "@/context/AppShellContext";
 import { I18nClientBridge } from "@/i18n/I18nClientBridge";
 import { cn } from "@/lib/utils";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-
-const clerkProxyUrl =
-  process.env.NEXT_PUBLIC_CLERK_PROXY_URL ||
-  (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.startsWith("pk_live_") && appUrl
-    ? `${appUrl}/__clerk`
-    : undefined);
-
 const fontSans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -57,7 +49,7 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="bg-background text-foreground font-sans">
-        <ClerkProvider proxyUrl={clerkProxyUrl}>
+        <ClerkProvider>
           <AppShellProvider>
             <I18nClientBridge>
               {children}
