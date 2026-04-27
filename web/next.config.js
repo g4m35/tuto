@@ -30,6 +30,11 @@ const nextConfig = {
   // This eliminates the need to copy the full node_modules into Docker production images
   output: "standalone",
 
+  // Clerk validates the exact proxy URL configured in its dashboard.
+  // Keep /__clerk/ from redirecting to /__clerk so validation can reach
+  // the middleware proxy without a Vercel trailing-slash redirect.
+  skipTrailingSlashRedirect: true,
+
   // Move dev indicator to bottom-right corner
   devIndicators: {
     position: "bottom-right",
