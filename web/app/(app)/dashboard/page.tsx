@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { ArrowRight, Plus } from "lucide-react";
 import { ActivityBars } from "@/components/dashboard/ActivityBars";
 import { buttonVariants } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/progress";
 import { toDashboardViewData } from "@/lib/course-data";
 import { listCoursesForUser } from "@/lib/course-store";
-import { courseCatalog } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 function Eyebrow({ index, children }: { index: string; children: React.ReactNode }) {
@@ -47,9 +46,18 @@ function DashboardMetric({
   );
 }
 
-const masteredByIndex = [45, 30, 12];
-const nextByIndex = ["Change of basis", "Entropy as missing information", "Taylor rule in practice"];
-const durationByIndex = ["14 min", "22 min", "18 min"];
+function getDisplayName(user: Awaited<ReturnType<typeof currentUser>>) {
+  return (
+    user?.firstName ||
+    user?.username ||
+    user?.emailAddresses[0]?.emailAddress.split("@")[0] ||
+    "there"
+  );
+}
+
+function getWeekday() {
+  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date());
+}
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -59,36 +67,53 @@ export default async function DashboardPage() {
   }
 
   try {
+    const user = await currentUser();
     const courses = await listCoursesForUser(userId);
     const dashboard = toDashboardViewData(courses);
-    const displayCourses = (dashboard.courses.length ? dashboard.courses : courseCatalog).slice(0, 3);
+    const displayCourses = dashboard.courses.slice(0, 3);
     const continueCourse = displayCourses[0] ?? null;
+    const hasCourses = displayCourses.length > 0;
+    const displayName = getDisplayName(user);
+    const totalLessons = dashboard.courses.reduce((sum, course) => sum + course.lessonCount, 0);
+    const completedLessons = dashboard.courses.reduce(
+      (sum, course) => sum + course.lessonsComplete,
+      0
+    );
+    const completionPercent = totalLessons
+      ? Math.round((completedLessons / totalLessons) * 100)
+      : 0;
 
     return (
       <div className="flex flex-col gap-10">
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] xl:items-end">
           <div className="animate-rise-in space-y-7">
-            <Eyebrow index="/">This week · Tuesday</Eyebrow>
+            <Eyebrow index="/">This week · {getWeekday()}</Eyebrow>
             <div className="max-w-[760px]">
               <h1 className="text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
-                Welcome back, Nava.
+                {hasCourses ? `Welcome back, ${displayName}.` : `Welcome, ${displayName}.`}
               </h1>
               <p className="mt-1 text-[40px] font-light leading-[1.05] tracking-normal text-[var(--text-dim)] sm:text-[56px]">
-                Pick up where you left — change of basis.
+                {continueCourse
+                  ? `Pick up where you left - ${continueCourse.weakness}.`
+                  : "Create your first course to start learning."}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link
-                href={continueCourse ? `/courses/${continueCourse.id}` : "/create"}
-                className={cn(buttonVariants({ size: "lg" }))}
-              >
-                Resume lesson · 14 min
-                <ArrowRight data-icon="inline-end" />
-              </Link>
+              {continueCourse ? (
+                <Link
+                  href={`/courses/${continueCourse.id}`}
+                  className={cn(buttonVariants({ size: "lg" }))}
+                >
+                  Resume lesson
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+              ) : null}
               <Link
                 href="/create"
-                className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
+                className={cn(
+                  buttonVariants({ variant: continueCourse ? "ghost" : "default", size: "lg" })
+                )}
               >
                 <Plus data-icon="inline-start" />
                 Create new course
@@ -105,23 +130,35 @@ export default async function DashboardPage() {
         </section>
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <DashboardMetric index="i" label="Courses" value={String(displayCourses.length || 3)} detail="↗ +1 this month" />
-          <DashboardMetric index="ii" label="Mastered" value="28/62" detail="↗ 45% coverage" />
-          <DashboardMetric index="iii" label="Streak" value={"12\ndays"} detail="↗ Longest this year" />
+          <DashboardMetric
+            index="i"
+            label="Courses"
+            value={String(dashboard.courses.length)}
+            detail={dashboard.courses.length ? "Active courses" : "No courses yet"}
+          />
+          <DashboardMetric
+            index="ii"
+            label="Completed"
+            value={`${completedLessons}/${totalLessons}`}
+            detail={totalLessons ? `${completionPercent}% complete` : "No lessons yet"}
+          />
+          <DashboardMetric index="iii" label="Streak" value={`${dashboard.streakDays}\ndays`} detail="No activity yet" />
           <DashboardMetric index="iv" label="Pace" value="0" />
         </section>
 
         <section id="courses" className="scroll-mt-28 space-y-5">
           <div className="flex items-center justify-between gap-4">
             <Eyebrow index="///">Your courses</Eyebrow>
-            <Link href="/courses" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
-              See all
-              <ArrowRight className="size-4" />
-            </Link>
+            {hasCourses ? (
+              <Link href="/courses" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
+                See all
+                <ArrowRight className="size-4" />
+              </Link>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-3">
-            {displayCourses.map((course, index) => (
+            {hasCourses ? displayCourses.map((course, index) => (
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
@@ -142,9 +179,9 @@ export default async function DashboardPage() {
                       {course.title}
                     </h3>
                     <p className="text-[13px] text-[var(--text-dim)]">
-                      Next — <span className="text-[var(--text)]">{nextByIndex[index] ?? course.weakness}</span>
+                      Next - <span className="text-[var(--text)]">{course.weakness}</span>
                       <span className="mx-2 text-[var(--text-mute)]">·</span>
-                      <span>{durationByIndex[index] ?? course.duration}</span>
+                      <span>{course.duration}</span>
                     </p>
                   </div>
 
@@ -156,8 +193,8 @@ export default async function DashboardPage() {
                         in progress
                       </span>
                       <span>
-                        <span className="mr-1 text-[var(--text)]">{masteredByIndex[index] ?? 20}%</span>
-                        mastered
+                        <span className="mr-1 text-[var(--text)]">{course.lessonsComplete}/{course.lessonCount}</span>
+                        completed
                       </span>
                     </div>
                   </div>
@@ -170,7 +207,20 @@ export default async function DashboardPage() {
                   </div>
                 </div>
               </Link>
-            ))}
+            )) : (
+              <div className="editorial-card animate-rise-in px-5 py-6 sm:px-6">
+                <h3 className="text-[20px] font-medium leading-7 text-[var(--text)]">
+                  No courses yet.
+                </h3>
+                <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--text-dim)]">
+                  Create a course and this section will show only your real learning progress.
+                </p>
+                <Link href="/create" className={cn(buttonVariants({ size: "sm" }), "mt-5")}>
+                  Create course
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+              </div>
+            )}
           </div>
         </section>
       </div>

@@ -90,7 +90,7 @@ function getCourseProgress(course: StoredCourse, lessonCount: number): number {
   if (!lessonCount) return 0;
 
   const completedLessons = Math.min(course.currentLessonIndex, lessonCount);
-  return Math.max(4, Math.min(100, Math.round((completedLessons / lessonCount) * 100)));
+  return Math.min(100, Math.round((completedLessons / lessonCount) * 100));
 }
 
 function getCourseLevel(difficulty: string): CourseLevel {
@@ -184,15 +184,11 @@ export function toCourseDetailData(course: StoredCourse): CourseDetailData {
   return {
     ...card,
     level: getCourseLevel(course.difficulty),
-    streak: Math.min(lessonCountOrOne(card.lessonCount), 7),
-    hoursInvested: Math.max(1, Math.round(card.lessonCount * 0.3)),
+    streak: 0,
+    hoursInvested: 0,
     materials: buildMaterials(course),
     learningPath: chunkLessons(lessons),
   };
-}
-
-function lessonCountOrOne(lessonCount: number) {
-  return lessonCount > 0 ? lessonCount : 1;
 }
 
 export function findLesson(course: StoredCourse, lessonId: string) {
@@ -206,7 +202,7 @@ export function toDashboardViewData(courses: StoredCourse[]): DashboardViewData 
 
   return {
     userName: "there",
-    streakDays: Math.min(Math.max(courses.length, 1) * 2, 14),
+    streakDays: 0,
     insightTopic,
     continueCopy: continueCourse
       ? `Next up: ${continueCourse.weakness}. DeepTutor already shaped the next exercise around it.`

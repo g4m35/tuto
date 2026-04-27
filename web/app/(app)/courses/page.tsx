@@ -5,7 +5,6 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import { buttonVariants } from "@/components/ui/Button";
 import { toCourseCardData } from "@/lib/course-data";
 import { listCoursesForUser } from "@/lib/course-store";
-import { courseCatalog } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 function Eyebrow({ index, children }: { index: string; children: React.ReactNode }) {
@@ -26,7 +25,8 @@ export default async function CoursesPage() {
   }
 
   const courseRecords = await listCoursesForUser(userId);
-  const courses = (courseRecords.length ? courseRecords.map(toCourseCardData) : courseCatalog).slice(0, 6);
+  const courses = courseRecords.map(toCourseCardData).slice(0, 6);
+  const hasCourses = courses.length > 0;
 
   return (
     <div className="space-y-10">
@@ -44,8 +44,9 @@ export default async function CoursesPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        {courses.map((course, index) => (
+      {hasCourses ? (
+        <div className="grid gap-4 xl:grid-cols-3">
+          {courses.map((course, index) => (
           <Link
             key={course.id}
             href={`/courses/${course.id}`}
@@ -97,8 +98,22 @@ export default async function CoursesPage() {
               </div>
             </div>
           </Link>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="editorial-card animate-rise-in px-6 py-8">
+          <h2 className="text-[24px] font-medium leading-8 text-[var(--text)]">
+            No courses yet.
+          </h2>
+          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--text-dim)]">
+            Your course library will stay empty until you create a course from your own topic or materials.
+          </p>
+          <Link href="/create" className={cn(buttonVariants({ size: "sm" }), "mt-6")}>
+            Create course
+            <ArrowRight data-icon="inline-end" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

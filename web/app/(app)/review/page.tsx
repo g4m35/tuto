@@ -4,7 +4,6 @@ import { ArrowRight, Braces } from "lucide-react";
 import { buttonVariants } from "@/components/ui/Button";
 import { toCourseCardData } from "@/lib/course-data";
 import { listCoursesForUser } from "@/lib/course-store";
-import { courseCatalog } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 function Eyebrow({ index, children }: { index: string; children: React.ReactNode }) {
@@ -25,12 +24,8 @@ export default async function ReviewPage() {
   }
 
   const courseRecords = await listCoursesForUser(userId);
-  const weakSpots = (courseRecords.length ? courseRecords.map(toCourseCardData) : courseCatalog)
-    .slice(0, 3)
-    .map((course, index) => ({
-      course,
-      recall: [72, 61, 48][index] ?? 52,
-    }));
+  const weakSpots = courseRecords.map(toCourseCardData).slice(0, 3);
+  const hasWeakSpots = weakSpots.length > 0;
 
   return (
     <div className="space-y-10">
@@ -38,21 +33,23 @@ export default async function ReviewPage() {
         <div className="space-y-5">
           <Eyebrow index="{}">Review</Eyebrow>
           <h1 className="max-w-4xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[48px]">
-            A few ideas are starting to slip.
+            {hasWeakSpots ? "Review your current weak spots." : "Nothing to review yet."}
           </h1>
           <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
-            Use a short review block to lock the unstable concepts back in before the next lesson opens.
+            {hasWeakSpots
+              ? "These review prompts come from your active courses, not placeholder recall scores."
+              : "Create a course first, then review items will appear as you make progress."}
           </p>
         </div>
 
-        <Link href={`/courses/${weakSpots[0]?.course.id ?? "linear-algebra-for-ml"}`} className={cn(buttonVariants({ size: "lg" }))}>
+        <Link href={hasWeakSpots ? `/courses/${weakSpots[0]?.id}` : "/create"} className={cn(buttonVariants({ size: "lg" }))}>
           <Braces data-icon="inline-start" />
-          Start review
+          {hasWeakSpots ? "Start review" : "Create course"}
         </Link>
       </section>
 
       <section className="grid gap-3">
-        {weakSpots.map(({ course, recall }, index) => (
+        {hasWeakSpots ? weakSpots.map((course, index) => (
           <Link
             key={course.id}
             href={`/courses/${course.id}`}
@@ -80,17 +77,12 @@ export default async function ReviewPage() {
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-[12px] text-[var(--text-faint)]">
-                  <span>Recall confidence</span>
-                  <span className="text-[var(--text)]">{recall}%</span>
-                </div>
-                <div className="h-1 rounded-full bg-[var(--border)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-[1100ms] ease-[var(--ease-signature)]"
-                    style={{ width: `${recall}%` }}
-                  />
-                </div>
+              <div className="text-[13px] leading-6 text-[var(--text-dim)]">
+                <p>
+                  <span className="text-[var(--text)]">{course.lessonsComplete}/{course.lessonCount}</span>{" "}
+                  lessons completed
+                </p>
+                <p>{course.progress}% course progress</p>
               </div>
 
               <div className="flex justify-start lg:justify-end">
@@ -101,7 +93,16 @@ export default async function ReviewPage() {
               </div>
             </div>
           </Link>
-        ))}
+        )) : (
+          <div className="editorial-card animate-rise-in px-6 py-8">
+            <h2 className="text-[24px] font-medium leading-8 text-[var(--text)]">
+              No review data yet.
+            </h2>
+            <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--text-dim)]">
+              Review recommendations will be based on your actual course progress once there is something to practice.
+            </p>
+          </div>
+        )}
       </section>
     </div>
   );

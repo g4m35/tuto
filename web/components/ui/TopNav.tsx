@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, Braces, Flame, Grid2x2, Sparkles } from "lucide-react"
+import { BookOpen, Braces, Grid2x2, Sparkles } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { CommandPalette } from "@/components/ui/CommandPalette"
 import { cn } from "@/lib/utils"
@@ -56,14 +56,6 @@ export function TopNav() {
 
         <div className="flex items-center gap-3">
           <CommandPalette />
-          <div className="hidden h-10 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3.5 text-[13px] text-[var(--text-dim)] lg:inline-flex">
-            <span className="relative flex size-2.5">
-              <span className="absolute inline-flex size-2.5 animate-[t-pulse-soft_1.8s_ease-in-out_infinite] rounded-full bg-[var(--accent)]/40" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-[var(--accent)]" />
-            </span>
-            <Flame className="size-3.5 text-[var(--text-faint)]" />
-            <span>12 day streak</span>
-          </div>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] p-1">
             <UserButton />
           </div>

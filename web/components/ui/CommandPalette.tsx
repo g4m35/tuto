@@ -2,7 +2,7 @@
 
 import { type ComponentType, type KeyboardEvent as ReactKeyboardEvent, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search, Sparkles } from "lucide-react"
+import { BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type CommandItem = {
@@ -43,34 +43,6 @@ const commandItems: CommandItem[] = [
     label: "Go to review",
     hint: "Route",
     icon: Braces,
-  },
-  {
-    id: "course-linear",
-    href: "/courses/linear-algebra-for-ml",
-    label: "Open · Linear algebra for ML",
-    hint: "Course · 01",
-    icon: ArrowRight,
-  },
-  {
-    id: "course-thermo",
-    href: "/courses/thermodynamics-carefully",
-    label: "Open · Thermodynamics, carefully.",
-    hint: "Course · 02",
-    icon: ArrowRight,
-  },
-  {
-    id: "course-policy",
-    href: "/courses/monetary-policy",
-    label: "Open · Monetary policy",
-    hint: "Course · 03",
-    icon: ArrowRight,
-  },
-  {
-    id: "resume-change",
-    href: "/courses/linear-algebra-for-ml",
-    label: "Resume · Change of basis",
-    hint: "Lesson · L06",
-    icon: Sparkles,
   },
 ]
 

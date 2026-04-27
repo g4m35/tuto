@@ -6,7 +6,6 @@ import { Progress } from "@/components/ui/progress"
 import { ProgressRing } from "@/components/ui/ProgressRing"
 import { findLesson, toCourseDetailData } from "@/lib/course-data"
 import { getCourseForUser } from "@/lib/course-store"
-import { courseDetailsById } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 export default async function CourseDetailPage({
@@ -24,9 +23,7 @@ export default async function CourseDetailPage({
     const { id } = await params
     const courseRecord = await getCourseForUser(userId, id)
 
-    const fallbackCourse = courseDetailsById[id]
-
-    if (!courseRecord && !fallbackCourse) {
+    if (!courseRecord) {
       return (
         <div className="editorial-card px-8 py-8">
           <p className="eyebrow">Course not found</p>
@@ -40,14 +37,12 @@ export default async function CourseDetailPage({
       )
     }
 
-    const course = courseRecord ? toCourseDetailData(courseRecord) : fallbackCourse!
+    const course = toCourseDetailData(courseRecord)
     const allLessons = course.learningPath.flatMap((level) => level.lessons)
     const currentLesson =
-      courseRecord
-        ? findLesson(courseRecord, courseRecord.currentLessonId || "") ??
-          allLessons.find((lesson) => lesson.state === "current") ??
-          allLessons[0]
-        : allLessons.find((lesson) => lesson.state === "current") ?? allLessons[0]
+      findLesson(courseRecord, courseRecord.currentLessonId || "") ??
+      allLessons.find((lesson) => lesson.state === "current") ??
+      allLessons[0]
 
     const flattenedLessons = course.learningPath.flatMap((level, levelIndex) =>
       level.lessons.map((lesson) => ({
