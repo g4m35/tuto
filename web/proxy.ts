@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import type { NextRequest } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -15,6 +16,12 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
 ]);
 
+function getSignInUrl(req: NextRequest) {
+  const url = new URL("/sign-in", req.url);
+  url.searchParams.set("redirect_url", req.nextUrl.href);
+  return url.toString();
+}
+
 export default clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) {
     return;
@@ -25,7 +32,7 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
 
-  await auth.protect({ unauthenticatedUrl: "/sign-in" });
+  await auth.protect({ unauthenticatedUrl: getSignInUrl(req) });
 }, {
   frontendApiProxy: {
     enabled: true,
