@@ -6,10 +6,9 @@ import { toCourseCardData } from "@/lib/course-data";
 import { listCoursesForUser } from "@/lib/course-store";
 import { cn } from "@/lib/utils";
 
-function Eyebrow({ index, children }: { index: string; children: React.ReactNode }) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="t-eyebrow">
-      <span className="t-eyebrow__num">{index}</span>
       <span className="t-eyebrow__rule" aria-hidden="true" />
       <span>{children}</span>
     </p>
@@ -31,7 +30,7 @@ export default async function ReviewPage() {
     <div className="space-y-10">
       <section className="flex flex-wrap items-end justify-between gap-6">
         <div className="space-y-5">
-          <Eyebrow index="{}">Review</Eyebrow>
+          <Eyebrow>Review</Eyebrow>
           <h1 className="max-w-4xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[48px]">
             {hasWeakSpots ? "Review your current weak spots." : "Nothing to review yet."}
           </h1>

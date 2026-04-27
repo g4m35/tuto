@@ -229,15 +229,6 @@
     text-transform: uppercase;
   }
 
-  .t-eyebrow__num {
-    color: var(--accent);
-    font-family: var(--font-serif), Georgia, serif;
-    font-size: 18px;
-    font-style: italic;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-
   .t-eyebrow__rule {
     background: var(--border-strong);
     display: inline-block;

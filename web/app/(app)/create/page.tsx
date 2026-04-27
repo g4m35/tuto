@@ -137,7 +137,6 @@ export default function CreateCoursePage() {
       <section className="space-y-7">
         <div className="space-y-5">
           <p className="t-eyebrow">
-            <span className="t-eyebrow__num">{"///"}</span>
             <span className="t-eyebrow__rule" aria-hidden="true" />
             <span>Create</span>
           </p>
@@ -286,7 +285,6 @@ export default function CreateCoursePage() {
       <aside className="space-y-4">
         <div className="space-y-2">
           <p className="t-eyebrow">
-            <span className="t-eyebrow__num">iv</span>
             <span className="t-eyebrow__rule" aria-hidden="true" />
             <span>Preview</span>
           </p>

@@ -8,10 +8,9 @@ import { toDashboardViewData } from "@/lib/course-data";
 import { listCoursesForUser } from "@/lib/course-store";
 import { cn } from "@/lib/utils";
 
-function Eyebrow({ index, children }: { index: string; children: React.ReactNode }) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="t-eyebrow">
-      <span className="t-eyebrow__num">{index}</span>
       <span className="t-eyebrow__rule" aria-hidden="true" />
       <span>{children}</span>
     </p>
@@ -19,19 +18,17 @@ function Eyebrow({ index, children }: { index: string; children: React.ReactNode
 }
 
 function DashboardMetric({
-  index,
   label,
   value,
   detail,
 }: {
-  index: string;
   label: string;
   value: string;
   detail?: string;
 }) {
   return (
     <div className="editorial-card t-lift animate-rise-in min-h-[132px] p-5 sm:p-6">
-      <Eyebrow index={index}>{label}</Eyebrow>
+      <Eyebrow>{label}</Eyebrow>
       <div className="mt-5 flex min-h-12 items-end justify-between gap-4">
         <p className="whitespace-pre-line text-[34px] font-semibold leading-[1.02] tracking-normal text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">
           {value}
@@ -87,7 +84,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-10">
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] xl:items-end">
           <div className="animate-rise-in space-y-7">
-            <Eyebrow index="/">This week · {getWeekday()}</Eyebrow>
+            <Eyebrow>This week · {getWeekday()}</Eyebrow>
             <div className="max-w-[760px]">
               <h1 className="text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
                 {hasCourses ? `Welcome back, ${displayName}.` : `Welcome, ${displayName}.`}
@@ -122,7 +119,7 @@ export default async function DashboardPage() {
           </div>
 
           <aside className="editorial-card animate-rise-in-delay-1 p-5 sm:p-6">
-            <Eyebrow index="//">Last 7 days</Eyebrow>
+            <Eyebrow>Last 7 days</Eyebrow>
             <div className="mt-6">
               <ActivityBars />
             </div>
@@ -131,24 +128,22 @@ export default async function DashboardPage() {
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <DashboardMetric
-            index="i"
             label="Courses"
             value={String(dashboard.courses.length)}
             detail={dashboard.courses.length ? "Active courses" : "No courses yet"}
           />
           <DashboardMetric
-            index="ii"
             label="Completed"
             value={`${completedLessons}/${totalLessons}`}
             detail={totalLessons ? `${completionPercent}% complete` : "No lessons yet"}
           />
-          <DashboardMetric index="iii" label="Streak" value={`${dashboard.streakDays}\ndays`} detail="No activity yet" />
-          <DashboardMetric index="iv" label="Pace" value="0" />
+          <DashboardMetric label="Streak" value={`${dashboard.streakDays}\ndays`} detail="No activity yet" />
+          <DashboardMetric label="Pace" value="0" />
         </section>
 
         <section id="courses" className="scroll-mt-28 space-y-5">
           <div className="flex items-center justify-between gap-4">
-            <Eyebrow index="///">Your courses</Eyebrow>
+            <Eyebrow>Your courses</Eyebrow>
             {hasCourses ? (
               <Link href="/courses" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
                 See all
@@ -228,7 +223,7 @@ export default async function DashboardPage() {
   } catch (error) {
     return (
       <div className="editorial-card px-8 py-8">
-        <Eyebrow index="!">Dashboard unavailable</Eyebrow>
+        <Eyebrow>Dashboard unavailable</Eyebrow>
         <h1 className="mt-4 text-[34px] font-semibold leading-[1.15] tracking-normal text-[var(--text)]">
           We could not load your courses.
         </h1>
