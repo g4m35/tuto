@@ -20,7 +20,12 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
 
-  await auth.protect();
+  if (req.nextUrl.pathname.startsWith("/api/")) {
+    await auth.protect();
+    return;
+  }
+
+  await auth.protect({ unauthenticatedUrl: "/sign-in" });
 }, {
   frontendApiProxy: {
     enabled: true,
