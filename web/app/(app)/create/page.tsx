@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, FileText, Upload, WandSparkles } from "lucide-react"
+import { BookOpen, FileText, LoaderCircle, Upload, WandSparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { cn } from "@/lib/utils"
 
@@ -28,10 +28,10 @@ function buildPreviewLessons(title: string, topicPrompt: string, mode: CreateMod
 
   if (mode === "upload") {
     return [
-      "Orient the material",
-      "Extract the governing ideas",
-      "Practice the unstable section",
-      "Close with a transfer drill",
+      "Get the big idea",
+      "Break down the main points",
+      "Try a simple example",
+      "Review what to remember",
     ].map((label, index) => `L0${index + 1} · ${label}`)
   }
 
@@ -42,12 +42,31 @@ function buildPreviewLessons(title: string, topicPrompt: string, mode: CreateMod
     .join(" ")
 
   return [
-    `L01 · ${token || "Frame the subject"}`,
-    "L02 · Build the core intuition",
-    "L03 · Move into a worked example",
-    "L04 · Practice the weak spot",
-    "L05 · Synthesize the whole path",
+    `L01 · ${token || "Start with the topic"}`,
+    "L02 · Learn the basics",
+    "L03 · See an easy example",
+    "L04 · Try it yourself",
+    "L05 · Review the key ideas",
   ]
+}
+
+function CourseGenerationLoader() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm text-[var(--text-dim)]"
+    >
+      <span className="relative inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)]">
+        <span className="absolute size-8 rounded-full border border-[var(--accent)]/25 animate-[t-pulse-soft_1.4s_ease-in-out_infinite]" />
+        <LoaderCircle className="size-4 animate-spin text-[var(--accent)]" aria-hidden="true" />
+      </span>
+      <span>
+        Building your course outline
+        <span className="ml-1 text-[var(--text-faint)]">This can take a moment.</span>
+      </span>
+    </div>
+  )
 }
 
 export default function CreateCoursePage() {
@@ -56,7 +75,7 @@ export default function CreateCoursePage() {
   const [mode, setMode] = useState<CreateMode>("upload")
   const [title, setTitle] = useState("")
   const [subject, setSubject] = useState("")
-  const [difficulty, setDifficulty] = useState("Intermediate")
+  const [difficulty, setDifficulty] = useState("Beginner")
   const [topicPrompt, setTopicPrompt] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [status, setStatus] = useState("Drop a PDF, notes bundle, or reading packet here.")
@@ -144,7 +163,7 @@ export default function CreateCoursePage() {
             Create new course
           </h1>
           <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
-            Turn a source or a prompt into a quiet lesson path before you commit.
+            Turn a source or a prompt into a simple course outline before you create it.
           </p>
         </div>
 
@@ -157,12 +176,13 @@ export default function CreateCoursePage() {
               <button
                 key={item.id}
                 type="button"
+                disabled={submitting}
                 onClick={() => {
                   setMode(item.id)
                   setError(null)
                 }}
                 className={cn(
-	                  "editorial-card interactive-card t-lift text-left px-5 py-5",
+                  "editorial-card interactive-card t-lift text-left px-5 py-5 disabled:pointer-events-none disabled:opacity-60",
                   index === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
                   active
                     ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
@@ -185,7 +205,7 @@ export default function CreateCoursePage() {
                 id="course-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Bayesian inference for builders"
+                placeholder="How photosynthesis works"
                 className="w-full border-0 bg-transparent p-0 text-[28px] font-medium leading-tight tracking-normal text-[var(--text)] outline-none placeholder:text-[var(--text-faint)]"
               />
             </div>
@@ -200,7 +220,7 @@ export default function CreateCoursePage() {
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null
                     setSelectedFile(file)
-                    setStatus(file ? `${file.name} is ready for ingestion.` : "Drop a PDF, notes bundle, or reading packet here.")
+                    setStatus(file ? `${file.name} is ready to use.` : "Drop a PDF, notes bundle, or reading packet here.")
                   }}
                 />
                 <button
@@ -224,7 +244,7 @@ export default function CreateCoursePage() {
                 id="topic-prompt"
                 value={topicPrompt}
                 onChange={(event) => setTopicPrompt(event.target.value)}
-                placeholder="Build a slow visual path through Bayesian inference, ending with a practical coding intuition."
+                placeholder="Explain photosynthesis like I am new to it. Use simple examples and a quick practice question."
                 className="min-h-48 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-5 py-5 text-base leading-7 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
               />
             )}
@@ -238,7 +258,7 @@ export default function CreateCoursePage() {
                   id="subject"
                   value={subject}
                   onChange={(event) => setSubject(event.target.value)}
-                  placeholder="Bayesian inference, molecular bonds, ancient Rome..."
+                  placeholder="Photosynthesis, fractions, ancient Rome..."
                   className="h-11 w-full rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
                 />
               </div>
@@ -265,13 +285,22 @@ export default function CreateCoursePage() {
               </div>
             ) : null}
 
+            {submitting ? <CourseGenerationLoader /> : null}
+
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3 text-sm text-[var(--text-faint)]">
                 <BookOpen className="size-4" />
                 Private by default. Only you see your courses and notes.
               </div>
               <Button size="lg" onClick={() => void handleSubmit()} disabled={submitting}>
-                {submitting ? "Composing..." : "Generate course"}
+                {submitting ? (
+                  <>
+                    <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                    Composing...
+                  </>
+                ) : (
+                  "Generate course"
+                )}
               </Button>
             </div>
           </div>
@@ -285,7 +314,7 @@ export default function CreateCoursePage() {
             <span>Preview</span>
           </p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
-            This is the shape of the draft before the real guide payload arrives.
+            You will see the first few lessons here before creating the course.
           </p>
         </div>
 
@@ -305,7 +334,7 @@ export default function CreateCoursePage() {
                   ? selectedFile
                     ? `Built from ${selectedFile.name}.`
                     : "Built from a source document once you choose one."
-                  : topicPrompt.trim() || "Start with a topic prompt and the lesson spine will take shape here."}
+                  : topicPrompt.trim() || "Type what you want to learn and a simple course outline will appear here."}
               </p>
             </div>
 

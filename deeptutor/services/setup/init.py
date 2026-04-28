@@ -146,6 +146,7 @@ def init_user_directories(project_root: Path | None = None) -> None:
         ├── book/
         └── chat/
             ├── chat/
+            ├── guide/
             ├── deep_solve/
             ├── deep_question/
             ├── deep_research/

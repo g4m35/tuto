@@ -15,6 +15,7 @@ data/user/
     ├── book/
     └── chat/
         ├── chat/
+        ├── guide/
         ├── deep_solve/
         ├── deep_question/
         ├── deep_research/
@@ -38,6 +39,7 @@ AgentModule = Literal[
 
 ChatWorkspaceFeature = Literal[
     "chat",
+    "guide",
     "deep_solve",
     "deep_question",
     "deep_research",
@@ -181,7 +183,15 @@ class PathService:
         return session_root / session_id
 
     def _resolve_feature_root(self, feature: str) -> Path:
-        if feature in {"chat", "deep_solve", "deep_question", "deep_research", "math_animator", "_detached_code_execution"}:
+        if feature in {
+            "chat",
+            "guide",
+            "deep_solve",
+            "deep_question",
+            "deep_research",
+            "math_animator",
+            "_detached_code_execution",
+        }:
             return self.get_chat_feature_dir(feature)  # type: ignore[arg-type]
         if feature in {"memory", "notebook", "co-writer", "book"}:
             return self.get_workspace_feature_dir(feature)  # type: ignore[arg-type]
@@ -239,6 +249,9 @@ class PathService:
 
     def get_chat_session_file(self) -> Path:
         return self.get_session_file("chat")
+
+    def get_guide_dir(self) -> Path:
+        return self.get_chat_feature_dir("guide")
 
     def get_question_dir(self) -> Path:
         return self.get_chat_feature_dir("deep_question")
@@ -362,6 +375,7 @@ class PathService:
             self.get_workspace_feature_dir(feature).mkdir(parents=True, exist_ok=True)
         for feature in (
             "chat",
+            "guide",
             "deep_solve",
             "deep_question",
             "deep_research",

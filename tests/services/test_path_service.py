@@ -96,6 +96,12 @@ def test_task_workspace_maps_capabilities_into_workspace_chat(tmp_path: Path) ->
         assert service.get_task_workspace("chat", "turn_1") == (
             tmp_path / "data" / "user" / "workspace" / "chat" / "chat" / "turn_1"
         )
+        assert service.get_guide_dir() == (
+            tmp_path / "data" / "user" / "workspace" / "chat" / "guide"
+        )
+        assert service.get_task_workspace("guide", "session_1") == (
+            tmp_path / "data" / "user" / "workspace" / "chat" / "guide" / "session_1"
+        )
         assert service.get_task_workspace("deep_question", "turn_2") == (
             tmp_path
             / "data"
