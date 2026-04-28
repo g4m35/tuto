@@ -240,12 +240,12 @@ def get_agent_params(module_name: str) -> dict:
         "math_animator": ("plugins", "math_animator"),
         "llm_probe": ("diagnostics", "llm_probe"),
     }
-    path = get_runtime_settings_dir(PROJECT_ROOT) / "agents.yaml"
-    if not path.exists():
-        raise FileNotFoundError(f"Missing required configuration file: {path}")
     section = section_map.get(module_name)
     if section is None:
         return defaults
+    path = get_runtime_settings_dir(PROJECT_ROOT) / "agents.yaml"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing required configuration file: {path}")
     with open(path, encoding="utf-8") as f:
         agents_config = yaml.safe_load(f) or {}
     module_config: dict[str, Any] = agents_config

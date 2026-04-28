@@ -2,11 +2,13 @@ export interface DeepTutorHealth {
   connected: boolean;
   latency_ms: number;
   version: string | null;
+  guide_configured: boolean;
   llm_configured: boolean;
   embeddings_configured: boolean;
 }
 
 interface DeepTutorSystemStatus {
+  guide?: { status?: unknown; error?: unknown };
   llm?: { status?: unknown };
   embeddings?: { status?: unknown };
 }
@@ -35,6 +37,7 @@ export async function getDeepTutorHealth(): Promise<DeepTutorHealth> {
       connected: false,
       latency_ms: 0,
       version: null,
+      guide_configured: false,
       llm_configured: false,
       embeddings_configured: false,
     };
@@ -62,20 +65,24 @@ export async function getDeepTutorHealth(): Promise<DeepTutorHealth> {
         connected: false,
         latency_ms: latencyMs,
         version: null,
+        guide_configured: false,
         llm_configured: false,
         embeddings_configured: false,
       };
     }
 
     let version: string | null = null;
+    let guideConfigured = false;
     let llmConfigured = false;
     let embeddingsConfigured = false;
 
     try {
       const status = (await statusResponse.json()) as DeepTutorSystemStatus;
+      guideConfigured = isConfiguredStatus(status.guide?.status);
       llmConfigured = isConfiguredStatus(status.llm?.status);
       embeddingsConfigured = isConfiguredStatus(status.embeddings?.status);
     } catch {
+      guideConfigured = false;
       llmConfigured = false;
       embeddingsConfigured = false;
     }
@@ -98,6 +105,7 @@ export async function getDeepTutorHealth(): Promise<DeepTutorHealth> {
       connected: true,
       latency_ms: latencyMs,
       version,
+      guide_configured: guideConfigured,
       llm_configured: llmConfigured,
       embeddings_configured: embeddingsConfigured,
     };
@@ -106,6 +114,7 @@ export async function getDeepTutorHealth(): Promise<DeepTutorHealth> {
       connected: false,
       latency_ms: Math.round(performance.now() - startedAt),
       version: null,
+      guide_configured: false,
       llm_configured: false,
       embeddings_configured: false,
     };

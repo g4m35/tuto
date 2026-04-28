@@ -102,7 +102,10 @@ class GuideManager:
         if config_path is None:
             from deeptutor.services.config import PROJECT_ROOT
 
-            config = load_config_with_main("main.yaml", PROJECT_ROOT)
+            try:
+                config = load_config_with_main("main.yaml", PROJECT_ROOT)
+            except Exception:
+                config = {}
         else:
             config_path = Path(config_path)
             if config_path.exists():
@@ -138,9 +141,12 @@ class GuideManager:
             if output_dir_from_config:
                 self.output_dir = Path(output_dir_from_config)
             else:
-                # Fallback to default path using PathService
                 path_service = get_path_service()
-                self.output_dir = path_service.get_guide_dir()
+                get_guide_dir = getattr(path_service, "get_guide_dir", None)
+                if callable(get_guide_dir):
+                    self.output_dir = get_guide_dir()
+                else:
+                    self.output_dir = path_service.get_chat_feature_dir("guide")
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         self.design_agent = DesignAgent(

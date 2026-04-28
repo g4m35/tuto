@@ -13,6 +13,7 @@ from deeptutor.services.config import resolve_search_runtime_config
 from deeptutor.services.embedding import get_embedding_client, get_embedding_config
 from deeptutor.services.llm import complete as llm_complete
 from deeptutor.services.llm import get_llm_config, get_token_limit_kwargs
+from deeptutor.services.path_service import get_path_service
 from deeptutor.services.search import web_search
 
 router = APIRouter()
@@ -67,6 +68,7 @@ async def get_system_status():
     """
     result = {
         "backend": {"status": "online", "timestamp": datetime.now().isoformat()},
+        "guide": {"status": "unknown", "testable": True},
         "llm": {"status": "unknown", "model": None, "testable": True},
         "embeddings": {"status": "unknown", "model": None, "testable": True},
         "search": {"status": "optional", "provider": None, "testable": True},
@@ -74,6 +76,14 @@ async def get_system_status():
 
     # Check backend status (this endpoint itself proves backend is online)
     result["backend"]["status"] = "online"
+
+    try:
+        guide_dir = get_path_service().get_guide_dir()
+        result["guide"]["status"] = "configured"
+        result["guide"]["output_dir"] = str(guide_dir)
+    except Exception as e:
+        result["guide"]["status"] = "error"
+        result["guide"]["error"] = str(e)
 
     # Check LLM configuration
     try:

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+import deeptutor.agents.guide.guide_manager as guide_manager_module
 from deeptutor.agents.guide.guide_manager import GuidedSession, GuideManager
 
 
@@ -47,6 +48,19 @@ def _build_manager(tmp_path, monkeypatch: pytest.MonkeyPatch) -> tuple[GuideMana
     )
     monkeypatch.setattr(manager, "_schedule_generation_task", lambda *_args, **_kwargs: None)
     return manager, fake_rag
+
+
+class _NoopGuideAgent:
+    def __init__(self, *_args, **_kwargs) -> None:
+        pass
+
+
+class _PathServiceWithoutGuideDir:
+    def __init__(self, root) -> None:
+        self.root = root
+
+    def get_chat_feature_dir(self, feature: str):
+        return self.root / "workspace" / "chat" / feature
 
 
 @pytest.mark.asyncio
@@ -119,3 +133,27 @@ def test_guided_session_from_dict_defaults_missing_kb_name_to_none() -> None:
     )
 
     assert session.kb_name is None
+
+
+def test_manager_falls_back_to_chat_feature_dir_without_legacy_guide_helper(
+    tmp_path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(guide_manager_module, "DesignAgent", _NoopGuideAgent)
+    monkeypatch.setattr(guide_manager_module, "InteractiveAgent", _NoopGuideAgent)
+    monkeypatch.setattr(guide_manager_module, "ChatAgent", _NoopGuideAgent)
+    monkeypatch.setattr(guide_manager_module, "SummaryAgent", _NoopGuideAgent)
+    monkeypatch.setattr(
+        guide_manager_module,
+        "get_path_service",
+        lambda: _PathServiceWithoutGuideDir(tmp_path),
+    )
+
+    manager = GuideManager(
+        api_key="sk-test",
+        base_url="https://example.com",
+        language="en",
+        config_path=str(tmp_path / "missing.yaml"),
+    )
+
+    assert manager.output_dir == tmp_path / "workspace" / "chat" / "guide"
+    assert manager.output_dir.exists()

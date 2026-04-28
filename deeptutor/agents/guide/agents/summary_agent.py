@@ -26,6 +26,7 @@ class SummaryAgent(BaseAgent):
             api_key=api_key,
             base_url=base_url,
             api_version=api_version,
+            binding=binding,
             language=language,
         )
 

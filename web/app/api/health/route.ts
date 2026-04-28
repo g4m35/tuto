@@ -132,14 +132,18 @@ async function getWebhookEventCheck(): Promise<LaunchHealthCheck> {
 
 async function getDeepTutorCheck(): Promise<LaunchHealthCheck> {
   const health = await getDeepTutorHealth();
-  const fullyConfigured = health.connected && health.llm_configured && health.embeddings_configured;
+  const fullyConfigured =
+    health.connected &&
+    health.guide_configured &&
+    health.llm_configured &&
+    health.embeddings_configured;
 
   return {
     name: "deeptutor",
     status: fullyConfigured ? "pass" : "fail",
     summary: fullyConfigured
-      ? "DeepTutor backend is reachable and fully configured."
-      : "DeepTutor backend is unreachable or missing model configuration.",
+      ? "DeepTutor backend is reachable and fully configured for course generation."
+      : "DeepTutor backend is unreachable or missing guided learning/model configuration.",
     details: { ...health },
   };
 }
