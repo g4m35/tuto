@@ -27,14 +27,14 @@ function DashboardMetric({
   detail?: string;
 }) {
   return (
-    <div className="editorial-card animate-rise-in min-h-[132px] p-5 sm:p-6">
+    <div className="editorial-card animate-rise-in min-h-[124px] p-5 sm:p-6">
       <Eyebrow>{label}</Eyebrow>
-      <div className="mt-5 flex min-h-12 items-end justify-between gap-4">
-        <p className="whitespace-pre-line text-[34px] font-semibold leading-[1.02] tracking-normal text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">
+      <div className="mt-5 flex min-h-10 items-end justify-between gap-4">
+        <p className="whitespace-nowrap text-[28px] font-semibold leading-none tracking-normal text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums] sm:text-[30px]">
           {value}
         </p>
         {detail ? (
-          <p className="pb-1 text-right text-[13px] leading-5 text-[var(--text-dim)]">
+          <p className="pb-0.5 text-right text-[13px] leading-5 text-[var(--text-dim)]">
             {detail}
           </p>
         ) : null}
@@ -137,7 +137,7 @@ export default async function DashboardPage() {
             value={`${completedLessons}/${totalLessons}`}
             detail={totalLessons ? `${completionPercent}% complete` : "No lessons yet"}
           />
-          <DashboardMetric label="Streak" value={`${dashboard.streakDays}\ndays`} detail="No activity yet" />
+          <DashboardMetric label="Streak" value={`${dashboard.streakDays} days`} detail="No activity yet" />
           <DashboardMetric label="Pace" value="0" />
         </section>
 
