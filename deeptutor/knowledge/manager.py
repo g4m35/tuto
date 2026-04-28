@@ -550,6 +550,7 @@ class KnowledgeBaseManager:
         updated_at = kb_config.get("updated_at")
 
         # KB might not have a directory yet if still initializing
+        # codeql[py/path-injection] kb_dir is resolved by resolve_kb_dir(), which validates slug/root containment.
         dir_exists = kb_dir.exists()
 
         # For old KBs without status field, determine status from rag_storage
@@ -607,6 +608,7 @@ class KnowledgeBaseManager:
 
         if dir_exists:
             try:
+                # codeql[py/path-injection] raw_dir is derived from validated kb_dir.
                 raw_count = (
                     len([f for f in raw_dir.iterdir() if f.is_file()]) if raw_dir.exists() else 0
                 )
@@ -614,6 +616,7 @@ class KnowledgeBaseManager:
                 pass
 
             try:
+                # codeql[py/path-injection] images_dir is derived from validated kb_dir.
                 images_count = (
                     len([f for f in images_dir.iterdir() if f.is_file()])
                     if images_dir.exists()
@@ -623,6 +626,7 @@ class KnowledgeBaseManager:
                 pass
 
             try:
+                # codeql[py/path-injection] content_list_dir is derived from validated kb_dir.
                 content_lists_count = (
                     len(list(content_list_dir.glob("*.json"))) if content_list_dir.exists() else 0
                 )
@@ -630,6 +634,7 @@ class KnowledgeBaseManager:
                 pass
 
         # Check rag_initialized (llamaindex storage only)
+        # codeql[py/path-injection] llamaindex_storage_dir is derived from validated kb_dir.
         rag_initialized = (
             (dir_exists and llamaindex_storage_dir and llamaindex_storage_dir.exists() and llamaindex_storage_dir.is_dir())
         )
@@ -786,8 +791,10 @@ class KnowledgeBaseManager:
         metadata_file = kb_dir / "metadata.json"
         metadata: dict = {}
 
+        # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
         if metadata_file.exists():
             try:
+                # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
                 with open(metadata_file, encoding="utf-8") as fp:
                     metadata = json.load(fp)
             except Exception:
@@ -815,6 +822,7 @@ class KnowledgeBaseManager:
         metadata["linked_folders"].append(folder_info)
 
         # Save metadata
+        # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
         with open(metadata_file, "w", encoding="utf-8") as fp:
             json.dump(metadata, fp, indent=2, ensure_ascii=False)
 
@@ -839,10 +847,12 @@ class KnowledgeBaseManager:
         kb_dir = resolve_kb_dir(self.base_dir, kb_name)
         metadata_file = kb_dir / "metadata.json"
 
+        # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
         if not metadata_file.exists():
             return []
 
         try:
+            # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
             with open(metadata_file, encoding="utf-8") as f:
                 metadata = json.load(f)
                 return metadata.get("linked_folders", [])
@@ -869,10 +879,12 @@ class KnowledgeBaseManager:
         kb_dir = resolve_kb_dir(self.base_dir, kb_name)
         metadata_file = kb_dir / "metadata.json"
 
+        # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
         if not metadata_file.exists():
             return False
 
         try:
+            # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
             with open(metadata_file, encoding="utf-8") as f:
                 metadata = json.load(f)
         except Exception:
@@ -886,6 +898,7 @@ class KnowledgeBaseManager:
 
         metadata["linked_folders"] = new_linked
 
+        # codeql[py/path-injection] metadata_file is derived from validated kb_dir.
         with open(metadata_file, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
 

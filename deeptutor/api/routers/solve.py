@@ -348,6 +348,7 @@ async def websocket_solve(websocket: WebSocket):
 
             if output_dir_str and final_answer:
                 try:
+                    # codeql[py/path-injection] output_dir is accepted only if it resolves under public_root below.
                     output_dir = Path(output_dir_str).expanduser()
                     if not output_dir.is_absolute():
                         output_dir = (output_base / output_dir).resolve()

@@ -125,6 +125,7 @@ async def fetch_image_from_url(url: str) -> tuple[bytes, str]:
                 if not is_valid_image_url(current_url):
                     raise ImageError("Image URL points to a private or invalid host")
 
+                # codeql[py/full-ssrf] current_url is validated before every request and redirect hop.
                 async with client.stream("GET", current_url) as response:
                     if response.is_redirect:
                         location = response.headers.get("location")

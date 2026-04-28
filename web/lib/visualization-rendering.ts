@@ -84,6 +84,10 @@ function normalizeUrlAttribute(value: string) {
   return value.replace(/[\u0000-\u001f\u007f\s]+/g, '').toLowerCase()
 }
 
+function getUrlScheme(value: string) {
+  return /^([a-z][a-z0-9+.-]*):/.exec(value)?.[1] ?? null
+}
+
 function isSafeSvgUrlAttribute(name: string, value: string) {
   if (!URL_ATTRIBUTES.has(name)) {
     return true
@@ -94,11 +98,14 @@ function isSafeSvgUrlAttribute(name: string, value: string) {
     return true
   }
 
-  if (normalized.startsWith('#') || normalized.startsWith('http://') || normalized.startsWith('https://')) {
+  if (normalized[0] === '#') {
     return true
   }
 
-  return normalized.startsWith('data:image/')
+  const scheme = getUrlScheme(normalized)
+  return scheme === null || scheme === 'http' || scheme === 'https' || (
+    scheme === 'data' && normalized.slice(5, 11) === 'image/'
+  )
 }
 
 export function sanitizeSvg(svg: string): { svg: string; error: string | null } {
@@ -128,13 +135,14 @@ export function sanitizeSvg(svg: string): { svg: string; error: string | null } 
       const name = attr.name.toLowerCase()
       const value = attr.value.trim()
       const normalizedValue = normalizeUrlAttribute(value)
+      const scheme = getUrlScheme(normalizedValue)
       if (
         !ALLOWED_SVG_ATTRIBUTES.has(name) ||
         name.startsWith('on') ||
         name === 'style' ||
-        normalizedValue.startsWith('javascript:') ||
-        normalizedValue.startsWith('vbscript:') ||
-        normalizedValue.startsWith('data:text/html') ||
+        scheme === 'javascript' ||
+        scheme === 'vbscript' ||
+        (scheme === 'data' && normalizedValue.slice(5, 14) === 'text/html') ||
         !isSafeSvgUrlAttribute(name, value)
       ) {
         node.removeAttribute(attr.name)

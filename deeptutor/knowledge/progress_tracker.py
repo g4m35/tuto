@@ -29,6 +29,7 @@ def resolve_kb_dir(base_dir: Path, kb_name: str) -> Path:
         raise ValueError("Invalid knowledge base name")
 
     base = Path(base_dir).resolve()
+    # codeql[py/path-injection] name is restricted to a path-separator-free slug before joining.
     candidate = (base / name).resolve()
     try:
         candidate.relative_to(base)
