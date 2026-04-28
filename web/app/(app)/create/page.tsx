@@ -55,7 +55,7 @@ export default function CreateCoursePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [mode, setMode] = useState<CreateMode>("upload")
   const [title, setTitle] = useState("")
-  const [subject, setSubject] = useState("Mathematics")
+  const [subject, setSubject] = useState("")
   const [difficulty, setDifficulty] = useState("Intermediate")
   const [topicPrompt, setTopicPrompt] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -92,7 +92,7 @@ export default function CreateCoursePage() {
       const formData = new FormData()
       formData.set("mode", mode)
       formData.set("title", title.trim())
-      formData.set("subject", subject)
+      formData.set("subject", subject.trim() || title.trim())
       formData.set("difficulty", difficulty)
       formData.set("topicPrompt", topicPrompt.trim())
 
@@ -232,19 +232,15 @@ export default function CreateCoursePage() {
             <div className="grid gap-4 border-t border-[var(--border)] pt-5 sm:grid-cols-2">
               <div className="space-y-2">
                 <label htmlFor="subject" className="text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
-                  Subject
+                  Topic
                 </label>
-                <select
+                <input
                   id="subject"
                   value={subject}
                   onChange={(event) => setSubject(event.target.value)}
-                  className="h-11 w-full rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-sm text-[var(--text)] outline-none focus:border-[var(--border-strong)]"
-                >
-                  <option>Mathematics</option>
-                  <option>Chemistry</option>
-                  <option>History</option>
-                  <option>Biology</option>
-                </select>
+                  placeholder="Bayesian inference, molecular bonds, ancient Rome..."
+                  className="h-11 w-full rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-4 text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
+                />
               </div>
               <div className="space-y-2">
                 <label htmlFor="difficulty" className="text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
@@ -297,7 +293,7 @@ export default function CreateCoursePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
               <span>Draft</span>
-              <span>{subject}</span>
+              <span>{subject.trim() || "Custom topic"}</span>
             </div>
 
             <div className="space-y-3">
