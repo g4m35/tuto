@@ -11,7 +11,8 @@ export const LANGUAGE_EVENT = "deeptutor:language";
 export const SIDEBAR_COLLAPSED_EVENT = "deeptutor:sidebar-collapsed";
 
 export function normalizeLanguage(value: string | null | undefined): AppLanguage {
-  return value === "zh" ? "zh" : "en";
+  void value;
+  return "en";
 }
 
 export function readStoredLanguage(): AppLanguage {
@@ -26,10 +27,11 @@ export function readStoredLanguage(): AppLanguage {
 export function writeStoredLanguage(language: AppLanguage): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    void language;
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
     window.dispatchEvent(
       new CustomEvent(LANGUAGE_EVENT, {
-        detail: { language },
+        detail: { language: "en" },
       }),
     );
   } catch {

@@ -7,6 +7,10 @@ export default async function SettingsLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  if (process.env.NODE_ENV === "production") {
+    redirect("/account");
+  }
+
   const { userId } = await auth();
 
   if (!userId) {

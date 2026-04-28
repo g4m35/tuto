@@ -1,5 +1,5 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { CreditCard, Gauge, Mail, Sparkles } from "lucide-react";
+import { CreditCard, Gauge, Mail } from "lucide-react";
 import { AccountBillingActions } from "@/components/account/AccountBillingActions";
 import { isStripeCheckoutConfigured, isStripePortalConfigured } from "@/lib/billing";
 import { getBillingSummary } from "@/lib/billing-server";
@@ -162,39 +162,24 @@ export default async function AccountPage({
         </aside>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="editorial-card animate-rise-in p-5 sm:p-6">
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className="editorial-card animate-rise-in flex min-h-[220px] flex-col p-5 sm:p-6">
           <div className="flex items-center gap-3 text-[var(--text-dim)]">
             <Mail className="size-4" />
             <Eyebrow>Identity</Eyebrow>
           </div>
-          <h2 className="mt-5 text-[24px] font-medium leading-8 text-[var(--text)]">{displayName}</h2>
-          <p className="mt-2 break-all text-sm leading-6 text-[var(--text-dim)]">{primaryEmail}</p>
-        </div>
-
-        <div className="editorial-card animate-rise-in-delay-1 p-5 sm:p-6">
-          <div className="flex items-center gap-3 text-[var(--text-dim)]">
-            <Sparkles className="size-4" />
-            <Eyebrow>Upgrade path</Eyebrow>
+          <div className="mt-auto">
+            <h2 className="text-[24px] font-medium leading-8 text-[var(--text)]">{displayName}</h2>
+            <p className="mt-2 break-all text-sm leading-6 text-[var(--text-dim)]">{primaryEmail}</p>
           </div>
-          <h2 className="mt-5 text-[24px] font-medium leading-8 text-[var(--text)]">
-            {hasPaidPlan ? "Paid access active" : "Pro is available"}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">
-            {hasPaidPlan
-              ? "Use Manage billing for invoices, payment method updates, and cancellation controls."
-              : "Upgrade to Pro for unlimited courses and larger knowledge-base capacity."}
-          </p>
         </div>
-      </section>
 
-      <section>
-        <div className="editorial-card animate-rise-in p-5 sm:p-6">
+        <div className="editorial-card animate-rise-in-delay-1 flex min-h-[220px] flex-col p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <Eyebrow>Usage</Eyebrow>
             <Gauge className="size-4 text-[var(--text-faint)]" />
           </div>
-          <div className="mt-6 space-y-4">
+          <div className="mt-auto space-y-4">
             {usageLines.map((line) => {
               const finiteLimit = typeof line.limit === "number" && Number.isFinite(line.limit);
               const value = finiteLimit && line.current !== null
