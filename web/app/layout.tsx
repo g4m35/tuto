@@ -56,15 +56,17 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="bg-background text-foreground font-sans">
-        <ClerkProvider
-          proxyUrl={getClerkProxyUrl()}
-          signInFallbackRedirectUrl="/dashboard"
-          signInForceRedirectUrl="/dashboard"
-          signUpFallbackRedirectUrl="/dashboard"
-          signUpForceRedirectUrl="/dashboard"
-        >
-          {children}
-        </ClerkProvider>
+        <div id="tuto-app-shell">
+          <ClerkProvider
+            proxyUrl={getClerkProxyUrl()}
+            signInFallbackRedirectUrl="/dashboard"
+            signInForceRedirectUrl="/dashboard"
+            signUpFallbackRedirectUrl="/dashboard"
+            signUpForceRedirectUrl="/dashboard"
+          >
+            {children}
+          </ClerkProvider>
+        </div>
       </body>
     </html>
   );

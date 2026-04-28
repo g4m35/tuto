@@ -1,6 +1,7 @@
 "use client"
 
 import { type ComponentType, type KeyboardEvent as ReactKeyboardEvent, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
+import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -49,10 +50,15 @@ const commandItems: CommandItem[] = [
 export function CommandPalette() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [query, setQuery] = useState("")
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPending, startTransition] = useTransition()
   const deferredQuery = useDeferredValue(query)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     for (const item of commandItems) {
@@ -84,6 +90,14 @@ export function CommandPalette() {
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
+
+  useEffect(() => {
+    document.body.classList.toggle("t-command-palette-open", open)
+
+    return () => {
+      document.body.classList.remove("t-command-palette-open")
+    }
+  }, [open])
 
   const filteredItems = useMemo(() => {
     const normalized = deferredQuery.trim().toLowerCase()
@@ -131,6 +145,103 @@ export function CommandPalette() {
     })
   }
 
+  const palette = mounted && open ? createPortal(
+    <div
+      data-command-palette-root
+      className="fixed inset-0 isolate z-[999] flex animate-[t-fade_180ms_var(--ease-signature)_both] items-start justify-center px-4 pt-[17vh]"
+      onClick={() => {
+        setOpen(false)
+        setQuery("")
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 bg-black/48 backdrop-blur-[42px]"
+        style={{
+          WebkitBackdropFilter: "blur(42px) saturate(0.52) brightness(0.62)",
+          backdropFilter: "blur(42px) saturate(0.52) brightness(0.62)",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.24),rgba(0,0,0,0.74))]" />
+      <div
+        className="surface-panel relative w-full max-w-[760px] animate-[t-scale-in_180ms_var(--ease-signature)_both] overflow-hidden border-[var(--border-strong)] shadow-[0_32px_90px_-36px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.05)]"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={handlePaletteKeyDown}
+      >
+        <div className="flex items-center gap-4 border-b border-[var(--border)] px-5 py-4">
+          <Search className="size-4 text-[var(--text-faint)]" />
+          <input
+            autoFocus
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Jump to anything..."
+            className="flex-1 border-0 bg-transparent text-[18px] text-[var(--text)] outline-none placeholder:text-[var(--text-mute)]"
+          />
+          <span className="rounded-[7px] border border-[var(--border)] bg-[var(--bg-elev-2)] px-2 py-1 font-mono text-[10px] uppercase text-[var(--text-faint)]">
+            esc
+          </span>
+        </div>
+
+        <div className="max-h-[27rem] overflow-y-auto p-2">
+          {filteredItems.length ? (
+            filteredItems.map((item, index) => {
+              const Icon = item.icon
+              const active = index === activeIndex
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onMouseEnter={() => {
+                    setActiveIndex(index)
+                    if (item.href) {
+                      router.prefetch(item.href)
+                    }
+                  }}
+                  onClick={() => navigate(item)}
+                  className={cn(
+                    "flex w-full cursor-pointer items-center gap-4 rounded-[var(--radius-sm)] px-4 py-3 text-left transition-colors duration-150 ease-[var(--ease-signature)]",
+                    active ? "bg-[var(--bg-elev-2)]" : "hover:bg-[var(--bg-elev-2)]",
+                    index === 0 && "animate-rise-in"
+                  )}
+                >
+                  <span className="inline-flex size-8 items-center justify-center text-[var(--text-faint)]">
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-[15px] font-medium text-[var(--text)]">
+                      {item.label}
+                    </span>
+                  </span>
+                  <span className="text-[13px] text-[var(--text-faint)]">
+                    {item.hint}
+                    {item.shortcut ? <span className="ml-1">· ⌘{item.shortcut}</span> : null}
+                  </span>
+                </button>
+              )
+            })
+          ) : (
+            <div className="px-4 py-10 text-center text-sm text-[var(--text-dim)]">
+              No matches yet for <span className="text-[var(--text)]">{deferredQuery}</span>.
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-[var(--border)] px-5 py-3 text-xs text-[var(--text-faint)]">
+          <span className="inline-flex items-center gap-3">
+            <span>↑↓ navigate</span>
+            <span className="inline-flex items-center gap-1">
+              <CornerDownLeft className="size-3" />
+              open
+            </span>
+            <span>esc close</span>
+          </span>
+          <span>{isPending ? "Opening..." : "Ready"}</span>
+        </div>
+      </div>
+    </div>,
+    document.body
+  ) : null
+
   return (
     <>
       <div className="flex items-center gap-3">
@@ -161,100 +272,7 @@ export function CommandPalette() {
         </button>
       </div>
 
-      {open ? (
-        <div
-          className="fixed inset-0 isolate z-[70] flex animate-[t-fade_180ms_var(--ease-signature)_both] items-start justify-center px-4 pt-[17vh]"
-          onClick={() => {
-            setOpen(false)
-            setQuery("")
-          }}
-        >
-          <div
-            className="pointer-events-none absolute inset-0 bg-black/52 backdrop-blur-[34px]"
-            style={{
-              WebkitBackdropFilter: "blur(34px) saturate(0.62) brightness(0.72)",
-              backdropFilter: "blur(34px) saturate(0.62) brightness(0.72)",
-            }}
-          />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.08),transparent_32%),linear-gradient(180deg,rgba(0,0,0,0.12),rgba(0,0,0,0.58))]" />
-          <div
-            className="surface-panel relative w-full max-w-[760px] animate-[t-scale-in_180ms_var(--ease-signature)_both] overflow-hidden border-[var(--border-strong)] shadow-[0_32px_90px_-36px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.05)]"
-            onClick={(event) => event.stopPropagation()}
-            onKeyDown={handlePaletteKeyDown}
-          >
-            <div className="flex items-center gap-4 border-b border-[var(--border)] px-5 py-4">
-              <Search className="size-4 text-[var(--text-faint)]" />
-              <input
-                autoFocus
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Jump to anything..."
-                className="flex-1 border-0 bg-transparent text-[18px] text-[var(--text)] outline-none placeholder:text-[var(--text-mute)]"
-              />
-              <span className="rounded-[7px] border border-[var(--border)] bg-[var(--bg-elev-2)] px-2 py-1 font-mono text-[10px] uppercase text-[var(--text-faint)]">
-                esc
-              </span>
-            </div>
-
-            <div className="max-h-[27rem] overflow-y-auto p-2">
-              {filteredItems.length ? (
-                filteredItems.map((item, index) => {
-                  const Icon = item.icon
-                  const active = index === activeIndex
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onMouseEnter={() => {
-                        setActiveIndex(index)
-                        if (item.href) {
-                          router.prefetch(item.href)
-                        }
-                      }}
-                      onClick={() => navigate(item)}
-                      className={cn(
-                        "flex w-full cursor-pointer items-center gap-4 rounded-[var(--radius-sm)] px-4 py-3 text-left transition-colors duration-150 ease-[var(--ease-signature)]",
-                        active ? "bg-[var(--bg-elev-2)]" : "hover:bg-[var(--bg-elev-2)]",
-                        index === 0 && "animate-rise-in"
-                      )}
-                    >
-                      <span className="inline-flex size-8 items-center justify-center text-[var(--text-faint)]">
-                        <Icon className="size-4" />
-                      </span>
-                      <span className="flex-1">
-                        <span className="block text-[15px] font-medium text-[var(--text)]">
-                          {item.label}
-                        </span>
-                      </span>
-                      <span className="text-[13px] text-[var(--text-faint)]">
-                        {item.hint}
-                        {item.shortcut ? <span className="ml-1">· ⌘{item.shortcut}</span> : null}
-                      </span>
-                    </button>
-                  )
-                })
-              ) : (
-                <div className="px-4 py-10 text-center text-sm text-[var(--text-dim)]">
-                  No matches yet for <span className="text-[var(--text)]">{deferredQuery}</span>.
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between border-t border-[var(--border)] px-5 py-3 text-xs text-[var(--text-faint)]">
-              <span className="inline-flex items-center gap-3">
-                <span>↑↓ navigate</span>
-                <span className="inline-flex items-center gap-1">
-                  <CornerDownLeft className="size-3" />
-                  open
-                </span>
-                <span>esc close</span>
-              </span>
-              <span>{isPending ? "Opening..." : "Ready"}</span>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {palette}
     </>
   )
 }
