@@ -53,7 +53,7 @@ export default async function ReviewPage() {
             key={course.id}
             href={`/courses/${course.id}`}
             className={cn(
-              "editorial-card t-lift block px-5 py-5 sm:px-6",
+              "editorial-card interactive-card t-lift block px-5 py-5 sm:px-6",
               index === 0
                 ? "animate-rise-in"
                 : index === 1

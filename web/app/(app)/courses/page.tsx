@@ -50,7 +50,7 @@ export default async function CoursesPage() {
             key={course.id}
             href={`/courses/${course.id}`}
             className={cn(
-              "editorial-card t-lift group relative min-h-[282px] overflow-hidden px-6 py-6",
+              "editorial-card interactive-card t-lift group relative min-h-[282px] overflow-hidden px-6 py-6",
               index % 3 === 0
                 ? "animate-rise-in"
                 : index % 3 === 1

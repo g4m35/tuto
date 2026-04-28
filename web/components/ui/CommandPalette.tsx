@@ -2,7 +2,7 @@
 
 import { type ComponentType, type KeyboardEvent as ReactKeyboardEvent, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search, UserCircle } from "lucide-react"
+import { BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type CommandItem = {
@@ -44,13 +44,6 @@ const commandItems: CommandItem[] = [
     hint: "Route",
     icon: Braces,
   },
-  {
-    id: "account",
-    href: "/account",
-    label: "Manage account",
-    hint: "Billing and profile",
-    icon: UserCircle,
-  },
 ]
 
 export function CommandPalette() {
@@ -60,6 +53,14 @@ export function CommandPalette() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPending, startTransition] = useTransition()
   const deferredQuery = useDeferredValue(query)
+
+  useEffect(() => {
+    for (const item of commandItems) {
+      if (item.href) {
+        router.prefetch(item.href)
+      }
+    }
+  }, [router])
 
   useEffect(() => {
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -197,10 +198,15 @@ export function CommandPalette() {
                     <button
                       key={item.id}
                       type="button"
-                      onMouseEnter={() => setActiveIndex(index)}
+                      onMouseEnter={() => {
+                        setActiveIndex(index)
+                        if (item.href) {
+                          router.prefetch(item.href)
+                        }
+                      }}
                       onClick={() => navigate(item)}
                       className={cn(
-                        "flex w-full items-center gap-4 rounded-[var(--radius-sm)] px-4 py-3 text-left transition-colors duration-200 ease-[var(--ease-signature)]",
+                        "flex w-full cursor-pointer items-center gap-4 rounded-[var(--radius-sm)] px-4 py-3 text-left transition-colors duration-150 ease-[var(--ease-signature)]",
                         active ? "bg-[var(--bg-elev-2)]" : "hover:bg-[var(--bg-elev-2)]",
                         index === 0 && "animate-rise-in"
                       )}

@@ -254,7 +254,8 @@ export default async function CourseDetailPage({
               )
 
               const wrapperClassName = cn(
-                "editorial-card hover-lift animate-rise-in block overflow-hidden",
+                "editorial-card animate-rise-in block overflow-hidden",
+                locked ? "opacity-75" : "interactive-card hover-lift cursor-pointer",
                 current && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
               )
 

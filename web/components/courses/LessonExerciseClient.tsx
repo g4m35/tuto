@@ -232,7 +232,7 @@ export function LessonExerciseClient({
                     setChecked(false)
                   }}
                   className={cn(
-                    "editorial-card t-lift animate-rise-in w-full text-left px-5 py-5",
+                    "editorial-card interactive-card t-lift animate-rise-in w-full text-left px-5 py-5",
                     selected
                       ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
                       : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"

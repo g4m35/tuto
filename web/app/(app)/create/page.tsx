@@ -162,7 +162,7 @@ export default function CreateCoursePage() {
                   setError(null)
                 }}
                 className={cn(
-	                  "editorial-card t-lift text-left px-5 py-5",
+	                  "editorial-card interactive-card t-lift text-left px-5 py-5",
                   index === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
                   active
                     ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"

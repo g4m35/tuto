@@ -13,7 +13,10 @@ export default function SidebarUserMenu({ compact = false }: SidebarUserMenuProp
       <>
         <Show when="signed-in">
           <div className="flex items-center justify-center">
-            <UserButton />
+            <UserButton
+              userProfileMode="navigation"
+              userProfileUrl="/account"
+            />
           </div>
         </Show>
         <Show when="signed-out">
@@ -31,7 +34,10 @@ export default function SidebarUserMenu({ compact = false }: SidebarUserMenuProp
   return (
     <>
       <Show when="signed-in">
-        <UserButton />
+        <UserButton
+          userProfileMode="navigation"
+          userProfileUrl="/account"
+        />
       </Show>
       <Show when="signed-out">
         <div className="flex items-center gap-2">

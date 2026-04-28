@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { BookOpen, Braces, Grid2x2, Sparkles, UserCircle } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { BookOpen, Braces, Grid2x2, Sparkles } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { CommandPalette } from "@/components/ui/CommandPalette"
 import { cn } from "@/lib/utils"
@@ -12,11 +13,18 @@ const navItems = [
   { id: "courses", href: "/courses", label: "Courses", icon: BookOpen },
   { id: "create", href: "/create", label: "Create", icon: Sparkles },
   { id: "review", href: "/review", label: "Review", icon: Braces },
-  { id: "account", href: "/account", label: "Account", icon: UserCircle },
 ]
 
 export function TopNav() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  useEffect(() => {
+    for (const item of navItems) {
+      router.prefetch(item.href)
+    }
+    router.prefetch("/account")
+  }, [router])
 
   return (
     <header className="sticky top-0 z-40 h-16 border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(10,10,10,0.92),rgba(0,0,0,0.74))] backdrop-blur-[18px]">
@@ -37,8 +45,10 @@ export function TopNav() {
                 <Link
                   key={item.id}
                   href={item.href}
+                  prefetch
+                  onMouseEnter={() => router.prefetch(item.href)}
                   className={cn(
-                    "relative inline-flex h-10 items-center gap-2 px-2.5 text-[14px] font-medium text-[var(--text-faint)] transition-colors duration-200 ease-[var(--ease-signature)]",
+                    "relative inline-flex h-10 cursor-pointer items-center gap-2 px-2.5 text-[14px] font-medium text-[var(--text-faint)] transition-colors duration-150 ease-[var(--ease-signature)]",
                     active
                       ? "text-[var(--text)]"
                       : "hover:text-[var(--text-dim)]"
@@ -58,7 +68,10 @@ export function TopNav() {
         <div className="flex items-center gap-3">
           <CommandPalette />
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] p-1">
-            <UserButton />
+            <UserButton
+              userProfileMode="navigation"
+              userProfileUrl="/account"
+            />
           </div>
         </div>
       </div>

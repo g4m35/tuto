@@ -84,12 +84,12 @@
   select,
   textarea {
     transition:
-      color 180ms ease,
-      background-color 180ms ease,
-      border-color 180ms ease,
-      opacity 180ms ease,
-      transform 300ms var(--ease-signature),
-      box-shadow 400ms var(--ease-signature);
+      color 140ms ease,
+      background-color 140ms ease,
+      border-color 140ms ease,
+      opacity 140ms ease,
+      transform 160ms var(--ease-signature),
+      box-shadow 180ms var(--ease-signature);
   }
 
   button,
@@ -97,6 +97,18 @@
   select,
   textarea {
     font: inherit;
+  }
+
+  a,
+  button,
+  [role="button"],
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
   }
 
   summary::-webkit-details-marker {
@@ -148,10 +160,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     transition:
-      transform 300ms var(--ease-signature),
-      border-color 300ms ease,
-      background-color 300ms ease,
-      box-shadow 400ms var(--ease-signature);
+      transform 160ms var(--ease-signature),
+      border-color 140ms ease,
+      background-color 140ms ease,
+      box-shadow 180ms var(--ease-signature);
   }
 
   .editorial-stat {
@@ -159,24 +171,24 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     transition:
-      transform 300ms var(--ease-signature),
-      border-color 300ms ease,
-      background-color 300ms ease,
-      box-shadow 400ms var(--ease-signature);
+      transform 160ms var(--ease-signature),
+      border-color 140ms ease,
+      background-color 140ms ease,
+      box-shadow 180ms var(--ease-signature);
   }
 
   .t-route {
-    animation: t-rise-lg 450ms var(--ease-signature) both;
+    animation: t-rise-lg 160ms var(--ease-signature) both;
   }
 
-	  .t-btn {
-	    transition:
-	      color 200ms ease,
-	      background-color 200ms ease,
-	      border-color 200ms ease,
-	      opacity 200ms ease,
-	      transform 300ms var(--ease-signature);
-	  }
+  .t-btn {
+    transition:
+      color 140ms ease,
+      background-color 140ms ease,
+      border-color 140ms ease,
+      opacity 140ms ease,
+      transform 160ms var(--ease-signature);
+  }
 
   .t-btn:hover {
     transform: translateY(-1px);
@@ -192,10 +204,16 @@
     border-radius: var(--radius);
   }
 
+  .interactive-card {
+    cursor: pointer;
+  }
+
+  .interactive-card:hover,
   .t-lift:hover {
+    background: var(--bg-elev-2);
     border-color: var(--border-strong);
     box-shadow: var(--shadow-card-hover);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
 
   .t-spotlight {
@@ -210,7 +228,7 @@
     opacity: 0;
     pointer-events: none;
     position: absolute;
-    transition: opacity 350ms ease;
+    transition: opacity 160ms ease;
   }
 
   .t-spotlight:hover::before {
@@ -261,27 +279,28 @@
   }
 
   .animate-rise-in {
-    animation: t-rise 180ms var(--ease-signature) both;
+    animation: t-rise 120ms var(--ease-signature) both;
   }
 
   .animate-rise-in-delay-1 {
-    animation: t-rise 180ms var(--ease-signature) 60ms both;
+    animation: t-rise 120ms var(--ease-signature) 40ms both;
   }
 
   .animate-rise-in-delay-2 {
-    animation: t-rise 180ms var(--ease-signature) 120ms both;
+    animation: t-rise 120ms var(--ease-signature) 80ms both;
   }
 
   .animate-rise-in-delay-3 {
-    animation: t-rise 180ms var(--ease-signature) 180ms both;
+    animation: t-rise 120ms var(--ease-signature) 120ms both;
   }
 
   .animate-rise-in-delay-4 {
-    animation: t-rise 180ms var(--ease-signature) 240ms both;
+    animation: t-rise 120ms var(--ease-signature) 160ms both;
   }
 
   .hover-lift:hover {
-    transform: translateY(-3px);
+    background: var(--bg-elev-2);
+    transform: translateY(-2px);
     border-color: var(--border-strong);
     box-shadow: var(--shadow-card-hover);
   }
@@ -301,6 +320,7 @@
     transform: none;
   }
 
+  .interactive-card:hover,
   .t-lift:hover,
   .t-btn:hover {
     transform: none;

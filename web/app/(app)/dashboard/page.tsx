@@ -27,7 +27,7 @@ function DashboardMetric({
   detail?: string;
 }) {
   return (
-    <div className="editorial-card t-lift animate-rise-in min-h-[132px] p-5 sm:p-6">
+    <div className="editorial-card animate-rise-in min-h-[132px] p-5 sm:p-6">
       <Eyebrow>{label}</Eyebrow>
       <div className="mt-5 flex min-h-12 items-end justify-between gap-4">
         <p className="whitespace-pre-line text-[34px] font-semibold leading-[1.02] tracking-normal text-[var(--text)] [font-feature-settings:'tnum','ss01'] [font-variant-numeric:tabular-nums]">
@@ -157,7 +157,7 @@ export default async function DashboardPage() {
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
-                className="group editorial-card t-lift animate-rise-in relative overflow-hidden px-5 py-4 sm:px-6"
+                className="group editorial-card interactive-card t-lift animate-rise-in relative overflow-hidden px-5 py-4 sm:px-6"
               >
                 <span
                   className="absolute bottom-4 left-0 top-4 w-px bg-[var(--accent)]/80"

@@ -1,7 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { CreditCard, Gauge, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { AccountBillingActions } from "@/components/account/AccountBillingActions";
-import { AccountProfileCard } from "@/components/account/AccountProfileCard";
 import { isStripeCheckoutConfigured, isStripePortalConfigured } from "@/lib/billing";
 import { getBillingSummary } from "@/lib/billing-server";
 import { getTierLimits, hasUnlimitedAllowance, type BillingTier } from "@/lib/limits";
@@ -129,7 +128,7 @@ export default async function AccountPage({
               Manage your account and plan.
             </h1>
             <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
-              Billing, limits, profile details, and security controls now live in one signed-in place.
+              Plan, billing, and usage live here. Profile controls stay in the top-right account menu.
             </p>
           </div>
         </div>
@@ -204,7 +203,7 @@ export default async function AccountPage({
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+      <section>
         <div className="editorial-card animate-rise-in p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <Eyebrow>Usage</Eyebrow>
@@ -241,13 +240,6 @@ export default async function AccountPage({
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        <div className="editorial-card animate-rise-in-delay-1 overflow-hidden p-5 sm:p-6">
-          <Eyebrow>Profile and security</Eyebrow>
-          <div className="mt-5">
-            <AccountProfileCard />
           </div>
         </div>
       </section>
