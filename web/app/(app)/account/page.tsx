@@ -1,5 +1,5 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { CreditCard, Gauge, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { CreditCard, Gauge, Mail, Sparkles } from "lucide-react";
 import { AccountBillingActions } from "@/components/account/AccountBillingActions";
 import { isStripeCheckoutConfigured, isStripePortalConfigured } from "@/lib/billing";
 import { getBillingSummary } from "@/lib/billing-server";
@@ -162,7 +162,7 @@ export default async function AccountPage({
         </aside>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid gap-4 lg:grid-cols-2">
         <div className="editorial-card animate-rise-in p-5 sm:p-6">
           <div className="flex items-center gap-3 text-[var(--text-dim)]">
             <Mail className="size-4" />
@@ -173,21 +173,6 @@ export default async function AccountPage({
         </div>
 
         <div className="editorial-card animate-rise-in-delay-1 p-5 sm:p-6">
-          <div className="flex items-center gap-3 text-[var(--text-dim)]">
-            <ShieldCheck className="size-4" />
-            <Eyebrow>Billing status</Eyebrow>
-          </div>
-          <h2 className="mt-5 text-[24px] font-medium leading-8 text-[var(--text)]">
-            {billingReady ? "Stripe ready" : "Billing unavailable"}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">
-            {billingReady
-              ? "Checkout and account billing use the configured Stripe production routes."
-              : "Billing actions are disabled until Stripe and the database are configured."}
-          </p>
-        </div>
-
-        <div className="editorial-card animate-rise-in-delay-2 p-5 sm:p-6">
           <div className="flex items-center gap-3 text-[var(--text-dim)]">
             <Sparkles className="size-4" />
             <Eyebrow>Upgrade path</Eyebrow>
