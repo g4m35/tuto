@@ -163,13 +163,20 @@ export function CommandPalette() {
 
       {open ? (
         <div
-          className="fixed inset-0 z-[70] flex animate-[t-fade_180ms_var(--ease-signature)_both] items-start justify-center bg-black/84 px-4 pt-[17vh] backdrop-blur-[18px]"
+          className="fixed inset-0 isolate z-[70] flex animate-[t-fade_180ms_var(--ease-signature)_both] items-start justify-center px-4 pt-[17vh]"
           onClick={() => {
             setOpen(false)
             setQuery("")
           }}
         >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.08),transparent_32%),linear-gradient(180deg,rgba(0,0,0,0.34),rgba(0,0,0,0.82))]" />
+          <div
+            className="pointer-events-none absolute inset-0 bg-black/52 backdrop-blur-[34px]"
+            style={{
+              WebkitBackdropFilter: "blur(34px) saturate(0.62) brightness(0.72)",
+              backdropFilter: "blur(34px) saturate(0.62) brightness(0.72)",
+            }}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.08),transparent_32%),linear-gradient(180deg,rgba(0,0,0,0.12),rgba(0,0,0,0.58))]" />
           <div
             className="surface-panel relative w-full max-w-[760px] animate-[t-scale-in_180ms_var(--ease-signature)_both] overflow-hidden border-[var(--border-strong)] shadow-[0_32px_90px_-36px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.05)]"
             onClick={(event) => event.stopPropagation()}
