@@ -1,6 +1,5 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { ArrowRight, CreditCard, Gauge, Mail, ShieldCheck, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { CreditCard, Gauge, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { AccountBillingActions } from "@/components/account/AccountBillingActions";
 import { AccountProfileCard } from "@/components/account/AccountProfileCard";
 import { isStripeCheckoutConfigured, isStripePortalConfigured } from "@/lib/billing";
@@ -246,13 +245,7 @@ export default async function AccountPage({
         </div>
 
         <div className="editorial-card animate-rise-in-delay-1 overflow-hidden p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Eyebrow>Profile and security</Eyebrow>
-            <Link href="/settings" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-dim)] hover:text-[var(--text)]">
-              App settings
-              <ArrowRight className="size-4" />
-            </Link>
-          </div>
+          <Eyebrow>Profile and security</Eyebrow>
           <div className="mt-5">
             <AccountProfileCard />
           </div>

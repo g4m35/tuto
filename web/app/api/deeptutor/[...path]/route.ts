@@ -1,5 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { canAccessOperatorSettings } from "@/lib/admin-access";
 import { getDeepTutorAuthHeaders, getDeepTutorUrl } from "@/lib/deeptutor-config";
 
 export const runtime = "nodejs";
@@ -46,12 +47,20 @@ async function proxy(request: Request, context: { params: Promise<{ path: string
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  const { path } = await context.params;
+  const targetPath = path.join("/");
+  if (targetPath.startsWith("api/v1/settings")) {
+    const user = await currentUser();
+    if (!canAccessOperatorSettings(userId, user)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+  }
+
   const baseUrl = getDeepTutorUrl();
   if (!baseUrl) {
     return NextResponse.json({ error: "deeptutor_not_configured" }, { status: 503 });
   }
 
-  const { path } = await context.params;
   const incomingUrl = new URL(request.url);
   const targetUrl = new URL(`/${path.join("/")}${incomingUrl.search}`, `${baseUrl}/`);
   const body =

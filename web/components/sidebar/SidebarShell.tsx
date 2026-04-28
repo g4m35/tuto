@@ -8,14 +8,12 @@ import {
   BookOpen,
   Bot,
   Brain,
-  CreditCard,
   Library,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
   PenLine,
   Plus,
-  Settings,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -41,10 +39,7 @@ const PRIMARY_NAV: NavEntry[] = [
   { href: "/memory", label: "Memory", icon: Brain },
 ];
 
-const SECONDARY_NAV: NavEntry[] = [
-  { href: "/account", label: "Account", icon: CreditCard },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+const SECONDARY_NAV: NavEntry[] = [];
 const DEFAULT_SESSION_VIEWPORT_CLASS_NAME = "max-h-[112px]";
 
 interface SidebarShellProps {
