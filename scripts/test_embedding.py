@@ -109,7 +109,7 @@ async def main() -> None:
         print(f"  dim={cfg.dim}")
         print(f"  timeout={cfg.request_timeout}")
         print(f"  batch_size={cfg.batch_size}")
-        print(f"  api_key={_mask_key(cfg.api_key)}")
+        print(f"  credential_configured={bool(cfg.api_key)}")
 
     try:
         await run_client_test(args.text, max(1, args.repeat))

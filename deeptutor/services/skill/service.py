@@ -25,8 +25,24 @@ import yaml
 
 from deeptutor.services.path_service import get_path_service
 
-_FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?", re.DOTALL)
 _NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+
+
+def _split_frontmatter(content: str) -> tuple[str, str] | None:
+    """Return YAML frontmatter and body when content starts with a frontmatter block."""
+    lines = content.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return None
+
+    raw_start = len(lines[0])
+    offset = raw_start
+    for line in lines[1:]:
+        next_offset = offset + len(line)
+        if line.strip() == "---":
+            return content[raw_start:offset], content[next_offset:]
+        offset = next_offset
+
+    return None
 
 
 @dataclass(slots=True)
@@ -94,11 +110,10 @@ class SkillService:
 
     @staticmethod
     def _parse_frontmatter(content: str) -> tuple[dict[str, Any], str]:
-        match = _FRONTMATTER_RE.match(content)
-        if not match:
+        parts = _split_frontmatter(content)
+        if not parts:
             return {}, content
-        raw = match.group(1)
-        body = content[match.end():]
+        raw, body = parts
         try:
             data = yaml.safe_load(raw) or {}
         except yaml.YAMLError:
@@ -271,7 +286,7 @@ class SkillService:
         ``name`` and ``description`` fields; otherwise we synthesise a header.
         """
         text = content if content is not None else ""
-        if _FRONTMATTER_RE.match(text):
+        if _split_frontmatter(text):
             text = self._rewrite_frontmatter(
                 text, name=name, description=description.strip()
             )

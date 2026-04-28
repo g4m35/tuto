@@ -7,7 +7,6 @@ WebSocket endpoint for real-time problem solving with streaming logs.
 
 import asyncio
 from pathlib import Path
-import re
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
@@ -32,6 +31,35 @@ router = APIRouter()
 
 # Initialize session manager
 solver_session_manager = SolverSessionManager()
+
+
+def _rewrite_artifact_links(markdown: str, base_url: str) -> str:
+    """Rewrite local artifact links without regex backtracking risk."""
+    marker = "](artifacts/"
+    output: list[str] = []
+    cursor = 0
+
+    while True:
+        start = markdown.find(marker, cursor)
+        if start == -1:
+            output.append(markdown[cursor:])
+            break
+
+        close = markdown.find(")", start + len(marker))
+        if close == -1:
+            output.append(markdown[cursor:])
+            break
+
+        artifact_path = markdown[start + len(marker) : close]
+        if "\n" in artifact_path or "\r" in artifact_path:
+            output.append(markdown[cursor : close + 1])
+        else:
+            output.append(markdown[cursor:start])
+            output.append(f"]({base_url}/artifacts/{artifact_path})")
+
+        cursor = close + 1
+
+    return "".join(output)
 
 
 # =============================================================================
@@ -331,9 +359,7 @@ async def websocket_solve(websocket: WebSocket):
                     output_dir_name = output_dir.name
                     output_base_url = f"/api/outputs/{rel_path}"
 
-                    pattern = r"\]\(artifacts/([^)]+)\)"
-                    replacement = rf"]({output_base_url}/artifacts/\1)"
-                    final_answer = re.sub(pattern, replacement, final_answer)
+                    final_answer = _rewrite_artifact_links(final_answer, output_base_url)
                 except Exception as e:
                     logger.debug(f"Error processing image paths: {e}")
 

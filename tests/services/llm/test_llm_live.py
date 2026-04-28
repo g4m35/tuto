@@ -63,7 +63,7 @@ async def run_test(
     print(f"  Binding:   {effective_binding}")
     print(f"  Model:     {effective_model}")
     print(f"  Base URL:  {effective_url}")
-    print(f"  API Key:   {_mask(effective_key)}")
+    print(f"  Credential configured: {'yes' if effective_key else 'no'}")
     print(f"{BOLD}{'─' * 60}{RESET}")
 
     ok = True

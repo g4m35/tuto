@@ -115,7 +115,7 @@ async def main() -> None:
         print(f"  model={cfg.model}")
         print(f"  max_concurrency={cfg.max_concurrency}")
         print(f"  requests_per_minute={cfg.requests_per_minute}")
-        print(f"  api_key={_mask_key(cfg.api_key)}")
+        print(f"  credential_configured={bool(cfg.api_key)}")
 
     try:
         await run_factory_test(args.prompt, args.system, args.max_tokens, args.temperature)
