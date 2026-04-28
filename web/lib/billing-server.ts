@@ -5,6 +5,8 @@ import {
   getStripeTeamPriceId,
   isStripeCheckoutConfigured,
   isStripePortalConfigured,
+  toSafeRelativePath,
+  withBillingStatus,
 } from '@/lib/billing'
 import { getEffectiveBillingTier, isBillingTier } from '@/lib/billing-status'
 import type { BillingTier } from '@/lib/limits'
@@ -232,6 +234,8 @@ type CheckoutDependencies = {
   getBaseUrl: typeof getBaseUrl
   hasValidBillingRequestOrigin: typeof hasValidBillingRequestOrigin
   getPriceIdForPlan: typeof getPriceIdForPlan
+  toSafeRelativePath: typeof toSafeRelativePath
+  withBillingStatus: typeof withBillingStatus
 }
 
 export async function createCheckoutSessionResult(input: {
@@ -253,6 +257,8 @@ export async function createCheckoutSessionResult(input: {
     getBaseUrl,
     hasValidBillingRequestOrigin,
     getPriceIdForPlan,
+    toSafeRelativePath,
+    withBillingStatus,
     ...input.deps,
   }
 
@@ -281,6 +287,11 @@ export async function createCheckoutSessionResult(input: {
   if (!deps.isCheckoutPlan(plan)) {
     return { status: 400, body: { error: 'Invalid billing plan.' } }
   }
+
+  const returnPath =
+    typeof input.payload === 'object' && input.payload && 'returnPath' in input.payload
+      ? deps.toSafeRelativePath(input.payload.returnPath as FormDataEntryValue | string | null | undefined)
+      : '/pricing'
 
   if (!deps.isLaunchReadyCheckoutPlan(plan)) {
     return {
@@ -315,8 +326,8 @@ export async function createCheckoutSessionResult(input: {
         quantity: 1,
       },
     ],
-    success_url: `${deps.getBaseUrl(input.request)}/dashboard?billing=success`,
-    cancel_url: `${deps.getBaseUrl(input.request)}/pricing?billing=canceled`,
+    success_url: `${deps.getBaseUrl(input.request)}${deps.withBillingStatus(returnPath, { billing: 'success' })}`,
+    cancel_url: `${deps.getBaseUrl(input.request)}${deps.withBillingStatus(returnPath, { billing: 'canceled' })}`,
     client_reference_id: input.userId,
     allow_promotion_codes: true,
     metadata: {
@@ -385,7 +396,7 @@ export async function createBillingPortalResult(input: {
 
   const session = await deps.getStripeServerClient().billingPortal.sessions.create({
     customer: billingSummary.stripeCustomerId,
-    return_url: `${deps.getBaseUrl(input.request)}/pricing`,
+    return_url: `${deps.getBaseUrl(input.request)}/account`,
   })
 
   return {

@@ -142,7 +142,7 @@ test('createCheckoutSessionResult returns manage hint for paid users', async () 
     request,
     userId: 'user_paid',
     sessionClaims: { email: 'paid@example.com' },
-    payload: { plan: 'pro' },
+    payload: { plan: 'pro', returnPath: '/account' },
     deps: {
       isDatabaseConfigured: () => true,
       isStripeCheckoutConfigured: () => true,
@@ -172,7 +172,7 @@ test('createCheckoutSessionResult creates a Stripe checkout session for free use
     request,
     userId: 'user_free',
     sessionClaims: { email: 'free@example.com' },
-    payload: { plan: 'pro' },
+    payload: { plan: 'pro', returnPath: '/account' },
     deps: {
       isDatabaseConfigured: () => true,
       isStripeCheckoutConfigured: () => true,
@@ -202,7 +202,52 @@ test('createCheckoutSessionResult creates a Stripe checkout session for free use
   assert.equal(result.status, 200)
   assert.equal(result.body.url, 'https://checkout.stripe.test/session_123')
   assert.equal(createCall?.['customer'], 'cus_123')
-  assert.equal(createCall?.['success_url'], 'http://localhost:3000/dashboard?billing=success')
+  assert.equal(createCall?.['success_url'], 'http://localhost:3000/account?billing=success')
+  assert.equal(createCall?.['cancel_url'], 'http://localhost:3000/account?billing=canceled')
+})
+
+test('createCheckoutSessionResult sanitizes unsafe return paths', async () => {
+  const request = new Request('http://localhost:3000/api/billing/checkout', {
+    method: 'POST',
+    headers: { origin: 'http://localhost:3000' },
+  })
+
+  let createCall: Record<string, unknown> | null = null
+
+  const result = await createCheckoutSessionResult({
+    request,
+    userId: 'user_free',
+    sessionClaims: { email: 'free@example.com' },
+    payload: { plan: 'pro', returnPath: 'https://evil.example.com/pay' },
+    deps: {
+      isDatabaseConfigured: () => true,
+      isStripeCheckoutConfigured: () => true,
+      getBillingSummary: async () => ({
+        billingEnabled: true,
+        tier: 'free',
+        stripeCustomerId: null,
+        subscriptionStatus: 'inactive',
+        currentPeriodEnd: null,
+      }),
+      getPriceIdForPlan: () => 'price_test_pro',
+      createOrReuseCustomer: async () => 'cus_123',
+      getStripeServerClient: () =>
+        ({
+          checkout: {
+            sessions: {
+              create: async (input: Record<string, unknown>) => {
+                createCall = input
+                return { url: 'https://checkout.stripe.test/session_123' }
+              },
+            },
+          },
+        }) as never,
+    },
+  })
+
+  assert.equal(result.status, 200)
+  assert.equal(createCall?.['success_url'], 'http://localhost:3000/pay?billing=success')
+  assert.equal(createCall?.['cancel_url'], 'http://localhost:3000/pay?billing=canceled')
 })
 
 test('createCheckoutSessionResult blocks team checkout until team billing is ready', async () => {
@@ -299,7 +344,7 @@ test('createBillingPortalResult returns a portal session for paid users', async 
   assert.equal(result.body.url, 'https://billing.stripe.test/session_123')
   assert.deepEqual(portalCall, {
     customer: 'cus_paid',
-    return_url: 'http://localhost:3000/pricing',
+    return_url: 'http://localhost:3000/account',
   })
 })
 

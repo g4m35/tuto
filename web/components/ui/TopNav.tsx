@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BookOpen, Braces, Grid2x2, Sparkles } from "lucide-react"
+import { BookOpen, Braces, Grid2x2, Sparkles, UserCircle } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { CommandPalette } from "@/components/ui/CommandPalette"
 import { cn } from "@/lib/utils"
@@ -12,6 +12,7 @@ const navItems = [
   { id: "courses", href: "/courses", label: "Courses", icon: BookOpen },
   { id: "create", href: "/create", label: "Create", icon: Sparkles },
   { id: "review", href: "/review", label: "Review", icon: Braces },
+  { id: "account", href: "/account", label: "Account", icon: UserCircle },
 ]
 
 export function TopNav() {

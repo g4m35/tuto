@@ -125,7 +125,7 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, returnPath: "/pricing" }),
       });
 
       const data = (await response.json().catch(() => null)) as BillingActionResponse | null;

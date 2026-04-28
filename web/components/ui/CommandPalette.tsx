@@ -2,7 +2,7 @@
 
 import { type ComponentType, type KeyboardEvent as ReactKeyboardEvent, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search } from "lucide-react"
+import { BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search, UserCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type CommandItem = {
@@ -43,6 +43,13 @@ const commandItems: CommandItem[] = [
     label: "Go to review",
     hint: "Route",
     icon: Braces,
+  },
+  {
+    id: "account",
+    href: "/account",
+    label: "Manage account",
+    hint: "Billing and profile",
+    icon: UserCircle,
   },
 ]
 

@@ -8,6 +8,7 @@ import {
   BookOpen,
   Bot,
   Brain,
+  CreditCard,
   Library,
   MessageSquare,
   PanelLeftClose,
@@ -40,7 +41,10 @@ const PRIMARY_NAV: NavEntry[] = [
   { href: "/memory", label: "Memory", icon: Brain },
 ];
 
-const SECONDARY_NAV: NavEntry[] = [{ href: "/settings", label: "Settings", icon: Settings }];
+const SECONDARY_NAV: NavEntry[] = [
+  { href: "/account", label: "Account", icon: CreditCard },
+  { href: "/settings", label: "Settings", icon: Settings },
+];
 const DEFAULT_SESSION_VIEWPORT_CLASS_NAME = "max-h-[112px]";
 
 interface SidebarShellProps {
