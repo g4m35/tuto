@@ -2,6 +2,10 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+const clerkProxyUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  ? new URL("/__clerk", process.env.NEXT_PUBLIC_APP_URL).toString()
+  : "";
+
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
@@ -38,12 +42,14 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   await auth.protect({ unauthenticatedUrl: getSignInUrl(req) });
-}, {
-  frontendApiProxy: {
-    enabled: true,
-    path: "/__clerk",
-  },
-});
+}, clerkProxyUrl
+  ? {
+      frontendApiProxy: {
+        enabled: true,
+        path: "/__clerk",
+      },
+    }
+  : {});
 
 export const config = {
   matcher: [

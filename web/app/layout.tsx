@@ -34,10 +34,11 @@ export const metadata: Metadata = {
 
 function getClerkProxyUrl() {
   const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const vercelAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
-  const appUrl = configuredAppUrl || vercelAppUrl || "http://localhost:3000";
+  if (!configuredAppUrl) {
+    return undefined;
+  }
 
-  return new URL("/__clerk", appUrl).toString();
+  return new URL("/__clerk", configuredAppUrl).toString();
 }
 
 export default function RootLayout({
