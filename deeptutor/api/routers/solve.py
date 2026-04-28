@@ -315,25 +315,25 @@ async def websocket_solve(websocket: WebSocket):
             # Process Markdown content to fix image paths
             final_answer = result.get("final_answer", "")
             output_dir_str = result.get("output_dir", "")
+            output_dir_name = ""
+            output_base_url = ""
 
             if output_dir_str and final_answer:
                 try:
-                    output_dir = Path(output_dir_str)
-
+                    output_dir = Path(output_dir_str).expanduser()
                     if not output_dir.is_absolute():
+                        output_dir = (output_base / output_dir).resolve()
+                    else:
                         output_dir = output_dir.resolve()
 
-                    path_str = str(output_dir).replace("\\", "/")
-                    parts = path_str.split("/")
+                    public_root = path_service.get_public_outputs_root().resolve()
+                    rel_path = output_dir.relative_to(public_root).as_posix()
+                    output_dir_name = output_dir.name
+                    output_base_url = f"/api/outputs/{rel_path}"
 
-                    if "user" in parts:
-                        idx = parts.index("user")
-                        rel_path = "/".join(parts[idx + 1 :])
-                        base_url = f"/api/outputs/{rel_path}"
-
-                        pattern = r"\]\(artifacts/([^)]+)\)"
-                        replacement = rf"]({base_url}/artifacts/\1)"
-                        final_answer = re.sub(pattern, replacement, final_answer)
+                    pattern = r"\]\(artifacts/([^)]+)\)"
+                    replacement = rf"]({output_base_url}/artifacts/\1)"
+                    final_answer = re.sub(pattern, replacement, final_answer)
                 except Exception as e:
                     logger.debug(f"Error processing image paths: {e}")
 
@@ -351,16 +351,15 @@ async def websocket_solve(websocket: WebSocket):
 
             # Send final result
             # Extract relative path from output_dir for frontend use
-            dir_name = ""
-            if output_dir_str:
-                parts = output_dir_str.replace("\\", "/").split("/")
-                dir_name = parts[-1] if parts else ""
+            dir_name = output_dir_name
+            if not dir_name and output_dir_str:
+                dir_name = Path(output_dir_str).name
 
             final_res = {
                 "type": "result",
                 "session_id": session_id,
                 "final_answer": final_answer,
-                "output_dir": output_dir_str,
+                "output_dir": output_base_url or output_dir_str,
                 "output_dir_name": dir_name,
                 "metadata": result.get("metadata"),
             }

@@ -15,6 +15,7 @@ from typing import List, Optional
 
 from dotenv import load_dotenv
 
+from deeptutor.knowledge.progress_tracker import resolve_kb_dir
 from deeptutor.logging import get_logger
 from deeptutor.services.rag.factory import DEFAULT_PROVIDER
 from deeptutor.services.rag.pipelines.llamaindex import LlamaIndexPipeline
@@ -36,9 +37,9 @@ class DocumentAdder:
         progress_tracker=None,
         rag_provider: str | None = None,
     ):
-        self.kb_name = kb_name
-        self.base_dir = Path(base_dir)
-        self.kb_dir = self.base_dir / kb_name
+        self.kb_name = kb_name.strip()
+        self.base_dir = Path(base_dir).resolve()
+        self.kb_dir = resolve_kb_dir(self.base_dir, self.kb_name)
 
         if not self.kb_dir.exists():
             raise ValueError(f"Knowledge base does not exist: {kb_name}")

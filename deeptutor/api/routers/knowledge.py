@@ -32,7 +32,7 @@ from deeptutor.api.utils.task_log_stream import capture_task_logs, get_task_stre
 from deeptutor.knowledge.add_documents import DocumentAdder
 from deeptutor.knowledge.initializer import KnowledgeBaseInitializer
 from deeptutor.knowledge.manager import KnowledgeBaseManager
-from deeptutor.knowledge.progress_tracker import ProgressStage, ProgressTracker
+from deeptutor.knowledge.progress_tracker import ProgressStage, ProgressTracker, resolve_kb_dir
 from deeptutor.logging import get_logger
 from deeptutor.services.config import PROJECT_ROOT, load_config_with_main
 from deeptutor.services.rag.factory import DEFAULT_PROVIDER
@@ -391,7 +391,8 @@ async def health_check():
             "knowledge_bases_count": kb_count,
         }
     except Exception as e:
-        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
+        logger.error(f"Knowledge health check failed: {e}", exc_info=True)
+        return {"status": "error", "error": "Knowledge health check failed"}
 
 
 @router.get("/rag-providers")
@@ -804,7 +805,7 @@ async def websocket_progress(websocket: WebSocket, kb_name: str):
         initial_progress = progress_tracker.get_progress()
         expected_task_id = websocket.query_params.get("task_id")
 
-        kb_dir = _kb_base_dir / kb_name
+        kb_dir = resolve_kb_dir(_kb_base_dir, kb_name)
         llamaindex_storage_dir = kb_dir / "llamaindex_storage"
         kb_is_ready = llamaindex_storage_dir.exists() and llamaindex_storage_dir.is_dir()
 

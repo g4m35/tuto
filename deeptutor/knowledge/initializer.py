@@ -12,7 +12,7 @@ from pathlib import Path
 import shutil
 from typing import Optional
 
-from deeptutor.knowledge.progress_tracker import ProgressStage, ProgressTracker
+from deeptutor.knowledge.progress_tracker import ProgressStage, ProgressTracker, resolve_kb_dir
 from deeptutor.logging import get_logger
 from deeptutor.services.rag.factory import DEFAULT_PROVIDER
 from deeptutor.services.rag.file_routing import FileTypeRouter
@@ -33,9 +33,9 @@ class KnowledgeBaseInitializer:
         progress_tracker: ProgressTracker | None = None,
         rag_provider: str | None = None,
     ):
-        self.kb_name = kb_name
-        self.base_dir = Path(base_dir)
-        self.kb_dir = self.base_dir / kb_name
+        self.kb_name = kb_name.strip()
+        self.base_dir = Path(base_dir).resolve()
+        self.kb_dir = resolve_kb_dir(self.base_dir, self.kb_name)
 
         self.raw_dir = self.kb_dir / "raw"
         self.llamaindex_storage_dir = self.kb_dir / "llamaindex_storage"

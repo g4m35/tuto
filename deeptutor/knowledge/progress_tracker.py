@@ -9,15 +9,32 @@ from enum import Enum
 import json
 import logging
 from pathlib import Path
+import re
 
 # Use unified logging system
 from deeptutor.logging import get_logger
 
 _logger = get_logger("KnowledgeInit")
+_SAFE_KB_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$")
 
 
 def _get_logger():
     return _logger
+
+
+def resolve_kb_dir(base_dir: Path, kb_name: str) -> Path:
+    """Resolve a knowledge-base directory below base_dir."""
+    name = (kb_name or "").strip()
+    if not _SAFE_KB_NAME_RE.fullmatch(name):
+        raise ValueError("Invalid knowledge base name")
+
+    base = Path(base_dir).resolve()
+    candidate = (base / name).resolve()
+    try:
+        candidate.relative_to(base)
+    except ValueError as exc:
+        raise ValueError("Invalid knowledge base path") from exc
+    return candidate
 
 
 class ProgressStage(Enum):
@@ -35,9 +52,9 @@ class ProgressTracker:
     """Progress tracker"""
 
     def __init__(self, kb_name: str, base_dir: Path):
-        self.kb_name = kb_name
-        self.base_dir = base_dir
-        self.kb_dir = base_dir / kb_name
+        self.kb_name = kb_name.strip()
+        self.base_dir = Path(base_dir).resolve()
+        self.kb_dir = resolve_kb_dir(self.base_dir, self.kb_name)
         self.progress_file = self.kb_dir / ".progress.json"
         self._callbacks: list = []  # Support multiple callbacks
         self.task_id: str | None = None  # Task ID (for log identification)

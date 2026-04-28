@@ -4,6 +4,7 @@ Provides notebook creation, querying, updating, deletion, and record management 
 """
 
 import json
+import logging
 from typing import AsyncGenerator, Literal
 
 from fastapi import APIRouter, HTTPException
@@ -14,6 +15,7 @@ from deeptutor.agents.notebook import NotebookSummarizeAgent
 from deeptutor.services.notebook import notebook_manager
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 # === Request/Response Models ===
@@ -125,7 +127,8 @@ async def _stream_add_record_with_summary(
         }
         yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
     except Exception as exc:
-        payload = {"type": "error", "detail": str(exc)}
+        logger.exception("Failed to add notebook record with streamed summary")
+        payload = {"type": "error", "detail": "Failed to add notebook record"}
         yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
@@ -141,7 +144,8 @@ async def list_notebooks():
         notebooks = notebook_manager.list_notebooks()
         return {"notebooks": notebooks, "total": len(notebooks)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error adding notebook record: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to add notebook record")
 
 
 @router.get("/statistics")

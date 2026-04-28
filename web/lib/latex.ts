@@ -198,8 +198,13 @@ function convertFlowFenceToMermaid(source: string): string | null {
   const nodeDefs: string[] = [];
   const edges: string[] = [];
 
+  const escapeMermaidLabel = (label: string): string =>
+    label
+      .replace(/[\r\n\t]+/g, " ")
+      .replace(/[\\`"'|\[\]{}()<>]/g, (char) => `\\${char}`);
+
   const renderNode = (id: string, type: string, label: string): string => {
-    const safeLabel = label.replace(/\|/g, "\\|");
+    const safeLabel = escapeMermaidLabel(label);
     switch (type) {
       case "start":
       case "end":
@@ -298,13 +303,14 @@ function convertSequenceFenceToMermaid(source: string): string | null {
 
     if (messageMatch) {
       const [, from, operator, to, message] = messageMatch;
+      const safeMessage = message.replace(/[\r\n\t]+/g, " ").replace(/[;`]/g, "");
       const arrow =
         operator === "--" || operator === "-->"
           ? "-->>"
           : operator === "->>" || operator === "-->>"
             ? operator
             : "->>";
-      return `  ${from}${arrow}${to}: ${message}`;
+      return `  ${from}${arrow}${to}: ${safeMessage}`;
     }
 
     return `  ${line}`;

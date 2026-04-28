@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import html
+from html.parser import HTMLParser
 import json
 import os
 import re
@@ -23,12 +24,36 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_2) AppleWebKit/537.36"
 MAX_REDIRECTS = 5  # Limit redirects to prevent DoS attacks
 
 
+class _HTMLTextExtractor(HTMLParser):
+    """Collect visible text without regex-based HTML parsing."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._hidden_depth = 0
+        self._chunks: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.lower() in {"script", "style"}:
+            self._hidden_depth += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in {"script", "style"} and self._hidden_depth:
+            self._hidden_depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if not self._hidden_depth:
+            self._chunks.append(data)
+
+    def text(self) -> str:
+        return "".join(self._chunks)
+
+
 def _strip_tags(text: str) -> str:
     """Remove HTML tags and decode entities."""
-    text = re.sub(r'<script[\s\S]*?</script>', '', text, flags=re.I)
-    text = re.sub(r'<style[\s\S]*?</style>', '', text, flags=re.I)
-    text = re.sub(r'<[^>]+>', '', text)
-    return html.unescape(text).strip()
+    parser = _HTMLTextExtractor()
+    parser.feed(text)
+    parser.close()
+    return html.unescape(parser.text()).strip()
 
 
 def _normalize(text: str) -> str:

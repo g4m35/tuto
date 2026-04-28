@@ -1,7 +1,9 @@
 """Image processing utilities - URL download and format conversion."""
 
 import base64
-from urllib.parse import urlparse
+import ipaddress
+import socket
+from urllib.parse import urljoin, urlparse
 
 import httpx
 
@@ -23,6 +25,46 @@ MAX_IMAGE_SIZE = 10 * 1024 * 1024
 
 # Request timeout (seconds)
 REQUEST_TIMEOUT = 30
+MAX_REDIRECTS = 5
+
+
+def _is_public_ip(address: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return False
+    return not (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_reserved
+        or ip.is_unspecified
+    )
+
+
+def _is_public_image_host(parsed_url) -> bool:
+    hostname = parsed_url.hostname
+    if not hostname:
+        return False
+
+    lowered = hostname.rstrip(".").lower()
+    if lowered in {"localhost", "localhost.localdomain"} or lowered.endswith(".localhost"):
+        return False
+
+    try:
+        ipaddress.ip_address(lowered)
+    except ValueError:
+        pass
+    else:
+        return _is_public_ip(lowered)
+
+    try:
+        resolved = socket.getaddrinfo(lowered, parsed_url.port, type=socket.SOCK_STREAM)
+    except socket.gaierror:
+        return False
+
+    return bool(resolved) and all(_is_public_ip(item[4][0]) for item in resolved)
 
 
 class ImageError(Exception):
@@ -42,7 +84,7 @@ def is_valid_image_url(url: str) -> bool:
     """
     try:
         parsed = urlparse(url)
-        return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+        return parsed.scheme in ("http", "https") and bool(parsed.netloc) and _is_public_image_host(parsed)
     except Exception:
         return False
 
@@ -72,36 +114,70 @@ async def fetch_image_from_url(url: str) -> tuple[bytes, str]:
         ImageError: If download fails or format unsupported
     """
     if not is_valid_image_url(url):
-        raise ImageError(f"Invalid image URL: {url}")
+        raise ImageError("Invalid image URL")
 
-    logger.info(f"Fetching image from URL: {url[:100]}...")
+    logger.info("Fetching image from external URL")
 
     try:
-        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT, follow_redirects=True) as client:
-            response = await client.get(url)
-            response.raise_for_status()
+        current_url = url
+        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT, follow_redirects=False) as client:
+            for _ in range(MAX_REDIRECTS + 1):
+                if not is_valid_image_url(current_url):
+                    raise ImageError("Image URL points to a private or invalid host")
 
-            # Check Content-Type
-            content_type = response.headers.get("content-type", "").split(";")[0].strip().lower()
+                async with client.stream("GET", current_url) as response:
+                    if response.is_redirect:
+                        location = response.headers.get("location")
+                        if not location:
+                            raise ImageError("Image redirect missing Location header")
+                        current_url = urljoin(current_url, location)
+                        continue
 
-            # If no Content-Type, infer from URL
-            if not content_type or content_type == "application/octet-stream":
-                content_type = guess_image_type_from_url(url)
+                    response.raise_for_status()
 
-            if content_type not in SUPPORTED_IMAGE_TYPES:
-                raise ImageError(f"Unsupported image format: {content_type}")
+                    content_type = response.headers.get("content-type", "").split(";")[0].strip().lower()
+                    if content_type == "image/jpg":
+                        content_type = "image/jpeg"
 
-            # Check size
-            content = response.content
-            if len(content) > MAX_IMAGE_SIZE:
-                raise ImageError(
-                    f"Image too large: {len(content) / 1024 / 1024:.1f}MB "
-                    f"(max {MAX_IMAGE_SIZE / 1024 / 1024:.0f}MB)"
-                )
+                    if not content_type or content_type == "application/octet-stream":
+                        content_type = guess_image_type_from_url(current_url)
 
-            logger.info(f"Image fetched successfully: {len(content)} bytes, type: {content_type}")
+                    if content_type not in SUPPORTED_IMAGE_TYPES:
+                        raise ImageError(f"Unsupported image format: {content_type}")
 
-            return content, content_type
+                    content_length = response.headers.get("content-length")
+                    if content_length:
+                        try:
+                            size = int(content_length)
+                        except ValueError:
+                            size = 0
+                        if size > MAX_IMAGE_SIZE:
+                            raise ImageError(
+                                f"Image too large: {size / 1024 / 1024:.1f}MB "
+                                f"(max {MAX_IMAGE_SIZE / 1024 / 1024:.0f}MB)"
+                            )
+
+                    chunks = bytearray()
+                    async for chunk in response.aiter_bytes():
+                        chunks.extend(chunk)
+                        if len(chunks) > MAX_IMAGE_SIZE:
+                            break
+
+                    content = bytes(chunks)
+                    if len(content) > MAX_IMAGE_SIZE:
+                        raise ImageError(
+                            f"Image too large: {len(content) / 1024 / 1024:.1f}MB "
+                            f"(max {MAX_IMAGE_SIZE / 1024 / 1024:.0f}MB)"
+                        )
+
+                    detected_type = guess_image_type_from_bytes(content)
+                    if detected_type != content_type:
+                        raise ImageError("Image content does not match declared format")
+
+                    logger.info(f"Image fetched successfully: {len(content)} bytes, type: {content_type}")
+                    return content, content_type
+
+            raise ImageError("Too many image redirects")
 
     except httpx.HTTPStatusError as e:
         raise ImageError(f"Failed to download image: HTTP {e.response.status_code}")
@@ -133,6 +209,19 @@ def guess_image_type_from_url(url: str) -> str:
     else:
         # Default to JPEG
         return "image/jpeg"
+
+
+def guess_image_type_from_bytes(content: bytes) -> str | None:
+    """Infer image type from file signature bytes."""
+    if content.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if content.startswith((b"GIF87a", b"GIF89a")):
+        return "image/gif"
+    if len(content) >= 12 and content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return "image/webp"
+    return None
 
 
 def image_bytes_to_base64(content: bytes, mime_type: str) -> str:

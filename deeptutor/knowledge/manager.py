@@ -14,7 +14,9 @@ from pathlib import Path
 import shutil
 import sys
 
+from deeptutor.knowledge.progress_tracker import resolve_kb_dir
 from deeptutor.logging import get_logger
+from deeptutor.runtime.mode import is_server
 from deeptutor.services.rag.factory import DEFAULT_PROVIDER
 from deeptutor.services.rag.file_routing import FileTypeRouter
 
@@ -118,7 +120,7 @@ class KnowledgeBaseManager:
     """Manager for knowledge bases"""
 
     def __init__(self, base_dir="./data/knowledge_bases"):
-        self.base_dir = Path(base_dir)
+        self.base_dir = Path(base_dir).resolve()
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
         # Config file to track knowledge bases
@@ -168,7 +170,11 @@ class KnowledgeBaseManager:
                             kb_entry["needs_reindex"] = True
                             config_changed = True
 
-                    kb_dir = self.base_dir / kb_name
+                    try:
+                        kb_dir = resolve_kb_dir(self.base_dir, kb_name)
+                    except ValueError:
+                        config_changed = True
+                        continue
                     legacy_storage = kb_dir / "rag_storage"
                     llamaindex_storage = kb_dir / "llamaindex_storage"
                     if legacy_storage.exists() and legacy_storage.is_dir() and not (
@@ -531,7 +537,7 @@ class KnowledgeBaseManager:
             raise ValueError("No knowledge base name provided and no default set")
 
         # Get knowledge base path
-        kb_dir = self.base_dir / kb_name
+        kb_dir = resolve_kb_dir(self.base_dir, kb_name)
 
         # Get config from kb_config.json (authoritative source)
         kb_config = self.config.get("knowledge_bases", {}).get(kb_name, {})
@@ -750,6 +756,9 @@ class KnowledgeBaseManager:
         Raises:
             ValueError: If KB not found or folder doesn't exist
         """
+        if is_server():
+            raise ValueError("Folder linking is disabled in hosted server mode")
+
         if kb_name not in self.list_knowledge_bases():
             raise ValueError(f"Knowledge base not found: {kb_name}")
 
@@ -773,7 +782,7 @@ class KnowledgeBaseManager:
         ).hexdigest()[:8]
 
         # Load existing linked folders from metadata
-        kb_dir = self.base_dir / kb_name
+        kb_dir = resolve_kb_dir(self.base_dir, kb_name)
         metadata_file = kb_dir / "metadata.json"
         metadata: dict = {}
 
@@ -821,10 +830,13 @@ class KnowledgeBaseManager:
         Returns:
             List of linked folder info dicts
         """
+        if is_server():
+            return []
+
         if kb_name not in self.list_knowledge_bases():
             raise ValueError(f"Knowledge base not found: {kb_name}")
 
-        kb_dir = self.base_dir / kb_name
+        kb_dir = resolve_kb_dir(self.base_dir, kb_name)
         metadata_file = kb_dir / "metadata.json"
 
         if not metadata_file.exists():
@@ -848,10 +860,13 @@ class KnowledgeBaseManager:
         Returns:
             True if unlinked successfully, False if not found
         """
+        if is_server():
+            return False
+
         if kb_name not in self.list_knowledge_bases():
             raise ValueError(f"Knowledge base not found: {kb_name}")
 
-        kb_dir = self.base_dir / kb_name
+        kb_dir = resolve_kb_dir(self.base_dir, kb_name)
         metadata_file = kb_dir / "metadata.json"
 
         if not metadata_file.exists():
@@ -887,6 +902,9 @@ class KnowledgeBaseManager:
         Returns:
             List of file paths (as strings)
         """
+        if is_server():
+            return []
+
         folder = Path(folder_path).expanduser().resolve()
 
         if not folder.exists() or not folder.is_dir():
@@ -915,6 +933,9 @@ class KnowledgeBaseManager:
         Returns:
             Dict with 'new_files', 'modified_files', and 'has_changes' keys
         """
+        if is_server():
+            return {"new_files": [], "modified_files": [], "deleted_files": [], "new_count": 0, "modified_count": 0, "deleted_count": 0}
+
         if kb_name not in self.list_knowledge_bases():
             raise ValueError(f"Knowledge base not found: {kb_name}")
 
@@ -979,10 +1000,13 @@ class KnowledgeBaseManager:
             folder_id: Folder ID
             synced_files: List of file paths that were successfully synced
         """
+        if is_server():
+            return
+
         if kb_name not in self.list_knowledge_bases():
             raise ValueError(f"Knowledge base not found: {kb_name}")
 
-        kb_dir = self.base_dir / kb_name
+        kb_dir = resolve_kb_dir(self.base_dir, kb_name)
         metadata_file = kb_dir / "metadata.json"
 
         if not metadata_file.exists():

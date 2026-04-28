@@ -29,14 +29,14 @@ async function getDatabaseCheck(): Promise<LaunchHealthCheck> {
         configured: true,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       name: "database",
       status: "fail",
       summary: "Postgres is configured but not reachable.",
       details: {
         configured: true,
-        error: error instanceof Error ? error.message : "Unknown database error",
+        error: "Database query failed.",
       },
     };
   }
@@ -118,13 +118,13 @@ async function getWebhookEventCheck(): Promise<LaunchHealthCheck> {
         failed_last_24h: failedCount,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       name: "stripe_webhooks",
       status: "warn",
       summary: "Stripe webhook health could not be queried.",
       details: {
-        error: error instanceof Error ? error.message : "Unknown webhook health error",
+        error: "Webhook health query failed.",
       },
     };
   }

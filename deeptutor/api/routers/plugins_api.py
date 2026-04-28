@@ -230,8 +230,9 @@ async def _execute_stream(tool_name: str, params: dict[str, Any]) -> AsyncGenera
                 "sources": result.sources,
                 "metadata": result.metadata,
             }
-        except Exception as exc:
-            error_holder["detail"] = str(exc)
+        except Exception:
+            logger.exception("Tool execution stream failed")
+            error_holder["detail"] = "Tool execution failed"
         finally:
             done.set()
 
@@ -343,8 +344,9 @@ async def _execute_capability_stream(
                     await log_queue.put(
                         "__STREAM_EVENT__" + json.dumps(event.to_dict(), default=str)
                     )
-        except Exception as exc:
-            error_holder["detail"] = str(exc)
+        except Exception:
+            logger.exception("Capability execution stream failed")
+            error_holder["detail"] = "Capability execution failed"
         finally:
             done.set()
 

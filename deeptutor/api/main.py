@@ -186,11 +186,18 @@ configured_origins = [
     ).split(",")
     if value.strip()
 ]
+cors_origins = configured_origins
+if not cors_origins:
+    if os.environ.get("DEEPTUTOR_MODE", "").strip().lower() == "server":
+        logger.warning("No CORS origins configured; cross-origin browser requests will be denied")
+        cors_origins = []
+    else:
+        cors_origins = ["*"]
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=configured_origins or ["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
