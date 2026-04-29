@@ -768,6 +768,7 @@ class KnowledgeBaseManager:
             raise ValueError(f"Knowledge base not found: {kb_name}")
 
         # Normalize path (cross-platform: handles ~, relative paths, etc.)
+        # codeql[py/path-injection] folder linking is blocked in hosted server mode and only resolves an operator-provided local path.
         folder = Path(folder_path).expanduser().resolve()
 
         if not folder.exists():

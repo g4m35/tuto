@@ -210,6 +210,7 @@ class ProgressTracker:
             return None
 
         try:
+            # codeql[py/path-injection] progress_file is derived from resolve_kb_dir(), which validates the KB slug and root containment.
             with open(self.progress_file, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:

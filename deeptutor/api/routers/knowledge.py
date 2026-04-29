@@ -807,6 +807,7 @@ async def websocket_progress(websocket: WebSocket, kb_name: str):
 
         kb_dir = resolve_kb_dir(_kb_base_dir, kb_name)
         llamaindex_storage_dir = kb_dir / "llamaindex_storage"
+        # codeql[py/path-injection] kb_dir is resolved by resolve_kb_dir(), which validates the KB slug and root containment.
         kb_is_ready = llamaindex_storage_dir.exists() and llamaindex_storage_dir.is_dir()
 
         # Fast path: no active task — send current state and close immediately
