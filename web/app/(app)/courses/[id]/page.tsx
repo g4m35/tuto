@@ -1,9 +1,8 @@
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
-import { ArrowLeft, ArrowRight, Clock3, Flame, Layers3, LockKeyhole } from "lucide-react"
+import { ArrowLeft, ArrowRight, LockKeyhole } from "lucide-react"
 import { buttonVariants } from "@/components/ui/Button"
 import { Progress } from "@/components/ui/progress"
-import { ProgressRing } from "@/components/ui/ProgressRing"
 import { findLesson, toCourseDetailData } from "@/lib/course-data"
 import { getCourseForUser } from "@/lib/course-store"
 import { cn } from "@/lib/utils"
@@ -39,10 +38,11 @@ export default async function CourseDetailPage({
 
     const course = toCourseDetailData(courseRecord)
     const allLessons = course.learningPath.flatMap((level) => level.lessons)
-    const currentLesson =
+    const nextLesson =
       findLesson(courseRecord, courseRecord.currentLessonId || "") ??
       allLessons.find((lesson) => lesson.state === "current") ??
-      allLessons[0]
+      allLessons.find((lesson) => lesson.state !== "complete") ??
+      null
 
     const flattenedLessons = course.learningPath.flatMap((level, levelIndex) =>
       level.lessons.map((lesson) => ({
@@ -53,7 +53,7 @@ export default async function CourseDetailPage({
     )
 
     return (
-      <div className="flex flex-col gap-10">
+      <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-8">
         <Link
           href="/courses"
           className="inline-flex items-center gap-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
@@ -62,8 +62,8 @@ export default async function CourseDetailPage({
           Back to courses
         </Link>
 
-        <section className="grid gap-10 xl:grid-cols-[minmax(0,1.35fr)_360px] xl:items-start">
-          <div className="animate-rise-in space-y-6">
+        <section className="animate-rise-in space-y-7">
+          <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
               <span>{course.subject}</span>
               <span className="size-1 rounded-full bg-[var(--text-faint)]" />
@@ -85,101 +85,30 @@ export default async function CourseDetailPage({
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              {currentLesson ? (
+            <div className="flex flex-wrap items-center gap-3">
+              {nextLesson ? (
                 <Link
-                  href={`/courses/${course.id}/lesson/${currentLesson.id}`}
+                  href={`/courses/${course.id}/lesson/${nextLesson.id}`}
                   className={cn(buttonVariants({ size: "lg" }))}
                 >
                   Continue
                   <ArrowRight data-icon="inline-end" />
                 </Link>
-              ) : null}
-              <Link
-                href={`/courses/${course.id}`}
-                className={cn(buttonVariants({ variant: "ghost", size: "lg" }))}
-              >
-                Practice weak spot
-              </Link>
+              ) : (
+                <span className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}>
+                  Course complete
+                </span>
+              )}
             </div>
           </div>
 
-          <aside className="space-y-4">
-            <div className="editorial-card animate-rise-in-delay-1 p-6">
-              <div className="space-y-5">
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <p className="eyebrow">Progress</p>
-                    <p className="mt-3 text-sm leading-7 text-[var(--text-dim)]">
-                      Breakdown of how far the path has moved.
-                    </p>
-                  </div>
-                  <ProgressRing value={course.progress} size={88} strokeWidth={4}>
-                    <div className="space-y-1">
-                      <p className="text-[1.4rem] font-medium leading-none tracking-normal text-[var(--text)]">
-                        {course.progress}%
-                      </p>
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                        done
-                      </p>
-                    </div>
-                  </ProgressRing>
-                </div>
-
-                <Progress value={course.progress} className="gap-2" />
-
-                <div className="space-y-3 text-sm text-[var(--text-dim)]">
-                  <div className="flex items-center justify-between">
-                    <span>Lessons completed</span>
-                    <span className="text-[var(--text)]">{course.lessonsComplete}/{course.lessonCount}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Hours invested</span>
-                    <span className="text-[var(--text)]">{course.hoursInvested}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Current streak</span>
-                    <span className="text-[var(--text)]">{course.streak} days</span>
-                  </div>
-                </div>
-              </div>
+          <div className="max-w-[720px] space-y-3">
+            <div className="flex items-center justify-between text-sm text-[var(--text-dim)]">
+              <span>{course.lessonsComplete}/{course.lessonCount} lessons complete</span>
+              <span className="text-[var(--text)]">{course.progress}%</span>
             </div>
-
-            <div className="editorial-card animate-rise-in-delay-2 p-5">
-              <p className="eyebrow">Session rhythm</p>
-              <div className="mt-4 space-y-3 text-sm text-[var(--text-dim)]">
-                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
-                  <Clock3 className="size-4 text-[var(--text)]" />
-                  {course.duration}
-                </div>
-                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
-                  <Layers3 className="size-4 text-[var(--text)]" />
-                  {course.intensity}
-                </div>
-                <div className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
-                  <Flame className="size-4 text-[var(--text)]" />
-                  Focused review on {course.weakness}
-                </div>
-              </div>
-            </div>
-
-            <div className="editorial-card animate-rise-in-delay-3 p-5">
-              <p className="eyebrow">Source material</p>
-              <div className="mt-4 space-y-3">
-                {course.materials.map((item) => (
-                  <div key={item.label + item.detail} className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-[var(--text)]">{item.label}</p>
-                      <span className="text-xs uppercase tracking-[0.12em] text-[var(--text-faint)]">
-                        {item.type}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{item.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </aside>
+            <Progress value={course.progress} className="gap-2" />
+          </div>
         </section>
 
         <section className="space-y-5">

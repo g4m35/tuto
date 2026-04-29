@@ -281,6 +281,7 @@ function buildStubExercise(lessonId: string, context: GenerateExerciseContext) {
       C: "It shows how the concept behaves, why it matters, and where it breaks.",
       D: "It replaces the rest of the course and makes later lessons unnecessary.",
     },
+    correctAnswer: "C",
     explanation:
       "The strongest answer is the one that connects mechanism, purpose, and boundary conditions, not just a slogan.",
     backendMode: "stub",
@@ -556,6 +557,12 @@ export async function generateExercise(
       lessonTitle: userHistory.lessonTitle,
       question: qaPair.question,
       options,
+      correctAnswer:
+        typeof qaPair.correct_answer === "string"
+          ? qaPair.correct_answer
+          : typeof qaPair.answer === "string"
+            ? qaPair.answer
+            : null,
       explanation:
         typeof qaPair.explanation === "string" ? qaPair.explanation : "DeepTutor returned no explanation.",
       backendMode: "live",

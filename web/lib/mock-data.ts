@@ -61,6 +61,8 @@ export interface ExerciseData {
   xp: number
   options: ExerciseOption[]
   hint: string
+  explanation?: string
+  correctOptionId?: string
 }
 
 export const courseCatalog: CourseCardData[] = [
@@ -312,6 +314,9 @@ export const exerciseById: Record<string, ExerciseData> = {
     step: 3,
     stepCount: 6,
     xp: 80,
+    correctOptionId: "a",
+    explanation:
+      "The x-axis keeps its direction under the transformation, so any nonzero vector on that axis is an eigenvector.",
     hint:
       "Look for a direction that keeps pointing the same way after the transformation.",
     options: [

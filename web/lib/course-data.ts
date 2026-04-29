@@ -195,6 +195,14 @@ export function findLesson(course: StoredCourse, lessonId: string) {
   return buildLessons(course).find((lesson) => lesson.id === lessonId) ?? null;
 }
 
+export function getLessonIndexById(course: StoredCourse, lessonId: string) {
+  return buildLessons(course).findIndex((lesson) => lesson.id === lessonId);
+}
+
+export function getLessonIdByIndex(course: StoredCourse, index: number) {
+  return buildLessons(course)[index]?.id ?? null;
+}
+
 export function toDashboardViewData(courses: StoredCourse[]): DashboardViewData {
   const mappedCourses = courses.map(toCourseCardData);
   const continueCourse = mappedCourses[0] ?? null;
@@ -220,6 +228,7 @@ export function buildExerciseData(input: {
   question: string;
   options: Record<string, string>;
   explanation: string;
+  correctAnswer?: string | null;
   backendMode: "live" | "stub";
 }): ExerciseData {
   const options: ExerciseOption[] = Object.entries(input.options).map(([key, value]) => ({
@@ -227,6 +236,18 @@ export function buildExerciseData(input: {
     label: key,
     body: value,
   }));
+  const normalizedAnswer = input.correctAnswer?.trim().toLowerCase() ?? "";
+  const correctOption = normalizedAnswer
+    ? options.find(
+        (option) =>
+          option.id.toLowerCase() === normalizedAnswer ||
+          option.label.toLowerCase() === normalizedAnswer ||
+          option.body.trim().toLowerCase() === normalizedAnswer ||
+          `option ${option.id.toLowerCase()}` === normalizedAnswer ||
+          normalizedAnswer.startsWith(`${option.id.toLowerCase()}.`) ||
+          normalizedAnswer.startsWith(`${option.id.toLowerCase()})`),
+      )
+    : null;
 
   return {
     courseId: input.courseId,
@@ -237,6 +258,8 @@ export function buildExerciseData(input: {
     stepCount: 1,
     xp: input.backendMode === "stub" ? 30 : 50,
     options,
+    correctOptionId: correctOption?.id,
+    explanation: input.explanation,
     hint: input.explanation || "Review the lesson summary, then eliminate the most obviously wrong option first.",
   };
 }

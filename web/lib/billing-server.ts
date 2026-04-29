@@ -46,7 +46,7 @@ export function getPriceIdForPlan(plan: CheckoutPlan) {
 }
 
 export function isLaunchReadyCheckoutPlan(plan: CheckoutPlan) {
-  return plan === 'pro'
+  return plan === 'pro' || plan === 'team'
 }
 
 export function getBaseUrl(request: Request) {
@@ -292,13 +292,6 @@ export async function createCheckoutSessionResult(input: {
     typeof input.payload === 'object' && input.payload && 'returnPath' in input.payload
       ? deps.toSafeRelativePath(input.payload.returnPath as FormDataEntryValue | string | null | undefined)
       : '/pricing'
-
-  if (!deps.isLaunchReadyCheckoutPlan(plan)) {
-    return {
-      status: 409,
-      body: { error: 'Team billing is not publicly available yet. Start with Pro for now.' },
-    }
-  }
 
   const billingSummary = await deps.getBillingSummary(input.userId)
   if (billingSummary.tier !== 'free') {

@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { ArrowRight, ChevronLeft, Check, Lightbulb, Sparkles } from "lucide-react"
+import { ArrowRight, ChevronLeft, Check, Lightbulb, LoaderCircle, Sparkles, X } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import type { ExerciseData } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -13,54 +14,14 @@ interface LessonExerciseClientProps {
   initialExercise: ExerciseData | null
 }
 
-function LessonVisualPanel() {
-  return (
-    <div className="editorial-card relative overflow-hidden px-6 py-6">
-      <div className="absolute inset-x-6 top-4 flex items-center justify-between text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
-        <span>Intuition layer</span>
-        <span>same vector · new frame</span>
-      </div>
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px]">
-        <div className="flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-6">
-          <svg viewBox="-120 -120 240 240" className="h-[18rem] w-[18rem]" aria-hidden="true">
-            <defs>
-              <pattern
-                id="lesson-grid"
-                width="22"
-                height="22"
-                patternUnits="userSpaceOnUse"
-                patternTransform="rotate(28)"
-              >
-                <path d="M 22 0 L 0 0 0 22" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="0.8" />
-              </pattern>
-            </defs>
-            <rect x="-120" y="-120" width="240" height="240" fill="url(#lesson-grid)" />
-            <line x1="-90" y1="0" x2="90" y2="0" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
-            <line x1="0" y1="-90" x2="0" y2="90" stroke="rgba(255,255,255,0.16)" strokeWidth="1" />
-            <line x1="0" y1="0" x2="70" y2="-42" stroke="currentColor" strokeWidth="3" className="text-[var(--accent)]" strokeLinecap="round" />
-            <circle cx="70" cy="-42" r="4" fill="currentColor" className="text-[var(--accent)]" />
-            <line x1="0" y1="0" x2="54" y2="34" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" />
-            <line x1="0" y1="0" x2="-34" y2="72" stroke="rgba(255,255,255,0.28)" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </div>
-
-        <div className="space-y-4">
-          <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
-            <p className="eyebrow">What stays fixed</p>
-            <p className="mt-3 text-sm leading-7 text-[var(--text-dim)]">
-              The object itself does not move. Only the coordinates shift when the frame changes.
-            </p>
-          </div>
-          <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4">
-            <p className="eyebrow">Watch for</p>
-            <p className="mt-3 text-sm leading-7 text-[var(--text-dim)]">
-              Eliminate answers that confuse a property of the basis with a property of the vector.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+interface CheckResult {
+  isCorrect: boolean
+  correctOptionId: string
+  correctOptionBody: string
+  explanation: string
+  canContinue: boolean
+  nextLessonId: string | null
+  courseComplete: boolean
 }
 
 export function LessonExerciseClient({
@@ -68,14 +29,15 @@ export function LessonExerciseClient({
   lessonId,
   initialExercise,
 }: LessonExerciseClientProps) {
+  const router = useRouter()
   const [exercise, setExercise] = useState<ExerciseData | null>(initialExercise)
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [checked, setChecked] = useState(false)
+  const [checking, setChecking] = useState(false)
+  const [checkResult, setCheckResult] = useState<CheckResult | null>(null)
   const [loading, setLoading] = useState(!initialExercise)
   const [error, setError] = useState<string | null>(null)
-  const selectedBody =
-    exercise?.options.find((option) => option.id === selectedOption)?.body ?? null
 
   useEffect(() => {
     if (exercise) return
@@ -136,17 +98,18 @@ export function LessonExerciseClient({
         <section className="editorial-card animate-rise-in px-7 py-8 sm:px-8">
           <p className="eyebrow">Composing</p>
           <h1 className="mt-4 text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)]">
-            Generating the next adaptive exercise.
+            Preparing your practice step.
           </h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
-            Tuto is taking the current lesson, extracting the unstable idea, and turning it into a fresh practice step.
-          </p>
+          <div className="mt-6 flex items-center gap-3 text-sm text-[var(--text-dim)]">
+            <LoaderCircle className="size-5 animate-spin text-[var(--text)]" />
+            Building one focused question from this lesson.
+          </div>
         </section>
       </div>
     )
   }
 
-  if (error || !exercise) {
+  if (!exercise) {
     return (
       <div className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-8">
         <Link
@@ -173,8 +136,52 @@ export function LessonExerciseClient({
     )
   }
 
+  async function checkAnswer() {
+    if (!selectedOption) return
+
+    setChecking(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/courses/${courseId}/exercises/check`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lessonId,
+          selectedOptionId: selectedOption,
+        }),
+      })
+      const data = (await response.json().catch(() => null)) as CheckResult & { error?: string } | null
+
+      if (!response.ok || !data) {
+        throw new Error(data?.error || "Unable to check this answer.")
+      }
+
+      setChecked(true)
+      setCheckResult(data)
+      router.refresh()
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "Unable to check this answer.")
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  function continueAfterCheck() {
+    if (!checkResult?.canContinue) return
+
+    if (checkResult.nextLessonId) {
+      router.push(`/courses/${courseId}/lesson/${checkResult.nextLessonId}`)
+      return
+    }
+
+    router.push(`/courses/${courseId}`)
+  }
+
   return (
-    <div className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-8">
       <div className="flex items-center justify-between gap-4">
         <Link
           href={`/courses/${exercise.courseId}`}
@@ -189,7 +196,7 @@ export function LessonExerciseClient({
         </div>
       </div>
 
-      <section className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="space-y-8">
         <div className="space-y-8">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -217,11 +224,11 @@ export function LessonExerciseClient({
               </div>
             </div>
 
-          <LessonVisualPanel />
-
           <div className="space-y-3">
             {exercise.options.map((option, index) => {
               const selected = selectedOption === option.id
+              const correct = checked && checkResult?.correctOptionId === option.id
+              const incorrectSelection = checked && selected && checkResult?.isCorrect === false
 
               return (
                 <button
@@ -230,12 +237,14 @@ export function LessonExerciseClient({
                   onClick={() => {
                     setSelectedOption(option.id)
                     setChecked(false)
+                    setCheckResult(null)
                   }}
                   className={cn(
                     "editorial-card interactive-card t-lift animate-rise-in w-full text-left px-5 py-5",
-                    selected
-                      ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
-                      : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
+                    selected && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]",
+                    correct && "border-emerald-300/70 bg-emerald-300/10",
+                    incorrectSelection && "border-red-300/70 bg-red-300/10",
+                    !selected && !correct && "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
                   )}
                   style={{ animationDelay: `${index * 70}ms` }}
                 >
@@ -245,9 +254,6 @@ export function LessonExerciseClient({
                     </span>
                     <div className="space-y-2">
                       <p className="text-base leading-7 text-[var(--text)]">{option.body}</p>
-                      {checked && selected ? (
-                        <p className="text-sm text-[var(--text-dim)]">Locked in for checking.</p>
-                      ) : null}
                     </div>
                   </div>
                 </button>
@@ -255,14 +261,25 @@ export function LessonExerciseClient({
             })}
           </div>
 
-          {checked && selectedBody ? (
+          {checked && checkResult ? (
             <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
               <div className="flex items-start gap-3">
-                <Check className="mt-1 size-4 text-[var(--accent)]" />
+                {checkResult.isCorrect ? (
+                  <Check className="mt-1 size-4 text-emerald-200" />
+                ) : (
+                  <X className="mt-1 size-4 text-red-200" />
+                )}
                 <div>
-                  <p className="text-sm font-medium text-[var(--text)]">Answer recorded</p>
+                  <p className="text-sm font-medium text-[var(--text)]">
+                    {checkResult.isCorrect ? "Correct" : "Not quite"}
+                  </p>
                   <p className="mt-1">
-                    You picked <span className="text-[var(--text)]">{selectedBody}</span>. Use the hint if you want one last nudge before moving on.
+                    {checkResult.isCorrect
+                      ? "Nice. This lesson is complete."
+                      : <>The answer is <span className="text-[var(--text)]">{checkResult.correctOptionBody}</span>.</>}
+                  </p>
+                  <p className="mt-3">
+                    {checkResult.explanation}
                   </p>
                 </div>
               </div>
@@ -275,55 +292,33 @@ export function LessonExerciseClient({
             </div>
           ) : null}
 
+          {error ? (
+            <div className="rounded-[var(--radius-sm)] border border-red-300/60 bg-red-300/10 px-5 py-4 text-sm leading-7 text-red-100">
+              {error}
+            </div>
+          ) : null}
+
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
             <Button variant="ghost" onClick={() => setShowHint((value) => !value)}>
               <Lightbulb data-icon="inline-start" />
               {showHint ? "Hide hint" : "Show hint"}
             </Button>
-            <Button onClick={() => setChecked(true)} disabled={!selectedOption}>
-              Check answer
-              <ArrowRight data-icon="inline-end" />
+            <Button
+              onClick={checkResult?.canContinue ? continueAfterCheck : checkAnswer}
+              disabled={!selectedOption || checking}
+            >
+              {checking ? <LoaderCircle className="size-4 animate-spin" /> : null}
+              {checkResult?.canContinue
+                ? checkResult.courseComplete
+                  ? "Finish course"
+                  : "Next lesson"
+                : checking
+                  ? "Checking"
+                  : "Check answer"}
+              {!checking ? <ArrowRight data-icon="inline-end" /> : null}
             </Button>
           </div>
         </div>
-
-        <aside className="space-y-4">
-          <div className="editorial-card animate-rise-in-delay-1 p-5">
-            <p className="eyebrow">Session</p>
-            <div className="mt-4 space-y-3 text-sm text-[var(--text-dim)]">
-              <div className="flex items-center justify-between">
-                <span>Step</span>
-                <span className="text-[var(--text)]">
-                  {exercise.step}/{exercise.stepCount}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Lesson id</span>
-                <span className="text-[var(--text)]">{exercise.lessonId}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Selection</span>
-                <span className="text-[var(--text)]">
-                  {selectedOption ? selectedOption.toUpperCase() : "Not answered"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="editorial-card animate-rise-in-delay-2 p-5">
-            <p className="eyebrow">Why this step</p>
-            <p className="mt-4 text-sm leading-7 text-[var(--text-dim)]">
-              The exercise is keeping the practice loop narrow, so you strengthen the current idea before the path opens wider.
-            </p>
-          </div>
-
-          <div className="editorial-card animate-rise-in-delay-3 p-5">
-            <p className="eyebrow">Next unlock</p>
-            <p className="mt-4 text-sm leading-7 text-[var(--text-dim)]">
-              Once this concept is stable, Tuto opens the next step instead of widening the scope too early.
-            </p>
-          </div>
-        </aside>
       </section>
     </div>
   )

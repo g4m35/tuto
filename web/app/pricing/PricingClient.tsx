@@ -53,14 +53,14 @@ const pricingCards: PricingCard[] = [
     plan: "team",
     name: "Team",
     price: "$65/mo",
-    summary: "For operator-led cohorts and teams. We are keeping this gated until shared billing is fully ready.",
+    summary: "For teams that need the larger shared-use tier and direct billing through Stripe.",
     features: [
-      "Reserved launch pricing while Team is in rollout",
-      "Priority migration once shared billing ships",
-      "Direct setup support for early operators",
+      "Team tier limits after Stripe checkout",
+      "Direct billing management in Stripe",
+      "Priority support for shared learning workflows",
     ],
-    checkoutEnabled: false,
-    ctaLabel: "Team coming soon",
+    checkoutEnabled: true,
+    ctaLabel: "Choose Team",
   },
 ];
 

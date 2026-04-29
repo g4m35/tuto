@@ -3,7 +3,7 @@
 import { type ComponentType, type KeyboardEvent as ReactKeyboardEvent, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
-import { BookOpen, Braces, CornerDownLeft, Grid2x2, Plus, Search } from "lucide-react"
+import { BookOpen, CornerDownLeft, Grid2x2, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type CommandItem = {
@@ -29,21 +29,6 @@ const commandItems: CommandItem[] = [
     label: "Go to courses",
     hint: "Route",
     icon: BookOpen,
-  },
-  {
-    id: "create",
-    href: "/create",
-    label: "Create new course",
-    hint: "Route",
-    shortcut: "N",
-    icon: Plus,
-  },
-  {
-    id: "review",
-    href: "/review",
-    label: "Go to review",
-    hint: "Route",
-    icon: Braces,
   },
 ]
 

@@ -16,7 +16,7 @@ test('billing helpers validate expected plan and tier values', () => {
   assert.equal(isCheckoutPlan('team'), true)
   assert.equal(isCheckoutPlan('free'), false)
   assert.equal(isLaunchReadyCheckoutPlan('pro'), true)
-  assert.equal(isLaunchReadyCheckoutPlan('team'), false)
+  assert.equal(isLaunchReadyCheckoutPlan('team'), true)
 
   assert.equal(isBillingTier('free'), true)
   assert.equal(isBillingTier('pro'), true)
@@ -250,17 +250,19 @@ test('createCheckoutSessionResult sanitizes unsafe return paths', async () => {
   assert.equal(createCall?.['cancel_url'], 'http://localhost:3000/pay?billing=canceled')
 })
 
-test('createCheckoutSessionResult blocks team checkout until team billing is ready', async () => {
+test('createCheckoutSessionResult creates a Stripe checkout session for team users', async () => {
   const request = new Request('http://localhost:3000/api/billing/checkout', {
     method: 'POST',
     headers: { origin: 'http://localhost:3000' },
   })
 
+  let createCall: Record<string, unknown> | null = null
+
   const result = await createCheckoutSessionResult({
     request,
     userId: 'user_free',
     sessionClaims: { email: 'free@example.com' },
-    payload: { plan: 'team' },
+    payload: { plan: 'team', returnPath: '/pricing' },
     deps: {
       isDatabaseConfigured: () => true,
       isStripeCheckoutConfigured: () => true,
@@ -271,11 +273,35 @@ test('createCheckoutSessionResult blocks team checkout until team billing is rea
         subscriptionStatus: 'inactive',
         currentPeriodEnd: null,
       }),
+      getPriceIdForPlan: () => 'price_test_team',
+      createOrReuseCustomer: async () => 'cus_team',
+      getStripeServerClient: () =>
+        ({
+          checkout: {
+            sessions: {
+              create: async (input: Record<string, unknown>) => {
+                createCall = input
+                return { url: 'https://checkout.stripe.test/team_123' }
+              },
+            },
+          },
+        }) as never,
     },
   })
 
-  assert.equal(result.status, 409)
-  assert.equal(result.body.error, 'Team billing is not publicly available yet. Start with Pro for now.')
+  assert.equal(result.status, 200)
+  assert.equal(result.body.url, 'https://checkout.stripe.test/team_123')
+  assert.equal(createCall?.['customer'], 'cus_team')
+  assert.deepEqual(createCall?.['metadata'], {
+    clerkId: 'user_free',
+    plan: 'team',
+  })
+  assert.deepEqual(createCall?.['line_items'], [
+    {
+      price: 'price_test_team',
+      quantity: 1,
+    },
+  ])
 })
 
 test('createCheckoutSessionResult fails closed when Stripe checkout is not configured', async () => {
