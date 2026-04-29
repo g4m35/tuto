@@ -15,6 +15,8 @@ This repo now has the in-app plumbing for beta capture and marketing events. Ext
 - Optional PostHog forwarding from the server.
 - Optional beta-signup webhook for Zapier, n8n, Make, HubSpot, Customer.io, or a custom worker.
 - Launch-health check for beta signup capture and PostHog forwarding.
+- Operator dashboard at `/marketing` for configured admin users.
+- CSV export at `/api/marketing/beta-signups/export` for configured admin users.
 
 ## Required Production Setup
 
@@ -36,6 +38,12 @@ This repo now has the in-app plumbing for beta capture and marketing events. Ext
 3. Keep `DATABASE_URL` or `POSTGRES_URL` configured. Postgres is the primary beta signup store.
 
 4. Confirm `/api/health` reports `marketing` as pass.
+
+5. Set at least one operator admin so `/marketing` can be opened in production:
+
+   ```bash
+   TUTO_ADMIN_EMAILS=you@example.com
+   ```
 
 ## PostHog Setup
 
