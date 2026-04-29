@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, useMotionValue, useTransform, type MotionValue } from "framer-motion";
 import {
   ArrowRight,
   BookOpenCheck,
@@ -188,6 +189,188 @@ function ProductPreview() {
         </div>
       </div>
     </div>
+  );
+}
+
+function GeneratedOutlineRow({
+  item,
+  index,
+  scrollYProgress,
+}: {
+  item: string;
+  index: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const start = 0.25 + index * 0.06;
+  const opacity = useTransform(scrollYProgress, [start, start + 0.12], [0, 1]);
+  const y = useTransform(scrollYProgress, [start, start + 0.12], [18, 0]);
+
+  return (
+    <motion.div className="flex items-center gap-3" style={{ opacity, y }}>
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[11px] text-[var(--text-dim)] sm:size-8 sm:text-[12px]">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      <span className="text-[13px] text-[var(--text)] sm:text-[15px]">{item}</span>
+    </motion.div>
+  );
+}
+
+function ScrollBuildPreview() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const scrollYProgress = useMotionValue(0);
+
+  useEffect(() => {
+    let frame = 0;
+
+    function updateProgress() {
+      const section = sectionRef.current;
+      if (!section) return;
+
+      const rect = section.getBoundingClientRect();
+      const sectionTop = rect.top + window.scrollY;
+      const distance = Math.max(1, rect.height - window.innerHeight);
+      const nextProgress = (window.scrollY - sectionTop) / distance;
+      scrollYProgress.set(Math.min(1, Math.max(0, nextProgress)));
+    }
+
+    function queueProgressUpdate() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateProgress);
+    }
+
+    updateProgress();
+    window.addEventListener("scroll", queueProgressUpdate, { passive: true });
+    window.addEventListener("resize", queueProgressUpdate);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", queueProgressUpdate);
+      window.removeEventListener("resize", queueProgressUpdate);
+    };
+  }, [scrollYProgress]);
+
+  const shellOpacity = useTransform(scrollYProgress, [0, 0.12, 0.65], [0.2, 0.72, 1]);
+  const shellScale = useTransform(scrollYProgress, [0, 0.2, 0.65], [0.94, 0.98, 1]);
+  const glowOpacity = useTransform(scrollYProgress, [0, 0.34, 0.58], [0.05, 0.16, 0.32]);
+  const uploadOpacity = useTransform(scrollYProgress, [0.08, 0.18], [0, 1]);
+  const uploadY = useTransform(scrollYProgress, [0.08, 0.2], [30, 0]);
+  const outlineOpacity = useTransform(scrollYProgress, [0.18, 0.3], [0, 1]);
+  const outlineY = useTransform(scrollYProgress, [0.18, 0.32], [30, 0]);
+  const reviewOpacity = useTransform(scrollYProgress, [0.38, 0.5], [0, 1]);
+  const reviewY = useTransform(scrollYProgress, [0.38, 0.52], [28, 0]);
+  const readyOpacity = useTransform(scrollYProgress, [0.48, 0.6], [0, 1]);
+  const progressWidth = useTransform(scrollYProgress, [0.06, 0.62], ["6%", "100%"]);
+  const blankOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
+  const titleOpacity = useTransform(scrollYProgress, [0.08, 0.24], [0, 1]);
+
+  return (
+    <section ref={sectionRef} className="relative min-h-[170vh] border-y border-[var(--border)] bg-[#050505]">
+      <div className="sticky top-16 mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-5 overflow-hidden px-5 py-5 sm:gap-8 sm:px-7 sm:py-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:py-10">
+        <div className="min-w-0 max-w-xl">
+          <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Course creation</p>
+          <h2 className="mt-3 text-[32px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:mt-4 sm:text-[52px]">
+            Watch a course build itself from a blank start.
+          </h2>
+          <p className="mt-4 text-[15px] leading-7 text-[var(--text-dim)] sm:mt-5 sm:text-[17px] sm:leading-8">
+            Tuto turns source material into a structured course plan, practice queue, and next action before the learner starts.
+          </p>
+          <div className="mt-5 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-white/10 sm:mt-9">
+            <motion.div className="h-full rounded-full bg-[var(--text)]" style={{ width: progressWidth }} />
+          </div>
+        </div>
+
+        <motion.div
+          className="relative w-full min-w-0 rounded-[22px] border border-[var(--border)] bg-[#101010] p-2 shadow-[0_46px_120px_-74px_rgba(255,255,255,0.5)] sm:rounded-[28px] sm:p-3"
+          style={{ opacity: shellOpacity, scale: shellScale }}
+        >
+          <motion.div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-12 bottom-0 h-28 rounded-full bg-white/25 blur-3xl"
+            style={{ opacity: glowOpacity }}
+          />
+          <div className="relative overflow-hidden rounded-[17px] border border-[var(--border)] bg-[#050505] p-4 sm:rounded-[22px] sm:p-7">
+            <motion.div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_72%)]"
+              style={{ opacity: blankOpacity }}
+            />
+
+            <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-5 sm:pb-5">
+              <div className="min-w-0">
+                <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Course builder</p>
+                <motion.h3
+                  className="mt-2 text-[21px] font-medium leading-tight tracking-normal text-[var(--text)] sm:mt-3 sm:text-[31px]"
+                  style={{ opacity: titleOpacity }}
+                >
+                  Photosynthesis from trusted notes
+                </motion.h3>
+                <motion.div
+                  aria-hidden="true"
+                  className="mt-3 h-6 w-64 max-w-full rounded-full border border-dashed border-[var(--border-strong)] bg-[var(--bg-elev)] sm:mt-4 sm:h-7 sm:w-72"
+                  style={{ opacity: blankOpacity }}
+                />
+              </div>
+              <motion.span
+                className="w-fit shrink-0 rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-[13px] text-[var(--text-dim)] sm:px-4 sm:py-2 sm:text-[15px]"
+                style={{ opacity: readyOpacity }}
+              >
+                Ready
+              </motion.span>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:mt-5 sm:gap-4 lg:grid-cols-[0.88fr_1.12fr]">
+              <motion.div
+                className="min-h-[150px] rounded-[14px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-elev)] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
+                style={{ opacity: uploadOpacity, y: uploadY }}
+              >
+                <div className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[#080808] sm:size-12">
+                  <Upload className="size-4 text-[var(--text)] sm:size-5" />
+                </div>
+                <p className="mt-7 text-[17px] font-medium leading-6 text-[var(--text)] sm:mt-12 sm:text-[20px] sm:leading-7">biology-notes.pdf</p>
+                <p className="mt-2 max-w-sm text-[13px] leading-6 text-[var(--text-dim)] sm:mt-3 sm:text-[15px] sm:leading-7">
+                  Source material is attached to the course plan.
+                </p>
+              </motion.div>
+
+              <motion.div
+                className="min-h-[194px] rounded-[14px] border border-[var(--border)] bg-[var(--bg-elev)] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
+                style={{ opacity: outlineOpacity, y: outlineY }}
+              >
+                <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Generated outline</p>
+                <div className="mt-4 space-y-3 sm:mt-7 sm:space-y-5">
+                  {["Big idea", "Light reactions", "Practice model", "Review weak spots"].map((item, index) => (
+                    <GeneratedOutlineRow
+                      key={item}
+                      item={item}
+                      index={index}
+                      scrollYProgress={scrollYProgress}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div
+              className="mt-3 rounded-[14px] border border-[var(--border)] bg-[var(--bg-elev)] p-4 sm:mt-4 sm:rounded-[18px] sm:p-5"
+              style={{ opacity: reviewOpacity, y: reviewY }}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Review queue</p>
+                  <p className="mt-2 text-[16px] leading-6 text-[var(--text)] sm:mt-3 sm:text-[20px] sm:leading-7">
+                    Energy transfer and chlorophyll roles
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-2 text-[13px] text-[var(--text-dim)] sm:text-[16px]">
+                  <BookOpenCheck className="size-4 sm:size-5" />
+                  Practice next
+                </span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
   );
 }
 
@@ -397,6 +580,8 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </div>
         <ProductPreview />
       </section>
+
+      <ScrollBuildPreview />
 
       <section className="border-y border-[var(--border)] bg-[#050505]">
         <div className="mx-auto grid w-full max-w-7xl gap-4 px-5 py-14 sm:px-7 lg:grid-cols-4">
