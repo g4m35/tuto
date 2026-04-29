@@ -22,7 +22,7 @@ const fontSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "Tuto",
-  description: "AI tutoring that keeps the subject in focus.",
+  description: "Turn PDFs, notes, and topics into guided courses with practice and review.",
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },

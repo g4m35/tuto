@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { BillingTier } from "@/lib/limits";
+import { trackMarketingEvent } from "@/lib/marketing-client";
 
 type CheckoutPlan = "pro" | "team";
 
@@ -84,9 +85,23 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
   const hasPaidPlan = billingSummary?.tier === "pro" || billingSummary?.tier === "team";
   const billingUnavailable = !billingReady || billingSummary?.billingEnabled === false;
 
+  useEffect(() => {
+    trackMarketingEvent("pricing_page_viewed", {
+      tier: billingSummary?.tier,
+      billing_ready: billingReady,
+      billing_enabled: billingSummary?.billingEnabled,
+      source: searchParams.get("source"),
+      from: searchParams.get("from"),
+    });
+  }, [billingReady, billingSummary?.billingEnabled, billingSummary?.tier, searchParams]);
+
   async function openBillingPortal() {
     setManagingBilling(true);
     setError(null);
+    trackMarketingEvent("billing_portal_started", {
+      tier: billingSummary?.tier,
+      subscription_status: billingSummary?.subscriptionStatus,
+    });
 
     try {
       const response = await fetch("/api/billing/portal", {
@@ -107,17 +122,28 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
           : "Unable to open billing management right now.",
       );
       setManagingBilling(false);
+      trackMarketingEvent("billing_portal_failed", {
+        error:
+          portalError instanceof Error
+            ? portalError.message
+            : "Unable to open billing management right now.",
+      });
     }
   }
 
   async function startCheckout(plan: CheckoutPlan) {
     if (billingUnavailable) {
       setError("Billing is unavailable until the database is configured.");
+      trackMarketingEvent("checkout_blocked", { plan, reason: "billing_unavailable" });
       return;
     }
 
     setLoadingPlan(plan);
     setError(null);
+    trackMarketingEvent("checkout_started", {
+      plan,
+      tier: billingSummary?.tier,
+    });
 
     try {
       const response = await fetch("/api/billing/checkout", {
@@ -132,6 +158,7 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
 
       if (!response.ok) {
         if (response.status === 409 && data?.manage_url) {
+          trackMarketingEvent("checkout_redirected_to_portal", { plan });
           window.location.assign(data.manage_url);
           return;
         }
@@ -150,6 +177,13 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
           : "Unable to start checkout right now.",
       );
       setLoadingPlan(null);
+      trackMarketingEvent("checkout_failed", {
+        plan,
+        error:
+          checkoutError instanceof Error
+            ? checkoutError.message
+            : "Unable to start checkout right now.",
+      });
     }
   }
 

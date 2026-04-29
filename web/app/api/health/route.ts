@@ -7,6 +7,10 @@ import {
   getLaunchHealthStatus,
   type LaunchHealthCheck,
 } from "@/lib/launch-health";
+import {
+  isBetaSignupSinkConfigured,
+  isMarketingEventForwardingConfigured,
+} from "@/lib/marketing";
 
 export const runtime = "nodejs";
 
@@ -71,6 +75,23 @@ function getAppUrlCheck(): LaunchHealthCheck {
     summary: appUrl
       ? "NEXT_PUBLIC_APP_URL is configured."
       : "NEXT_PUBLIC_APP_URL is unset; redirects rely on request headers.",
+  };
+}
+
+function getMarketingCheck(): LaunchHealthCheck {
+  const betaSinkConfigured = isBetaSignupSinkConfigured();
+  const eventForwardingConfigured = isMarketingEventForwardingConfigured();
+
+  return {
+    name: "marketing",
+    status: betaSinkConfigured ? "pass" : "warn",
+    summary: betaSinkConfigured
+      ? "Beta signup capture is configured."
+      : "Beta signups need Postgres or BETA_SIGNUP_WEBHOOK_URL before launch traffic.",
+    details: {
+      beta_signup_sink_configured: betaSinkConfigured,
+      posthog_forwarding_configured: eventForwardingConfigured,
+    },
   };
 }
 
@@ -153,6 +174,7 @@ export async function GET() {
     Promise.resolve(getAppUrlCheck()),
     getDatabaseCheck(),
     Promise.resolve(getBillingCheck()),
+    Promise.resolve(getMarketingCheck()),
     getWebhookEventCheck(),
     getDeepTutorCheck(),
   ]);

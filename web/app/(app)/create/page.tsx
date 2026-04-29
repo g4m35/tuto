@@ -1,9 +1,10 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen, FileText, LoaderCircle, Upload, WandSparkles } from "lucide-react"
 import { Button } from "@/components/ui/Button"
+import { trackMarketingEvent } from "@/lib/marketing-client"
 import { cn } from "@/lib/utils"
 
 type CreateMode = "upload" | "topic"
@@ -87,25 +88,40 @@ export default function CreateCoursePage() {
     [mode, title, topicPrompt]
   )
 
+  useEffect(() => {
+    trackMarketingEvent("course_create_page_viewed")
+  }, [])
+
   async function handleSubmit() {
     setError(null)
 
     if (!title.trim()) {
       setError("Give the course a title first.")
+      trackMarketingEvent("course_create_validation_failed", { reason: "missing_title", mode })
       return
     }
 
     if (mode === "topic" && !topicPrompt.trim()) {
       setError("Add a topic prompt so Tuto knows what to generate.")
+      trackMarketingEvent("course_create_validation_failed", { reason: "missing_topic_prompt", mode })
       return
     }
 
     if (mode === "upload" && !selectedFile) {
       setError("Upload a source document before generating the course.")
+      trackMarketingEvent("course_create_validation_failed", { reason: "missing_upload", mode })
       return
     }
 
     setSubmitting(true)
+    trackMarketingEvent("course_create_started", {
+      mode,
+      difficulty,
+      has_subject: Boolean(subject.trim()),
+      has_topic_prompt: Boolean(topicPrompt.trim()),
+      file_type: selectedFile?.name.split(".").pop()?.toLowerCase() ?? null,
+      file_size: selectedFile?.size ?? null,
+    })
 
     try {
       const formData = new FormData()
@@ -127,6 +143,12 @@ export default function CreateCoursePage() {
       const data = await response.json().catch(() => null)
 
       if (response.status === 429 && data?.upgrade_url) {
+        trackMarketingEvent("course_create_limit_hit", {
+          mode,
+          tier: data?.tier,
+          limit: data?.limit,
+          current: data?.current,
+        })
         const pricingUrl = new URL(data.upgrade_url, window.location.origin)
         pricingUrl.searchParams.set("source", "limit")
         pricingUrl.searchParams.set("from", mode === "upload" ? "doc_upload" : "course_created")
@@ -143,9 +165,18 @@ export default function CreateCoursePage() {
         throw new Error("Course was created but no id came back from the API.")
       }
 
+      trackMarketingEvent("course_create_completed", {
+        mode,
+        course_id: courseId,
+        backend_mode: data?.course?.backendMode,
+      })
       router.push(`/courses/${courseId}`)
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Course generation failed.")
+      trackMarketingEvent("course_create_failed", {
+        mode,
+        error: nextError instanceof Error ? nextError.message : "Course generation failed.",
+      })
     } finally {
       setSubmitting(false)
     }
@@ -180,6 +211,7 @@ export default function CreateCoursePage() {
                 onClick={() => {
                   setMode(item.id)
                   setError(null)
+                  trackMarketingEvent("course_create_mode_selected", { mode: item.id })
                 }}
                 className={cn(
                   "editorial-card interactive-card t-lift text-left px-5 py-5 disabled:pointer-events-none disabled:opacity-60",
@@ -221,6 +253,12 @@ export default function CreateCoursePage() {
                     const file = event.target.files?.[0] ?? null
                     setSelectedFile(file)
                     setStatus(file ? `${file.name} is ready to use.` : "Drop a PDF, notes bundle, or reading packet here.")
+                    if (file) {
+                      trackMarketingEvent("course_create_file_selected", {
+                        file_type: file.name.split(".").pop()?.toLowerCase() ?? null,
+                        file_size: file.size,
+                      })
+                    }
                   }}
                 />
                 <button

@@ -8,6 +8,11 @@ const clerkProxyUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
 
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/pdf-to-course(.*)",
+  "/ai-study-course(.*)",
+  "/training-docs-to-course(.*)",
+  "/robots.txt",
+  "/sitemap.xml",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/pricing(.*)",
@@ -18,6 +23,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/version(.*)",
   "/api/health(.*)",
   "/api/health/deeptutor(.*)",
+  "/api/beta-signups(.*)",
+  "/api/marketing/events(.*)",
   "/api/webhooks(.*)",
 ]);
 
