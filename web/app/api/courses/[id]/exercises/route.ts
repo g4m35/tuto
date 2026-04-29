@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { findLesson } from "@/lib/course-data";
+import { evaluateCourseLessonQuality } from "@/lib/course-quality";
 import { getCourseForUser, saveExercise, updateCourseProgress } from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
 import { DeepTutorClientError, generateExercise } from "@/lib/deeptutor";
@@ -54,6 +55,15 @@ export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
         knowledgeBaseName: course.knowledgeBaseName,
         recentPerformance: Array.isArray(body.userHistory) ? body.userHistory : [],
       });
+      const quality = evaluateCourseLessonQuality(generated.exercise);
+
+      if (!quality.ok) {
+        throw new DeepTutorClientError(
+          "Generated lesson did not meet the interactive course quality bar.",
+          422,
+          quality,
+        );
+      }
 
       const storedExercise = await saveExercise({
         courseId: course.id,

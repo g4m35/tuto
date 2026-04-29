@@ -118,3 +118,81 @@ test("course-store refuses ephemeral fallback in production without a database",
     }
   }
 });
+
+test("course-store file fallback preserves rich lesson exercise payloads", async () => {
+  const previousCwd = process.cwd();
+  const tempDir = await mkdtemp(path.join(tmpdir(), "tuto-course-exercise-store-"));
+
+  process.chdir(tempDir);
+
+  try {
+    const store = await importFresh<typeof import("../lib/course-store")>("../lib/course-store");
+
+    await store.saveExercise({
+      courseId: "course-rich",
+      clerkId: "user-rich",
+      lessonId: "lesson-rich",
+      backendMode: "stub",
+      payload: {
+        courseId: "course-rich",
+        lessonId: "lesson-rich",
+        title: "Rich lesson",
+        subtitle: "Interactive lesson",
+        objective: "Understand the concept through interaction.",
+        prompt: "Which option explains the concept best?",
+        step: 2,
+        stepCount: 2,
+        xp: 50,
+        hint: "Look for the mechanism.",
+        explanation: "The correct option explains mechanism and boundary.",
+        correctOptionId: "a",
+        checkpointStepId: "lesson-rich-checkpoint",
+        options: [
+          { id: "a", label: "A", body: "Mechanism and boundary" },
+          { id: "b", label: "B", body: "Memorized slogan" },
+        ],
+        steps: [
+          {
+            id: "lesson-rich-interactive",
+            kind: "interactive",
+            title: "Compare the parts",
+            body: "Reveal each card to compare the mechanism with the trap.",
+            interactive: {
+              kind: "compare",
+              prompt: "Tap to reveal.",
+              items: [
+                { id: "mechanism", label: "Mechanism", body: "How it works." },
+                { id: "trap", label: "Trap", body: "What it is not." },
+              ],
+            },
+          },
+          {
+            id: "lesson-rich-checkpoint",
+            kind: "checkpoint",
+            title: "Checkpoint",
+            body: "Choose the strongest answer.",
+            prompt: "Which option explains the concept best?",
+            correctOptionId: "a",
+            options: [
+              { id: "a", label: "A", body: "Mechanism and boundary" },
+              { id: "b", label: "B", body: "Memorized slogan" },
+            ],
+          },
+        ],
+      },
+    });
+
+    const stored = await store.getLatestExerciseForLesson({
+      clerkId: "user-rich",
+      courseId: "course-rich",
+      lessonId: "lesson-rich",
+    });
+
+    assert.equal(stored?.payload.checkpointStepId, "lesson-rich-checkpoint");
+    assert.equal(stored?.payload.steps?.length, 2);
+    assert.equal(stored?.payload.steps?.[0]?.interactive?.kind, "compare");
+    assert.equal(stored?.payload.steps?.[0]?.interactive?.items[1]?.label, "Trap");
+  } finally {
+    process.chdir(previousCwd);
+  }
+});

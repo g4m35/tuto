@@ -34,6 +34,9 @@ export interface LearningLevel {
   title: string
   description: string
   completion: number
+  mastery?: number
+  reviewDue?: number
+  projectTitle?: string
   lessons: LessonNode[]
 }
 
@@ -41,6 +44,9 @@ export interface CourseDetailData extends CourseCardData {
   level: CourseLevel
   streak: number
   hoursInvested: number
+  masteryPercent?: number
+  reviewDueCount?: number
+  projectCount?: number
   materials: MaterialItem[]
   learningPath: LearningLevel[]
 }

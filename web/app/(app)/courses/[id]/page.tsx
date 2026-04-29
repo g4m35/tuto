@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
-import { ArrowLeft, ArrowRight, LockKeyhole } from "lucide-react"
+import { ArrowLeft, ArrowRight, CalendarClock, Hammer, LockKeyhole, Target } from "lucide-react"
 import { buttonVariants } from "@/components/ui/Button"
 import { Progress } from "@/components/ui/progress"
 import { findLesson, toCourseDetailData } from "@/lib/course-data"
@@ -111,6 +111,47 @@ export default async function CourseDetailPage({
           </div>
         </section>
 
+        <section className="grid gap-3 md:grid-cols-3">
+          <div className="editorial-card animate-rise-in-delay-1 px-5 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="eyebrow">Mastery</p>
+              <Target className="size-4 text-[var(--text-dim)]" />
+            </div>
+            <p className="mt-5 text-[34px] font-semibold leading-none tracking-normal text-[var(--text)]">
+              {course.masteryPercent ?? 0}%
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
+              Based on completed lessons and checkpoint readiness.
+            </p>
+          </div>
+
+          <div className="editorial-card animate-rise-in-delay-2 px-5 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="eyebrow">Review due</p>
+              <CalendarClock className="size-4 text-[var(--text-dim)]" />
+            </div>
+            <p className="mt-5 text-[34px] font-semibold leading-none tracking-normal text-[var(--text)]">
+              {course.reviewDueCount ?? 0}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
+              Spaced practice prompts from lessons that need another pass.
+            </p>
+          </div>
+
+          <div className="editorial-card animate-rise-in-delay-3 px-5 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="eyebrow">Projects</p>
+              <Hammer className="size-4 text-[var(--text-dim)]" />
+            </div>
+            <p className="mt-5 text-[34px] font-semibold leading-none tracking-normal text-[var(--text)]">
+              {course.projectCount ?? course.learningPath.length}
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
+              Unit-level applications turn the lesson path into usable skill.
+            </p>
+          </div>
+        </section>
+
         <section className="space-y-5">
           <div className="space-y-2">
             <p className="eyebrow">Learning path</p>
@@ -152,6 +193,12 @@ export default async function CourseDetailPage({
                       <span>{lesson.levelTitle}</span>
                       <span className="size-1 rounded-full bg-[var(--text-faint)]" />
                       <span>{lesson.state}</span>
+                      {current ? (
+                        <>
+                          <span className="size-1 rounded-full bg-[var(--text-faint)]" />
+                          <span>interactive</span>
+                        </>
+                      ) : null}
                     </div>
                     <div className="space-y-1">
                       <h3 className="text-lg font-medium tracking-normal text-[var(--text)]">
@@ -198,6 +245,43 @@ export default async function CourseDetailPage({
                 </Link>
               )
             })}
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <p className="eyebrow">Unit projects</p>
+            <h2 className="text-[34px] font-semibold tracking-normal text-[var(--text)]">
+              Prove it in context.
+            </h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {course.learningPath.map((level, index) => (
+              <div
+                key={level.id}
+                className={cn(
+                  "editorial-card px-5 py-5",
+                  index % 2 === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
+                )}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                      {level.title}
+                    </p>
+                    <h3 className="mt-3 text-lg font-medium leading-7 text-[var(--text)]">
+                      {level.projectTitle}
+                    </h3>
+                  </div>
+                  <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-sm text-[var(--text)]">
+                    {level.mastery ?? 0}%
+                  </span>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-[var(--text-dim)]">
+                  Complete the unit lessons, then use the final checkpoint to explain, apply, and review the main idea without hints.
+                </p>
+              </div>
+            ))}
           </div>
         </section>
       </div>
