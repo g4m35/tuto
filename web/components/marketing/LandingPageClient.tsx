@@ -5,14 +5,12 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  BookOpenCheck,
   BriefcaseBusiness,
   Check,
   ClipboardCheck,
   FileText,
   GraduationCap,
   Mail,
-  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { trackMarketingEvent } from "@/lib/marketing-client";
@@ -132,6 +130,27 @@ const faqs = [
   },
 ];
 
+const courseExamples = [
+  {
+    source: "biology-notes.pdf",
+    title: "Photosynthesis from trusted notes",
+    detail: "4 lessons",
+    lessons: ["Big idea", "Light reactions", "Review weak spots"],
+  },
+  {
+    source: "topic prompt",
+    title: "Hockey fundamentals",
+    detail: "3 lessons",
+    lessons: ["Rules", "Positioning", "Practice plan"],
+  },
+  {
+    source: "training-docs.md",
+    title: "Support onboarding",
+    detail: "5 lessons",
+    lessons: ["Workflow", "Escalation", "Quality checks"],
+  },
+];
+
 function LogoMark() {
   return (
     <span className="inline-flex items-center gap-2.5" aria-label="Tuto">
@@ -144,229 +163,139 @@ function LogoMark() {
   );
 }
 
-function ProductPreview() {
+function CourseExamplesGraphic() {
   return (
-    <div className="relative rounded-[28px] bg-[#0a2540] p-3 shadow-[0_38px_90px_-38px_rgba(10,37,64,0.72)]">
-      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#00d4ff]/25 blur-3xl" aria-hidden="true" />
-      <div className="absolute -bottom-10 left-12 h-36 w-36 rounded-full bg-[#635bff]/30 blur-3xl" aria-hidden="true" />
-      <div className="relative rounded-[22px] border border-white/10 bg-[#06182c] p-4 text-white sm:p-5">
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+    <motion.div
+      className="relative rounded-[24px] border border-[#dbe6f2] bg-white p-3 shadow-[0_34px_80px_-54px_rgba(10,37,64,0.7)]"
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.35 }}
+      transition={{ duration: 0.48, ease: [0.2, 0.7, 0.2, 1] }}
+    >
+      <div className="rounded-[18px] bg-[#f7fbff] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/[0.42]">Course builder</p>
-            <h2 className="mt-2 text-[18px] font-medium tracking-normal text-white">
-              Photosynthesis from trusted notes
+            <p className="text-[12px] font-semibold text-[#635bff]">Example courses</p>
+            <h2 className="mt-2 text-[20px] font-semibold tracking-[-0.025em] text-[#0a2540]">
+              From source to lesson path
             </h2>
           </div>
-          <span className="rounded-full border border-white/[0.18] bg-white/[0.08] px-3 py-1 text-[12px] text-white/[0.72]">
-            Ready
+          <span className="rounded-full border border-[#d9e2ec] bg-white px-3 py-1 text-[12px] font-medium text-[#425466]">
+            Simple output
           </span>
         </div>
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-[0.85fr_1.15fr]">
-          <div className="rounded-[14px] border border-dashed border-white/20 bg-white/[0.045] p-4">
-            <div className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/20">
-              <Upload className="size-4 text-white" />
-            </div>
-            <p className="mt-5 text-[13px] font-medium text-white">biology-notes.pdf</p>
-            <p className="mt-1 text-[12px] leading-5 text-white/[0.58]">
-              Source material is attached to the course plan.
-            </p>
-          </div>
-
-          <div className="rounded-[14px] border border-white/10 bg-white/[0.045] p-4">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/[0.42]">Generated outline</p>
-            <div className="mt-4 space-y-3">
-              {["Big idea", "Light reactions", "Practice model", "Review weak spots"].map((item, index) => (
-                <div key={item} className="flex items-center gap-3">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-white/10 text-[11px] text-white/[0.58]">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="text-[13px] text-white">{item}</span>
+        <div className="mt-6 space-y-3">
+          {courseExamples.map((course, index) => (
+            <motion.article
+              key={course.title}
+              className="rounded-[16px] border border-[#e6ebf1] bg-white p-4 transition-transform duration-200 ease-[var(--ease-signature)] hover:-translate-y-0.5"
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.75 }}
+              transition={{ duration: 0.36, delay: index * 0.08, ease: [0.2, 0.7, 0.2, 1] }}
+            >
+              <div className="flex items-start gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-[12px] font-semibold text-[#635bff]">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-[15px] font-semibold leading-5 tracking-[-0.015em] text-[#0a2540]">
+                      {course.title}
+                    </h3>
+                    <span className="text-[12px] font-medium text-[#635bff]">{course.detail}</span>
+                  </div>
+                  <p className="mt-1 text-[12px] text-[#6b7c93]">{course.source}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {course.lessons.map((lesson) => (
+                      <span
+                        key={lesson}
+                        className="rounded-full border border-[#dbe6f2] px-2.5 py-1 text-[12px] text-[#425466]"
+                      >
+                        {lesson}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </motion.article>
+          ))}
         </div>
 
-        <div className="mt-3 rounded-[14px] border border-white/10 bg-white/[0.045] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-white/[0.42]">Review queue</p>
-              <p className="mt-2 text-[14px] text-white">Energy transfer and chlorophyll roles</p>
-            </div>
-            <span className="inline-flex items-center gap-2 text-[13px] text-white/[0.62]">
-              <BookOpenCheck className="size-4" />
-              Practice next
-            </span>
+        <div className="mt-6">
+          <div className="relative h-px overflow-hidden bg-[#d9e2ec]">
+            <motion.div
+              className="absolute inset-y-0 left-0 w-full origin-left bg-[linear-gradient(90deg,#00d4ff,#635bff,#ff5a9e)]"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true, amount: 0.8 }}
+              transition={{ duration: 0.7, delay: 0.14, ease: [0.2, 0.7, 0.2, 1] }}
+            />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[12px] font-medium text-[#425466]">
+            <span>Source</span>
+            <span>Lessons</span>
+            <span>Practice</span>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function GeneratedOutlineRow({
-  item,
-  index,
-}: {
-  item: string;
-  index: number;
-}) {
-  return (
-    <motion.div
-      className="flex items-center gap-3"
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.8 }}
-      transition={{ duration: 0.42, delay: 0.32 + index * 0.08, ease: [0.2, 0.7, 0.2, 1] }}
-    >
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-white/10 text-[11px] text-white/[0.58] sm:size-8 sm:text-[12px]">
-        {String(index + 1).padStart(2, "0")}
-      </span>
-      <span className="text-[13px] text-white sm:text-[15px]">{item}</span>
     </motion.div>
   );
 }
 
-function ScrollBuildPreview() {
+function CourseExampleStrip() {
   return (
-    <section className="relative overflow-hidden bg-[#f6f9fc] py-20 sm:py-28">
-      <div className="absolute inset-x-0 top-0 h-28 -skew-y-3 bg-[linear-gradient(90deg,#00d4ff_0%,#635bff_48%,#ff5a9e_100%)] opacity-90" aria-hidden="true" />
-      <div className="relative mx-auto grid w-full max-w-7xl gap-10 px-5 sm:px-7 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
-        <div className="min-w-0 max-w-xl">
-          <p className="text-[13px] font-semibold text-[#635bff]">Course creation</p>
-          <h2 className="mt-3 text-[34px] font-semibold leading-[1.04] tracking-[-0.035em] text-[#0a2540] sm:text-[54px]">
-            Watch the course take shape as you move down the page.
+    <section className="bg-[#f7fbff]">
+      <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-20 sm:px-7 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+        <div className="max-w-xl">
+          <p className="text-[13px] font-semibold text-[#635bff]">Course examples</p>
+          <h2 className="mt-3 text-[34px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#0a2540] sm:text-[48px]">
+            Show the outcome, not the machinery.
           </h2>
           <p className="mt-5 text-[17px] leading-8 text-[#425466]">
-            Tuto turns source material into a structured course plan, practice queue, and next action before the learner starts.
+            A learner should immediately understand what they get: a course path, short lessons, and practice tied to the material.
           </p>
-          <div className="mt-9 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-[#d9e2ec]">
-            <motion.div
-              className="h-full rounded-full bg-[#635bff]"
-              initial={{ width: "8%" }}
-              whileInView={{ width: "100%" }}
-              viewport={{ once: true, amount: 0.55 }}
-              transition={{ duration: 1.1, ease: [0.2, 0.7, 0.2, 1] }}
-            />
-          </div>
         </div>
 
         <motion.div
-          className="relative w-full min-w-0 rounded-[28px] bg-[#0a2540] p-3 shadow-[0_42px_90px_-36px_rgba(10,37,64,0.72)]"
-          initial={{ opacity: 0.3, scale: 0.96, y: 24 }}
-          whileInView={{ opacity: 1, scale: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.45 }}
-          transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1] }}
+          className="grid gap-3 sm:grid-cols-3"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.35 }}
+          variants={{
+            hidden: {},
+            show: { transition: { staggerChildren: 0.08 } },
+          }}
         >
-          <motion.div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-12 bottom-0 h-28 rounded-full bg-[#00d4ff]/28 blur-3xl"
-            initial={{ opacity: 0.04 }}
-            whileInView={{ opacity: 0.34 }}
-            viewport={{ once: true, amount: 0.45 }}
-            transition={{ duration: 1.1, delay: 0.25 }}
-          />
-          <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#06182c] p-4 text-white sm:p-7">
-            <motion.div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_72%)]"
-              initial={{ opacity: 1 }}
-              whileInView={{ opacity: 0 }}
-              viewport={{ once: true, amount: 0.45 }}
-              transition={{ duration: 0.65, delay: 0.15 }}
-            />
-
-            <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-5 sm:pb-5">
-              <div className="min-w-0">
-                <p className="text-[12px] uppercase tracking-[0.24em] text-white/[0.42]">Course builder</p>
-                <motion.h3
-                  className="mt-2 text-[21px] font-medium leading-tight tracking-normal text-white sm:mt-3 sm:text-[31px]"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true, amount: 0.7 }}
-                  transition={{ duration: 0.45, delay: 0.18 }}
-                >
-                  Photosynthesis from trusted notes
-                </motion.h3>
-                <motion.div
-                  aria-hidden="true"
-                  className="mt-3 h-6 w-64 max-w-full rounded-full border border-dashed border-white/[0.18] bg-white/[0.045] sm:mt-4 sm:h-7 sm:w-72"
-                  initial={{ opacity: 1 }}
-                  whileInView={{ opacity: 0 }}
-                  viewport={{ once: true, amount: 0.7 }}
-                  transition={{ duration: 0.42, delay: 0.16 }}
-                />
-              </div>
-              <motion.span
-                className="w-fit shrink-0 rounded-full border border-white/[0.18] bg-white/[0.08] px-3 py-1.5 text-[13px] text-white/[0.72] sm:px-4 sm:py-2 sm:text-[15px]"
-                initial={{ opacity: 0, y: -8 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.7 }}
-                transition={{ duration: 0.44, delay: 0.68 }}
-              >
-                Ready
-              </motion.span>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:mt-5 sm:gap-4 lg:grid-cols-[0.88fr_1.12fr]">
-              <motion.div
-                className="min-h-[150px] rounded-[14px] border border-dashed border-white/20 bg-white/[0.045] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.55 }}
-                transition={{ duration: 0.5, delay: 0.18, ease: [0.2, 0.7, 0.2, 1] }}
-              >
-                <div className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/20 sm:size-12">
-                  <Upload className="size-4 text-white sm:size-5" />
-                </div>
-                <p className="mt-7 text-[17px] font-medium leading-6 text-white sm:mt-12 sm:text-[20px] sm:leading-7">biology-notes.pdf</p>
-                <p className="mt-2 max-w-sm text-[13px] leading-6 text-white/[0.58] sm:mt-3 sm:text-[15px] sm:leading-7">
-                  Source material is attached to the course plan.
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="min-h-[194px] rounded-[14px] border border-white/10 bg-white/[0.045] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.55 }}
-                transition={{ duration: 0.5, delay: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
-              >
-                <p className="text-[12px] uppercase tracking-[0.24em] text-white/[0.42]">Generated outline</p>
-                <div className="mt-4 space-y-3 sm:mt-7 sm:space-y-5">
-                  {["Big idea", "Light reactions", "Practice model", "Review weak spots"].map((item, index) => (
-                    <GeneratedOutlineRow
-                      key={item}
-                      item={item}
-                      index={index}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-
-            <motion.div
-              className="mt-3 rounded-[14px] border border-white/10 bg-white/[0.045] p-4 sm:mt-4 sm:rounded-[18px] sm:p-5"
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.8 }}
-              transition={{ duration: 0.5, delay: 0.52, ease: [0.2, 0.7, 0.2, 1] }}
+          {courseExamples.map((course) => (
+            <motion.article
+              key={course.title}
+              className="rounded-[18px] border border-[#e6ebf1] bg-white p-5 shadow-[0_18px_50px_-42px_rgba(10,37,64,0.58)]"
+              variants={{
+                hidden: { opacity: 0, y: 12 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.34, ease: [0.2, 0.7, 0.2, 1] } },
+              }}
             >
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-[12px] uppercase tracking-[0.24em] text-white/[0.42]">Review queue</p>
-                  <p className="mt-2 text-[16px] leading-6 text-white sm:mt-3 sm:text-[20px] sm:leading-7">
-                    Energy transfer and chlorophyll roles
-                  </p>
-                </div>
-                <span className="inline-flex items-center gap-2 text-[13px] text-white/[0.62] sm:text-[16px]">
-                  <BookOpenCheck className="size-4 sm:size-5" />
-                  Practice next
-                </span>
+              <p className="text-[12px] font-medium text-[#6b7c93]">{course.source}</p>
+              <h3 className="mt-4 min-h-12 text-[17px] font-semibold leading-6 tracking-[-0.02em] text-[#0a2540]">
+                {course.title}
+              </h3>
+              <div className="mt-5 space-y-2">
+                {course.lessons.map((lesson, index) => (
+                  <div key={lesson} className="flex items-center gap-2 text-[13px] text-[#425466]">
+                    <span className="size-1.5 rounded-full bg-[#635bff]" />
+                    <span>{lesson}</span>
+                    {index === 0 ? (
+                      <span className="ml-auto rounded-full bg-[#eef2ff] px-2 py-0.5 text-[11px] font-medium text-[#635bff]">
+                        start
+                      </span>
+                    ) : null}
+                  </div>
+                ))}
               </div>
-            </motion.div>
-          </div>
+            </motion.article>
+          ))}
         </motion.div>
       </div>
     </section>
@@ -545,12 +474,12 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </nav>
       </header>
 
-      <section id="product" className="relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[520px] -skew-y-6 bg-[linear-gradient(120deg,#00d4ff_0%,#635bff_45%,#ff5a9e_100%)]" aria-hidden="true" />
-        <div className="absolute inset-x-0 top-[380px] h-44 -skew-y-6 bg-white" aria-hidden="true" />
+      <section id="product" className="relative overflow-hidden bg-[#fbfdff]">
+        <div className="absolute right-[-18%] top-[-28%] h-[520px] w-[520px] rounded-full bg-[#00d4ff]/18 blur-3xl" aria-hidden="true" />
+        <div className="absolute right-[12%] top-[12%] h-[300px] w-[300px] rounded-full bg-[#635bff]/12 blur-3xl" aria-hidden="true" />
         <div className="relative mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-10 px-5 py-16 sm:px-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-center lg:py-20">
           <div className="max-w-3xl pt-8 lg:pt-0">
-            <h1 className="text-[44px] font-semibold leading-[0.96] tracking-[-0.04em] text-[#0a2540] sm:text-[74px] sm:tracking-[-0.045em] lg:text-[86px]">
+            <h1 className="text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-[#0a2540] sm:text-[68px] lg:text-[78px]">
               {copy.headline}
             </h1>
             <p className="mt-6 max-w-2xl text-[19px] leading-8 text-[#425466] sm:text-[21px]">
@@ -579,11 +508,11 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
               ))}
             </div>
           </div>
-          <ProductPreview />
+          <CourseExamplesGraphic />
         </div>
       </section>
 
-      <ScrollBuildPreview />
+      <CourseExampleStrip />
 
       <section className="border-y border-[#e6ebf1] bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-4 px-5 py-16 sm:px-7 lg:grid-cols-4">
