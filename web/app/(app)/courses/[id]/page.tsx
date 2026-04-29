@@ -68,12 +68,6 @@ export default async function CourseDetailPage({
               <span>{course.subject}</span>
               <span className="size-1 rounded-full bg-[var(--text-faint)]" />
               <span>{course.level}</span>
-              {courseRecord?.backendMode === "stub" ? (
-                <>
-                  <span className="size-1 rounded-full bg-[var(--text-faint)]" />
-                  <span>Stubbed backend</span>
-                </>
-              ) : null}
             </div>
 
             <div className="space-y-4">

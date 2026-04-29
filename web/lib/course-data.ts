@@ -205,7 +205,7 @@ export function toCourseCardData(course: StoredCourse): CourseCardData {
     lessonsComplete,
     lessonCount,
     duration: `${Math.max(1, lessonCount)} steps`,
-    intensity: course.backendMode === "stub" ? "Stubbed local flow" : "Adaptive guided path",
+    intensity: "Adaptive guided path",
     weakness: currentLesson?.title || "Foundational review",
   };
 }
