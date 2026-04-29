@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
 
 import { TopNav } from "@/components/ui/TopNav"
 
@@ -7,7 +8,11 @@ export default async function AppLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  await auth.protect({ unauthenticatedUrl: "/sign-in" })
+  const { userId } = await auth()
+
+  if (!userId) {
+    redirect("/sign-in")
+  }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_50%_0%,var(--bg)_0%,var(--ink-warm)_72%)] text-[var(--text)]">
