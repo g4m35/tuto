@@ -4,6 +4,8 @@ import type {
   CourseCardData,
   CourseDetailData,
   CourseLevel,
+  CourseWorkflowKind,
+  CourseWorkStatus,
   ExerciseData,
   ExerciseOption,
   LessonInteractiveData,
@@ -55,6 +57,32 @@ export interface StoredExercise {
   payload: ExerciseData;
   backendMode: "live" | "stub";
   createdAt: string;
+}
+
+export interface StoredCourseAttempt {
+  id: string;
+  courseId: string;
+  clerkId: string;
+  workflowKind: CourseWorkflowKind;
+  lessonId: string | null;
+  unitId: string | null;
+  selectedOptionId: string | null;
+  isCorrect: boolean;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface StoredProjectSubmission {
+  id: string;
+  courseId: string;
+  clerkId: string;
+  unitId: string;
+  response: string;
+  checklist: string[];
+  confidence: number;
+  status: Extract<CourseWorkStatus, "submitted" | "complete">;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DashboardViewData {
@@ -214,6 +242,12 @@ export function getLessonIdByIndex(course: StoredCourse, index: number) {
   return buildLessons(course)[index]?.id ?? null;
 }
 
+function getInteractionKind(seed: string): LessonInteractiveData["kind"] {
+  const kinds: LessonInteractiveData["kind"][] = ["compare", "reveal", "sort", "slider", "match"];
+  const score = Array.from(seed).reduce((total, char) => total + char.charCodeAt(0), 0);
+  return kinds[score % kinds.length] ?? "compare";
+}
+
 export function toDashboardViewData(courses: StoredCourse[]): DashboardViewData {
   const mappedCourses = courses.map(toCourseCardData);
   const continueCourse = mappedCourses[0] ?? null;
@@ -266,28 +300,39 @@ export function buildExerciseData(input: {
   const correctOptionId = correctOption?.id ?? options[0]?.id;
   const checkpointOptions = options.map((option) => ({ ...option }));
   const misconception = options.find((option) => option.id !== correctOptionId);
+  const interactionKind = getInteractionKind(`${input.lessonId}:${input.lessonTitle}`);
   const interaction: LessonInteractiveData = {
-    kind: "compare",
-    prompt: "Tap each card to separate the durable idea from a tempting shortcut.",
+    kind: interactionKind,
+    prompt:
+      interactionKind === "slider"
+        ? "Move the control to see how confidence changes as the idea becomes more precise."
+        : interactionKind === "sort"
+          ? "Read the cards in order, then reveal how the reasoning should flow."
+          : "Tap each card to separate the durable idea from a tempting shortcut.",
     items: [
       {
-        id: "mechanism",
-        label: "Mechanism",
+        id: interactionKind === "sort" ? "step-1" : "mechanism",
+        label: interactionKind === "sort" ? "1. Mechanism" : "Mechanism",
         body: lessonSummary,
+        matchId: "mechanism",
       },
       {
-        id: "misconception",
-        label: "Trap",
+        id: interactionKind === "sort" ? "step-2" : "misconception",
+        label: interactionKind === "sort" ? "2. Trap" : "Trap",
         body:
           misconception?.body ||
           "Treating the lesson as a phrase to memorize instead of a tool to use.",
+        matchId: "trap",
       },
       {
-        id: "boundary",
-        label: "Boundary",
+        id: interactionKind === "sort" ? "step-3" : "boundary",
+        label: interactionKind === "sort" ? "3. Boundary" : "Boundary",
         body: input.explanation,
+        matchId: "boundary",
       },
     ],
+    minLabel: "Vague",
+    maxLabel: "Precise",
   };
   const steps: LessonStepData[] = [
     {

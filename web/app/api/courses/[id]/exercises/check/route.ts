@@ -7,6 +7,7 @@ import {
 import {
   getCourseForUser,
   getLatestExerciseForLesson,
+  saveCourseAttempt,
   updateCourseProgress,
 } from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
@@ -77,6 +78,19 @@ export async function POST(
         deeptutorStatus: nextLessonId ? "learning" : "complete",
       });
     }
+
+    await saveCourseAttempt({
+      clerkId: userId,
+      courseId: course.id,
+      workflowKind: "lesson",
+      lessonId: body.lessonId,
+      unitId: null,
+      selectedOptionId: selectedOption.id,
+      isCorrect,
+      metadata: {
+        correctOptionId: correctOption?.id ?? selectedOption.id,
+      },
+    });
 
     return NextResponse.json({
       isCorrect,

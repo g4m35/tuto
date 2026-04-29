@@ -196,3 +196,54 @@ test("course-store file fallback preserves rich lesson exercise payloads", async
     process.chdir(previousCwd);
   }
 });
+
+test("course-store file fallback preserves attempts and project submissions", async () => {
+  const previousCwd = process.cwd();
+  const tempDir = await mkdtemp(path.join(tmpdir(), "tuto-course-workflow-store-"));
+
+  process.chdir(tempDir);
+
+  try {
+    const store = await importFresh<typeof import("../lib/course-store")>("../lib/course-store");
+
+    await store.saveCourseAttempt({
+      courseId: "course-work",
+      clerkId: "user-work",
+      workflowKind: "review",
+      lessonId: "lesson-work",
+      unitId: null,
+      selectedOptionId: "mechanism",
+      isCorrect: true,
+      metadata: { promptTitle: "Lesson work" },
+    });
+
+    await store.saveProjectSubmission({
+      courseId: "course-work",
+      clerkId: "user-work",
+      unitId: "unit-1",
+      response: "A project response that is long enough to resemble an actual submitted artifact.",
+      checklist: ["Names the situation", "Shows the reasoning chain"],
+      confidence: 72,
+      status: "submitted",
+    });
+
+    const attempts = await store.listCourseAttempts({
+      clerkId: "user-work",
+      courseId: "course-work",
+      workflowKind: "review",
+    });
+    const project = await store.getProjectSubmission({
+      clerkId: "user-work",
+      courseId: "course-work",
+      unitId: "unit-1",
+    });
+
+    assert.equal(attempts.length, 1);
+    assert.equal(attempts[0]?.workflowKind, "review");
+    assert.equal(attempts[0]?.metadata.promptTitle, "Lesson work");
+    assert.equal(project?.confidence, 72);
+    assert.equal(project?.checklist.length, 2);
+  } finally {
+    process.chdir(previousCwd);
+  }
+});

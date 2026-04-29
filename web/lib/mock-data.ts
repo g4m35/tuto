@@ -1,5 +1,7 @@
 export type CourseLevel = "Beginner" | "Intermediate" | "Advanced"
 export type LessonState = "complete" | "current" | "locked"
+export type CourseWorkflowKind = "lesson" | "review" | "project"
+export type CourseWorkStatus = "not_started" | "in_progress" | "submitted" | "complete"
 
 export interface CourseCardData {
   id: string
@@ -38,6 +40,15 @@ export interface LearningLevel {
   reviewDue?: number
   projectTitle?: string
   lessons: LessonNode[]
+}
+
+export interface UnitProjectData {
+  unitId: string
+  title: string
+  prompt: string
+  rubric: string[]
+  status: CourseWorkStatus
+  submittedAt?: string
 }
 
 export interface CourseDetailData extends CourseCardData {

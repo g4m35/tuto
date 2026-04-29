@@ -13,16 +13,18 @@ import {
   CircleDot,
   Layers3,
   Lightbulb,
+  ListChecks,
   LoaderCircle,
   MessageSquareText,
   MousePointer2,
   RotateCcw,
+  SlidersHorizontal,
   Sparkles,
   Target,
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import type { ExerciseData, LessonStepData } from "@/lib/mock-data"
+import type { ExerciseData, LessonInteractiveData, LessonStepData } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 interface LessonExerciseClientProps {
@@ -108,6 +110,7 @@ export function LessonExerciseClient({
   const [error, setError] = useState<string | null>(null)
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [revealedCards, setRevealedCards] = useState<Set<string>>(() => new Set())
+  const [sliderValue, setSliderValue] = useState(50)
 
   useEffect(() => {
     if (exercise) return
@@ -161,6 +164,7 @@ export function LessonExerciseClient({
     setCheckResult(null)
     setShowHint(false)
     setRevealedCards(new Set())
+    setSliderValue(50)
   }, [exercise?.lessonId])
 
   const steps = useMemo(() => (exercise ? exercise.steps?.length ? exercise.steps : fallbackSteps(exercise) : []), [exercise])
@@ -426,44 +430,13 @@ export function LessonExerciseClient({
                     </div>
 
                     {activeStep.interactive ? (
-                      <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev-2)] p-4 sm:p-5">
-                        <div className="mb-4 flex items-center gap-2 text-sm text-[var(--text-dim)]">
-                          <MousePointer2 className="size-4 text-[var(--text)]" />
-                          {activeStep.interactive.prompt}
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-3">
-                          {activeStep.interactive.items.map((item, index) => {
-                            const revealed = revealedCards.has(item.id)
-
-                            return (
-                              <motion.button
-                                key={item.id}
-                                type="button"
-                                onClick={() => toggleCard(item.id)}
-                                className={cn(
-                                  "min-h-[170px] rounded-[var(--radius-sm)] border px-4 py-4 text-left",
-                                  revealed
-                                    ? "border-[var(--border-strong)] bg-[var(--bg)]"
-                                    : "border-[var(--border)] bg-[var(--bg-elev)] hover:border-[var(--border-strong)]",
-                                )}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.04, duration: 0.16 }}
-                              >
-                                <div className="flex items-center justify-between gap-3">
-                                  <span className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                                    {item.label}
-                                  </span>
-                                  <RotateCcw className={cn("size-4 text-[var(--text-faint)]", revealed && "rotate-180 text-[var(--text)]")} />
-                                </div>
-                                <p className={cn("mt-5 text-sm leading-7", revealed ? "text-[var(--text)]" : "text-[var(--text-dim)]")}>
-                                  {revealed ? item.body : "Reveal this lens"}
-                                </p>
-                              </motion.button>
-                            )
-                          })}
-                        </div>
-                      </div>
+                      <InteractiveLessonPanel
+                        interactive={activeStep.interactive}
+                        revealedCards={revealedCards}
+                        sliderValue={sliderValue}
+                        onToggleCard={toggleCard}
+                        onSliderChange={setSliderValue}
+                      />
                     ) : null}
 
                     {activeStep.prompt && !activeIsCheckpoint ? (
@@ -645,6 +618,113 @@ function CheckpointPanel({
           </div>
         </div>
       ) : null}
+    </div>
+  )
+}
+
+function InteractiveLessonPanel({
+  interactive,
+  revealedCards,
+  sliderValue,
+  onToggleCard,
+  onSliderChange,
+}: {
+  interactive: LessonInteractiveData
+  revealedCards: Set<string>
+  sliderValue: number
+  onToggleCard: (cardId: string) => void
+  onSliderChange: (value: number) => void
+}) {
+  const sliderIndex = Math.min(
+    interactive.items.length - 1,
+    Math.max(0, Math.round((sliderValue / 100) * Math.max(0, interactive.items.length - 1))),
+  )
+  const sliderItem = interactive.items[sliderIndex]
+  const isSlider = interactive.kind === "slider"
+  const isSort = interactive.kind === "sort"
+  const isMatch = interactive.kind === "match"
+  const Icon = isSlider ? SlidersHorizontal : isSort ? ListChecks : MousePointer2
+
+  return (
+    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev-2)] p-4 sm:p-5">
+      <div className="mb-4 flex items-center gap-2 text-sm text-[var(--text-dim)]">
+        <Icon className="size-4 text-[var(--text)]" />
+        {interactive.prompt}
+      </div>
+
+      {isSlider ? (
+        <div className="space-y-5">
+          <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-elev)] px-4 py-4">
+            <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+              <span>{interactive.minLabel || "Low"}</span>
+              <span>{interactive.maxLabel || "High"}</span>
+            </div>
+            <input
+              aria-label="Interactive confidence slider"
+              type="range"
+              min="0"
+              max="100"
+              value={sliderValue}
+              onChange={(event) => onSliderChange(Number(event.target.value))}
+              className="mt-4 w-full accent-[var(--text)]"
+            />
+          </div>
+          <motion.div
+            key={sliderItem?.id ?? "slider-empty"}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16 }}
+            className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg)] px-5 py-4"
+          >
+            <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+              {sliderItem?.label || "Lens"}
+            </p>
+            <p className="mt-3 text-sm leading-7 text-[var(--text)]">
+              {sliderItem?.body || "Move the slider to reveal a learning lens."}
+            </p>
+          </motion.div>
+        </div>
+      ) : (
+        <div className={cn("grid gap-3", isSort ? "md:grid-cols-1" : "md:grid-cols-3")}>
+          {interactive.items.map((item, index) => {
+            const revealed = revealedCards.has(item.id)
+
+            return (
+              <motion.button
+                key={item.id}
+                type="button"
+                onClick={() => onToggleCard(item.id)}
+                className={cn(
+                  "rounded-[var(--radius-sm)] border px-4 py-4 text-left",
+                  isSort ? "min-h-[104px]" : "min-h-[170px]",
+                  revealed
+                    ? "border-[var(--border-strong)] bg-[var(--bg)]"
+                    : "border-[var(--border)] bg-[var(--bg-elev)] hover:border-[var(--border-strong)]",
+                )}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04, duration: 0.16 }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                    {isMatch && item.matchId ? `${item.label} / ${item.matchId}` : item.label}
+                  </span>
+                  <RotateCcw className={cn("size-4 text-[var(--text-faint)]", revealed && "rotate-180 text-[var(--text)]")} />
+                </div>
+                <p className={cn("mt-5 text-sm leading-7", revealed ? "text-[var(--text)]" : "text-[var(--text-dim)]")}>
+                  {revealed
+                    ? item.body
+                    : isSort
+                      ? "Reveal this step"
+                      : isMatch
+                        ? "Reveal the paired idea"
+                        : "Reveal this lens"}
+                </p>
+              </motion.button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

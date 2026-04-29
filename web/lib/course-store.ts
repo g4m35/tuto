@@ -7,7 +7,12 @@ import {
   isDatabaseConfigured,
   query,
 } from "@/lib/db";
-import type { StoredCourse, StoredExercise } from "@/lib/course-data";
+import type {
+  StoredCourse,
+  StoredCourseAttempt,
+  StoredExercise,
+  StoredProjectSubmission,
+} from "@/lib/course-data";
 
 interface CourseRow {
   id: string;
@@ -39,9 +44,37 @@ interface ExerciseRow {
   created_at: Date | string;
 }
 
+interface AttemptRow {
+  id: string;
+  course_id: string;
+  clerk_id: string;
+  workflow_kind: StoredCourseAttempt["workflowKind"];
+  lesson_id: string | null;
+  unit_id: string | null;
+  selected_option_id: string | null;
+  is_correct: boolean;
+  metadata: StoredCourseAttempt["metadata"];
+  created_at: Date | string;
+}
+
+interface ProjectSubmissionRow {
+  id: string;
+  course_id: string;
+  clerk_id: string;
+  unit_id: string;
+  response: string;
+  checklist: string[];
+  confidence: number;
+  status: StoredProjectSubmission["status"];
+  created_at: Date | string;
+  updated_at: Date | string;
+}
+
 interface FileStoreShape {
   courses: StoredCourse[];
   exercises: StoredExercise[];
+  attempts: StoredCourseAttempt[];
+  projectSubmissions: StoredProjectSubmission[];
 }
 
 const FILE_STORE_PATH = path.join(process.cwd(), ".local-data", "course-store.json");
@@ -88,6 +121,36 @@ function mapExerciseRow(row: ExerciseRow): StoredExercise {
   };
 }
 
+function mapAttemptRow(row: AttemptRow): StoredCourseAttempt {
+  return {
+    id: row.id,
+    courseId: row.course_id,
+    clerkId: row.clerk_id,
+    workflowKind: row.workflow_kind,
+    lessonId: row.lesson_id,
+    unitId: row.unit_id,
+    selectedOptionId: row.selected_option_id,
+    isCorrect: row.is_correct,
+    metadata: row.metadata ?? {},
+    createdAt: toIsoString(row.created_at),
+  };
+}
+
+function mapProjectSubmissionRow(row: ProjectSubmissionRow): StoredProjectSubmission {
+  return {
+    id: row.id,
+    courseId: row.course_id,
+    clerkId: row.clerk_id,
+    unitId: row.unit_id,
+    response: row.response,
+    checklist: Array.isArray(row.checklist) ? row.checklist : [],
+    confidence: row.confidence,
+    status: row.status,
+    createdAt: toIsoString(row.created_at),
+    updatedAt: toIsoString(row.updated_at),
+  };
+}
+
 async function readFileStore(): Promise<FileStoreShape> {
   try {
     const raw = await readFile(FILE_STORE_PATH, "utf8");
@@ -95,9 +158,13 @@ async function readFileStore(): Promise<FileStoreShape> {
     return {
       courses: Array.isArray(parsed.courses) ? parsed.courses : [],
       exercises: Array.isArray(parsed.exercises) ? parsed.exercises : [],
+      attempts: Array.isArray(parsed.attempts) ? parsed.attempts : [],
+      projectSubmissions: Array.isArray(parsed.projectSubmissions)
+        ? parsed.projectSubmissions
+        : [],
     };
   } catch {
-    return { courses: [], exercises: [] };
+    return { courses: [], exercises: [], attempts: [], projectSubmissions: [] };
   }
 }
 
@@ -367,4 +434,202 @@ export async function getLatestExerciseForLesson(input: {
 
   const row = result.rows[0];
   return row ? mapExerciseRow(row) : null;
+}
+
+export async function saveCourseAttempt(
+  attempt: Omit<StoredCourseAttempt, "id" | "createdAt">,
+): Promise<StoredCourseAttempt> {
+  const stored: StoredCourseAttempt = {
+    ...attempt,
+    id: randomUUID(),
+    createdAt: new Date().toISOString(),
+  };
+
+  if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
+    const store = await readFileStore();
+    store.attempts = [stored, ...store.attempts];
+    await writeFileStore(store);
+    return stored;
+  }
+
+  const result = await query<AttemptRow>(
+    `
+      insert into course_attempts (
+        id,
+        course_id,
+        clerk_id,
+        workflow_kind,
+        lesson_id,
+        unit_id,
+        selected_option_id,
+        is_correct,
+        metadata
+      )
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
+      returning *
+    `,
+    [
+      stored.id,
+      stored.courseId,
+      stored.clerkId,
+      stored.workflowKind,
+      stored.lessonId,
+      stored.unitId,
+      stored.selectedOptionId,
+      stored.isCorrect,
+      JSON.stringify(stored.metadata ?? {}),
+    ],
+  );
+
+  return mapAttemptRow(result.rows[0]);
+}
+
+export async function listCourseAttempts(input: {
+  clerkId: string;
+  courseId: string;
+  workflowKind?: StoredCourseAttempt["workflowKind"];
+}): Promise<StoredCourseAttempt[]> {
+  if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
+    const store = await readFileStore();
+    return store.attempts
+      .filter(
+        (attempt) =>
+          attempt.clerkId === input.clerkId &&
+          attempt.courseId === input.courseId &&
+          (!input.workflowKind || attempt.workflowKind === input.workflowKind),
+      )
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  const params: unknown[] = [input.clerkId, input.courseId];
+  const workflowFilter = input.workflowKind ? "and workflow_kind = $3" : "";
+  if (input.workflowKind) params.push(input.workflowKind);
+
+  const result = await query<AttemptRow>(
+    `
+      select *
+      from course_attempts
+      where clerk_id = $1
+        and course_id = $2
+        ${workflowFilter}
+      order by created_at desc
+    `,
+    params,
+  );
+
+  return result.rows.map(mapAttemptRow);
+}
+
+export async function saveProjectSubmission(
+  submission: Omit<StoredProjectSubmission, "id" | "createdAt" | "updatedAt">,
+): Promise<StoredProjectSubmission> {
+  const now = new Date().toISOString();
+  const stored: StoredProjectSubmission = {
+    ...submission,
+    id: randomUUID(),
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
+    const store = await readFileStore();
+    store.projectSubmissions = [
+      stored,
+      ...store.projectSubmissions.filter(
+        (item) =>
+          !(
+            item.clerkId === stored.clerkId &&
+            item.courseId === stored.courseId &&
+            item.unitId === stored.unitId
+          ),
+      ),
+    ];
+    await writeFileStore(store);
+    return stored;
+  }
+
+  const result = await query<ProjectSubmissionRow>(
+    `
+      insert into course_project_submissions (
+        id,
+        course_id,
+        clerk_id,
+        unit_id,
+        response,
+        checklist,
+        confidence,
+        status
+      )
+      values ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)
+      on conflict (clerk_id, course_id, unit_id)
+      do update set
+        response = excluded.response,
+        checklist = excluded.checklist,
+        confidence = excluded.confidence,
+        status = excluded.status,
+        updated_at = now()
+      returning *
+    `,
+    [
+      stored.id,
+      stored.courseId,
+      stored.clerkId,
+      stored.unitId,
+      stored.response,
+      JSON.stringify(stored.checklist),
+      stored.confidence,
+      stored.status,
+    ],
+  );
+
+  return mapProjectSubmissionRow(result.rows[0]);
+}
+
+export async function getProjectSubmission(input: {
+  clerkId: string;
+  courseId: string;
+  unitId: string;
+}): Promise<StoredProjectSubmission | null> {
+  if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
+    const store = await readFileStore();
+    return (
+      store.projectSubmissions.find(
+        (item) =>
+          item.clerkId === input.clerkId &&
+          item.courseId === input.courseId &&
+          item.unitId === input.unitId,
+      ) ?? null
+    );
+  }
+
+  const result = await query<ProjectSubmissionRow>(
+    `
+      select *
+      from course_project_submissions
+      where clerk_id = $1
+        and course_id = $2
+        and unit_id = $3
+      limit 1
+    `,
+    [input.clerkId, input.courseId, input.unitId],
+  );
+
+  const row = result.rows[0];
+  return row ? mapProjectSubmissionRow(row) : null;
 }

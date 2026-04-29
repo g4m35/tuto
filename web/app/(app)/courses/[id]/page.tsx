@@ -125,7 +125,10 @@ export default async function CourseDetailPage({
             </p>
           </div>
 
-          <div className="editorial-card animate-rise-in-delay-2 px-5 py-5">
+          <Link
+            href={`/courses/${course.id}/review`}
+            className="editorial-card interactive-card t-lift animate-rise-in-delay-2 px-5 py-5"
+          >
             <div className="flex items-center justify-between gap-3">
               <p className="eyebrow">Review due</p>
               <CalendarClock className="size-4 text-[var(--text-dim)]" />
@@ -136,7 +139,7 @@ export default async function CourseDetailPage({
             <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
               Spaced practice prompts from lessons that need another pass.
             </p>
-          </div>
+          </Link>
 
           <div className="editorial-card animate-rise-in-delay-3 px-5 py-5">
             <div className="flex items-center justify-between gap-3">
@@ -257,10 +260,11 @@ export default async function CourseDetailPage({
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {course.learningPath.map((level, index) => (
-              <div
+              <Link
                 key={level.id}
+                href={`/courses/${course.id}/project/${level.id}`}
                 className={cn(
-                  "editorial-card px-5 py-5",
+                  "editorial-card interactive-card t-lift px-5 py-5",
                   index % 2 === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
                 )}
               >
@@ -280,7 +284,7 @@ export default async function CourseDetailPage({
                 <p className="mt-4 text-sm leading-6 text-[var(--text-dim)]">
                   Complete the unit lessons, then use the final checkpoint to explain, apply, and review the main idea without hints.
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
