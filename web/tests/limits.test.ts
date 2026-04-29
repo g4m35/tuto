@@ -17,6 +17,11 @@ test("launch billing tiers expose expected message and document quotas", () => {
     messagesPerMonth: null,
     documents: null,
   });
+
+  assert.deepEqual(getTierLimits("enterprise"), {
+    messagesPerMonth: null,
+    documents: null,
+  });
 });
 
 test("null limits are treated as unlimited allowance", () => {

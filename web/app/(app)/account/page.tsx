@@ -19,6 +19,7 @@ const planLabels: Record<BillingTier, string> = {
   free: "Free",
   pro: "Pro",
   team: "Team",
+  enterprise: "Enterprise",
 };
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -103,7 +104,10 @@ export default async function AccountPage({
   const usageLines = await getUsageLines(userId, billingSummary.tier);
   const billingReady = isStripeCheckoutConfigured();
   const portalReady = isStripePortalConfigured();
-  const hasPaidPlan = billingSummary.tier === "pro" || billingSummary.tier === "team";
+  const hasPaidPlan =
+    billingSummary.tier === "pro" ||
+    billingSummary.tier === "team" ||
+    billingSummary.tier === "enterprise";
   const canManageBilling = portalReady && Boolean(billingSummary.stripeCustomerId);
   const primaryEmail = user?.emailAddresses.find((email) => email.id === user.primaryEmailAddressId)?.emailAddress ??
     user?.emailAddresses[0]?.emailAddress ??

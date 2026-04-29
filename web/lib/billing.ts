@@ -33,10 +33,14 @@ export function getStripeTeamPriceId(): string {
 export type BillingPlan = Exclude<BillingTier, "free">;
 
 export function isBillingPlan(value: string): value is BillingPlan {
-  return value === "pro" || value === "team";
+  return value === "pro" || value === "team" || value === "enterprise";
 }
 
 export function getStripePriceIdForPlan(plan: BillingPlan): string {
+  if (plan === "enterprise") {
+    throw new Error("Enterprise plans use contract billing and are granted manually.");
+  }
+
   return plan === "team" ? getStripeTeamPriceId() : getStripeProPriceId();
 }
 

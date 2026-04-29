@@ -1,4 +1,4 @@
-export type BillingTier = "free" | "pro" | "team";
+export type BillingTier = "free" | "pro" | "team" | "enterprise";
 
 export interface TierLimits {
   messagesPerMonth: number | null;
@@ -15,6 +15,10 @@ export const BILLING_LIMITS = {
     documents: 10,
   },
   team: {
+    messagesPerMonth: null,
+    documents: null,
+  },
+  enterprise: {
     messagesPerMonth: null,
     documents: null,
   },

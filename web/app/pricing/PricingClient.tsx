@@ -236,7 +236,10 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
     return null;
   }, [searchParams]);
 
-  const hasPaidPlan = billingSummary?.tier === "pro" || billingSummary?.tier === "team";
+  const hasPaidPlan =
+    billingSummary?.tier === "pro" ||
+    billingSummary?.tier === "team" ||
+    billingSummary?.tier === "enterprise";
   const billingUnavailable = !billingReady || billingSummary?.billingEnabled === false;
 
   useEffect(() => {
@@ -360,7 +363,11 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
               Current plan
             </div>
             <div className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
-              {billingSummary?.tier === "team" ? "Team" : "Pro"}
+              {billingSummary?.tier === "enterprise"
+                ? "Enterprise"
+                : billingSummary?.tier === "team"
+                  ? "Team"
+                  : "Pro"}
             </div>
             <p className="max-w-2xl text-sm leading-6 text-[var(--text-dim)]">
               Go directly to the dashboard when you want to use Tuto.

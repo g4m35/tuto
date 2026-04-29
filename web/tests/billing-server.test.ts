@@ -21,7 +21,7 @@ test('billing helpers validate expected plan and tier values', () => {
   assert.equal(isBillingTier('free'), true)
   assert.equal(isBillingTier('pro'), true)
   assert.equal(isBillingTier('team'), true)
-  assert.equal(isBillingTier('enterprise'), false)
+  assert.equal(isBillingTier('enterprise'), true)
 })
 
 test('getBaseUrl prefers configured app URL for billing redirects', () => {
