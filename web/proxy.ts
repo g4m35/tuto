@@ -29,8 +29,13 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 function getSignInUrl(req: NextRequest) {
-  const url = new URL("/sign-in", req.url);
-  url.searchParams.set("redirect_url", req.nextUrl.href);
+  const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const origin = publicAppUrl || req.nextUrl.origin;
+  const redirectTarget = publicAppUrl
+    ? new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, publicAppUrl).toString()
+    : req.nextUrl.href;
+  const url = new URL("/sign-in", origin);
+  url.searchParams.set("redirect_url", redirectTarget);
   return url.toString();
 }
 
