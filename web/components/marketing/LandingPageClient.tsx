@@ -349,8 +349,8 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
             <a href="#pricing" className="hover:text-[var(--text)]">Pricing</a>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/sign-in" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              Sign in
+            <Link href="/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              Open app
             </Link>
             <Link
               href="/create"
@@ -459,18 +459,19 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
           {[
             ["Free starter", "$0", "Create the first course and feel the loop before upgrading."],
             ["Pro", "$20/mo", "More generation room, more document knowledge bases, and guided practice."],
-            ["Team", "Waitlist", "For tutors, coaches, and cohort operators once shared billing is ready."],
+            ["Team", "$65/mo", "Shared-use billing for small teams, tutors, coaches, and cohort operators."],
+            ["Enterprise", "Custom", "For schools and companies that need seats, onboarding, and contract billing."],
           ].map(([name, price, body]) => (
             <article key={name} className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] p-6">
               <h3 className="text-[15px] font-medium text-[var(--text)]">{name}</h3>
               <p className="mt-5 text-[34px] font-semibold tracking-normal text-[var(--text)]">{price}</p>
               <p className="mt-4 min-h-16 text-[14px] leading-6 text-[var(--text-dim)]">{body}</p>
               <Link
-                href={name === "Team" ? "#beta" : name === "Pro" ? "/pricing" : "/create"}
+                href={name === "Enterprise" ? "/pricing#enterprise" : name === "Pro" || name === "Team" ? "/pricing" : "/create"}
                 onClick={() => trackMarketingEvent("pricing_cta_clicked", { source: copy.eventSource, plan: name })}
-                className={cn(buttonVariants({ variant: name === "Pro" ? "default" : "secondary", size: "lg" }), "mt-7 w-full")}
+                className={cn(buttonVariants({ variant: name === "Pro" || name === "Enterprise" ? "default" : "secondary", size: "lg" }), "mt-7 w-full")}
               >
-                {name === "Team" ? "Join waitlist" : name === "Pro" ? "View pricing" : "Start free"}
+                {name === "Enterprise" ? "Talk to us" : name === "Pro" || name === "Team" ? "View pricing" : "Start free"}
               </Link>
             </article>
           ))}

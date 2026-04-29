@@ -25,6 +25,7 @@ export default async function PricingPage() {
               </h1>
               <p className="max-w-2xl text-base leading-7 text-[var(--text-dim)]">
                 Free gets you started. Paid plans unlock heavier course generation, more knowledge-base uploads, and fewer artificial limits while the product moves toward launch.
+                Existing customers can go straight to the dashboard; billing management is only for plan changes, invoices, and cancellations.
               </p>
             </div>
           </div>

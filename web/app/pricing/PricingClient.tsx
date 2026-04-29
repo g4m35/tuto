@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, LoaderCircle } from "lucide-react";
+import { ArrowRight, Building2, Check, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { BillingTier } from "@/lib/limits";
 import { trackMarketingEvent } from "@/lib/marketing-client";
 
 type CheckoutPlan = "pro" | "team";
+type EnterpriseState = "idle" | "submitting" | "success" | "error";
 
 interface PricingCard {
   plan: CheckoutPlan;
@@ -64,6 +65,159 @@ const pricingCards: PricingCard[] = [
     ctaLabel: "Choose Team",
   },
 ];
+
+function EnterpriseContactForm() {
+  const [state, setState] = useState<EnterpriseState>("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setState("submitting");
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    const payload = {
+      name: String(formData.get("name") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      useCase: "Enterprise",
+      materialType: String(formData.get("organizationType") ?? ""),
+      notes: [
+        `Organization: ${String(formData.get("organization") ?? "")}`,
+        `Seats: ${String(formData.get("seats") ?? "")}`,
+        `Need: ${String(formData.get("notes") ?? "")}`,
+      ].join("\n"),
+      marketingOptIn: true,
+      pageUrl: window.location.href,
+      referrer: document.referrer,
+      source: "enterprise_pricing",
+    };
+
+    trackMarketingEvent("enterprise_inquiry_started", {
+      organization_type: payload.materialType,
+      seats: String(formData.get("seats") ?? ""),
+    });
+
+    try {
+      const response = await fetch("/api/beta-signups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Unable to send the enterprise request right now.");
+      }
+
+      setState("success");
+      trackMarketingEvent("enterprise_inquiry_completed", {
+        organization_type: payload.materialType,
+      });
+    } catch (nextError) {
+      setState("error");
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : "Unable to send the enterprise request right now.",
+      );
+      trackMarketingEvent("enterprise_inquiry_failed", {
+        error:
+          nextError instanceof Error
+            ? nextError.message
+            : "Unable to send the enterprise request right now.",
+      });
+    }
+  }
+
+  return (
+    <section
+      id="enterprise"
+      className="surface-card grid gap-6 rounded-[var(--radius-lg)] border border-[var(--border)] p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-7"
+    >
+      <div className="space-y-5">
+        <div className="inline-flex size-11 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
+          <Building2 className="size-5 text-[var(--text)]" />
+        </div>
+        <div className="space-y-3">
+          <div className="text-sm font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
+            Enterprise
+          </div>
+          <h2 className="serif text-[2rem] font-semibold tracking-tight text-[var(--text)]">
+            Schools, companies, and cohorts.
+          </h2>
+          <p className="max-w-xl text-sm leading-6 text-[var(--text-dim)]">
+            Enterprise is for shared learning programs that need seats, onboarding help, centralized billing, and a path toward admin controls or SSO.
+          </p>
+        </div>
+        <ul className="space-y-3 text-sm leading-6 text-[var(--text-dim)]">
+          {[
+            "Seat-based pricing for classes, teams, and departments",
+            "Invoice or contract billing instead of self-serve checkout",
+            "Pilot support for training docs, course templates, and rollout planning",
+          ].map((feature) => (
+            <li key={feature} className="flex items-start gap-3">
+              <Check className="mt-0.5 size-4 text-[var(--accent)]" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {state === "success" ? (
+        <div className="rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--bg-elev)] p-5">
+          <Check className="size-5 text-[var(--accent)]" />
+          <h3 className="mt-4 text-xl font-medium tracking-normal text-[var(--text)]">
+            Enterprise request received.
+          </h3>
+          <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
+            It is in the operator queue with your org details and rollout notes.
+          </p>
+        </div>
+      ) : (
+        <form onSubmit={onSubmit} className="grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-2">
+              <span className="text-[12px] text-[var(--text-dim)]">Name</span>
+              <input name="name" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+            </label>
+            <label className="space-y-2">
+              <span className="text-[12px] text-[var(--text-dim)]">Work email</span>
+              <input name="email" type="email" required className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+            </label>
+            <label className="space-y-2">
+              <span className="text-[12px] text-[var(--text-dim)]">Organization</span>
+              <input name="organization" required className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+            </label>
+            <label className="space-y-2">
+              <span className="text-[12px] text-[var(--text-dim)]">Type</span>
+              <select name="organizationType" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]">
+                <option>School</option>
+                <option>Company</option>
+                <option>Training team</option>
+                <option>Tutoring/coaching group</option>
+              </select>
+            </label>
+          </div>
+          <label className="space-y-2">
+            <span className="text-[12px] text-[var(--text-dim)]">Estimated seats</span>
+            <input name="seats" inputMode="numeric" placeholder="25, 100, 500..." className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+          </label>
+          <label className="space-y-2">
+            <span className="text-[12px] text-[var(--text-dim)]">What would you roll out first?</span>
+            <textarea name="notes" rows={4} className="w-full resize-none rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 py-3 text-[14px] leading-6 outline-none focus:border-[var(--border-strong)]" />
+          </label>
+          {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
+          <Button type="submit" size="lg" className="w-full" disabled={state === "submitting"}>
+            {state === "submitting" ? <LoaderCircle className="size-4 animate-spin" /> : null}
+            {state === "submitting" ? "Sending" : "Request enterprise plan"}
+            {state !== "submitting" ? <ArrowRight data-icon="inline-end" /> : null}
+          </Button>
+        </form>
+      )}
+    </section>
+  );
+}
 
 export function PricingClient({ billingReady, billingSummary }: PricingClientProps) {
   const searchParams = useSearchParams();
@@ -209,8 +363,9 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
               {billingSummary?.tier === "team" ? "Team" : "Pro"}
             </div>
             <p className="max-w-2xl text-sm leading-6 text-[var(--text-dim)]">
+              Go directly to the dashboard when you want to use Tuto.
               {billingSummary?.subscriptionStatus
-                ? `Subscription status: ${billingSummary.subscriptionStatus}.`
+                ? ` Subscription status: ${billingSummary.subscriptionStatus}.`
                 : "Billing is active for this account."}
               {billingSummary?.currentPeriodEnd
                 ? ` Current period ends on ${new Date(
@@ -287,6 +442,7 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
           );
         })}
       </div>
+      <EnterpriseContactForm />
     </div>
   );
 }
