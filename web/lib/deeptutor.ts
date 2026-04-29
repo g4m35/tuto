@@ -274,6 +274,7 @@ function buildStubExercise(lessonId: string, context: GenerateExerciseContext) {
     courseId: context.courseId,
     lessonId,
     lessonTitle: context.lessonTitle,
+    lessonSummary: context.lessonSummary,
     question: `Which statement best captures the core idea behind ${context.lessonTitle}?`,
     options: {
       A: "It is only a memorization trick with no reusable structure.",
@@ -555,6 +556,7 @@ export async function generateExercise(
       courseId: userHistory.courseId,
       lessonId,
       lessonTitle: userHistory.lessonTitle,
+      lessonSummary: userHistory.lessonSummary,
       question: qaPair.question,
       options,
       correctAnswer:

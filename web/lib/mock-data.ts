@@ -51,10 +51,52 @@ export interface ExerciseOption {
   body: string
 }
 
+export type LessonStepKind =
+  | "hook"
+  | "concept"
+  | "example"
+  | "interactive"
+  | "practice"
+  | "reflection"
+  | "checkpoint"
+
+export type LessonInteractiveKind = "compare" | "sort" | "match" | "slider" | "reveal"
+
+export interface LessonInteractiveItem {
+  id: string
+  label: string
+  body: string
+  matchId?: string
+}
+
+export interface LessonInteractiveData {
+  kind: LessonInteractiveKind
+  prompt: string
+  items: LessonInteractiveItem[]
+  minLabel?: string
+  maxLabel?: string
+}
+
+export interface LessonStepData {
+  id: string
+  kind: LessonStepKind
+  title: string
+  body: string
+  takeaway?: string
+  prompt?: string
+  interactive?: LessonInteractiveData
+  options?: ExerciseOption[]
+  correctOptionId?: string
+  hint?: string
+  explanation?: string
+}
+
 export interface ExerciseData {
   courseId: string
   lessonId: string
   title: string
+  subtitle?: string
+  objective?: string
   prompt: string
   step: number
   stepCount: number
@@ -63,6 +105,8 @@ export interface ExerciseData {
   hint: string
   explanation?: string
   correctOptionId?: string
+  steps?: LessonStepData[]
+  checkpointStepId?: string
 }
 
 export const courseCatalog: CourseCardData[] = [

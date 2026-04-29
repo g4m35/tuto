@@ -6,6 +6,8 @@ import type {
   CourseLevel,
   ExerciseData,
   ExerciseOption,
+  LessonInteractiveData,
+  LessonStepData,
   LearningLevel,
   LessonNode,
   LessonState,
@@ -225,6 +227,7 @@ export function buildExerciseData(input: {
   courseId: string;
   lessonId: string;
   lessonTitle: string;
+  lessonSummary?: string;
   question: string;
   options: Record<string, string>;
   explanation: string;
@@ -248,18 +251,100 @@ export function buildExerciseData(input: {
           normalizedAnswer.startsWith(`${option.id.toLowerCase()})`),
       )
     : null;
+  const lessonSummary =
+    input.lessonSummary?.trim() ||
+    `Build a working mental model for ${input.lessonTitle} before answering the checkpoint.`;
+  const correctOptionId = correctOption?.id ?? options[0]?.id;
+  const checkpointOptions = options.map((option) => ({ ...option }));
+  const misconception = options.find((option) => option.id !== correctOptionId);
+  const interaction: LessonInteractiveData = {
+    kind: "compare",
+    prompt: "Tap each card to separate the durable idea from a tempting shortcut.",
+    items: [
+      {
+        id: "mechanism",
+        label: "Mechanism",
+        body: lessonSummary,
+      },
+      {
+        id: "misconception",
+        label: "Trap",
+        body:
+          misconception?.body ||
+          "Treating the lesson as a phrase to memorize instead of a tool to use.",
+      },
+      {
+        id: "boundary",
+        label: "Boundary",
+        body: input.explanation,
+      },
+    ],
+  };
+  const steps: LessonStepData[] = [
+    {
+      id: `${input.lessonId}-hook`,
+      kind: "hook",
+      title: "Start with the puzzle",
+      body: `Before naming the rule, ask what would change if ${input.lessonTitle} were removed from the course. The useful answer is the behavior or decision you could no longer explain.`,
+      takeaway: "A lesson should earn its place by making a hard situation easier to reason about.",
+    },
+    {
+      id: `${input.lessonId}-model`,
+      kind: "concept",
+      title: "Build the model",
+      body: lessonSummary,
+      takeaway: "Keep the concept tied to a concrete action, not just a definition.",
+    },
+    {
+      id: `${input.lessonId}-example`,
+      kind: "example",
+      title: "Work a small example",
+      body: `Use this pattern: identify the situation, name the moving parts, predict what should happen, then check the result against the lesson idea. For ${input.lessonTitle}, the important move is explaining why the answer follows, not only which answer wins.`,
+      takeaway: "A good example makes the invisible mechanism visible.",
+    },
+    {
+      id: `${input.lessonId}-interactive`,
+      kind: "interactive",
+      title: "Test the moving parts",
+      body: "Compare the cards and notice which one describes the mechanism, which one describes a trap, and which one marks the edge of the idea.",
+      interactive: interaction,
+      takeaway: "Strong understanding includes use, misuse, and limits.",
+    },
+    {
+      id: `${input.lessonId}-practice`,
+      kind: "practice",
+      title: "Try it before the checkpoint",
+      body: "Say the answer in your own words first. Then choose the option that best explains the concept's behavior, purpose, and limits.",
+      prompt: input.question,
+      hint: input.explanation,
+    },
+    {
+      id: `${input.lessonId}-checkpoint`,
+      kind: "checkpoint",
+      title: "Checkpoint",
+      body: "Lock in the lesson by choosing the strongest explanation.",
+      prompt: input.question,
+      options: checkpointOptions,
+      correctOptionId,
+      explanation: input.explanation,
+    },
+  ];
 
   return {
     courseId: input.courseId,
     lessonId: input.lessonId,
     title: input.lessonTitle,
+    subtitle: "Interactive lesson",
+    objective: `Understand and apply ${input.lessonTitle}.`,
     prompt: input.question,
-    step: 1,
-    stepCount: 1,
+    step: steps.length,
+    stepCount: steps.length,
     xp: input.backendMode === "stub" ? 30 : 50,
     options,
-    correctOptionId: correctOption?.id,
+    correctOptionId,
     explanation: input.explanation,
     hint: input.explanation || "Review the lesson summary, then eliminate the most obviously wrong option first.",
+    steps,
+    checkpointStepId: `${input.lessonId}-checkpoint`,
   };
 }
