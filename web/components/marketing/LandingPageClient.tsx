@@ -8,7 +8,6 @@ import {
   BriefcaseBusiness,
   Check,
   ClipboardCheck,
-  FileText,
   GraduationCap,
   Mail,
 } from "lucide-react";
@@ -28,48 +27,27 @@ const variantCopy: Record<
   {
     headline: string;
     supporting: string;
-    proof: [string, string, string];
     eventSource: string;
   }
 > = {
   default: {
     headline: "Turn any PDF or topic into a guided course.",
     supporting: "Tuto builds lessons, practice, and review loops from material you already trust.",
-    proof: [
-      "Source-grounded course creation",
-      "Practice tied to course progress",
-      "Review loop from real weak spots",
-    ],
     eventSource: "landing_default",
   },
   pdf: {
     headline: "Turn a dense PDF into a guided course.",
     supporting: "Upload a trusted source and Tuto turns it into lessons, practice, and review.",
-    proof: [
-      "Works from PDFs, Markdown, and text",
-      "Course outline before you commit",
-      "Practice from the same material",
-    ],
     eventSource: "landing_pdf",
   },
   notes: {
     headline: "Turn class notes into lessons and practice.",
     supporting: "Move from passive notes to a course path that helps you study before the next exam.",
-    proof: [
-      "Built for adult learners",
-      "Topic or notes-based course creation",
-      "Review loop after progress",
-    ],
     eventSource: "landing_notes",
   },
   training: {
     headline: "Turn training docs into guided practice.",
     supporting: "Convert onboarding packets, SOPs, and internal docs into a course you can work through.",
-    proof: [
-      "Useful for operators and coaches",
-      "Source-first learning paths",
-      "Team waitlist for shared workflows",
-    ],
     eventSource: "landing_training",
   },
 };
@@ -191,8 +169,7 @@ function CourseExamplesGraphic() {
               key={course.title}
               className="rounded-[16px] border border-[#e6ebf1] bg-white p-4 transition-transform duration-200 ease-[var(--ease-signature)] hover:-translate-y-0.5"
               initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.75 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.36, delay: index * 0.08, ease: [0.2, 0.7, 0.2, 1] }}
             >
               <div className="flex items-start gap-3">
@@ -223,82 +200,17 @@ function CourseExamplesGraphic() {
           ))}
         </div>
 
-        <div className="mt-6">
-          <div className="relative h-px overflow-hidden bg-[#d9e2ec]">
-            <motion.div
-              className="absolute inset-y-0 left-0 w-full origin-left bg-[linear-gradient(90deg,#00d4ff,#635bff,#ff5a9e)]"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              viewport={{ once: true, amount: 0.8 }}
-              transition={{ duration: 0.7, delay: 0.14, ease: [0.2, 0.7, 0.2, 1] }}
-            />
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[12px] font-medium text-[#425466]">
-            <span>Source</span>
-            <span>Lessons</span>
-            <span>Practice</span>
-          </div>
+        <div className="mt-6 h-px overflow-hidden bg-[#d9e2ec]">
+          <motion.div
+            className="h-full w-full origin-left bg-[linear-gradient(90deg,#00d4ff,#635bff,#ff5a9e)]"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true, amount: 0.8 }}
+            transition={{ duration: 0.7, delay: 0.14, ease: [0.2, 0.7, 0.2, 1] }}
+          />
         </div>
       </div>
     </motion.div>
-  );
-}
-
-function CourseExampleStrip() {
-  return (
-    <section className="bg-[#f7fbff]">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-20 sm:px-7 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-        <div className="max-w-xl">
-          <p className="text-[13px] font-semibold text-[#635bff]">Course examples</p>
-          <h2 className="mt-3 text-[34px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#0a2540] sm:text-[48px]">
-            Show the outcome, not the machinery.
-          </h2>
-          <p className="mt-5 text-[17px] leading-8 text-[#425466]">
-            A learner should immediately understand what they get: a course path, short lessons, and practice tied to the material.
-          </p>
-        </div>
-
-        <motion.div
-          className="grid gap-3 sm:grid-cols-3"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.35 }}
-          variants={{
-            hidden: {},
-            show: { transition: { staggerChildren: 0.08 } },
-          }}
-        >
-          {courseExamples.map((course) => (
-            <motion.article
-              key={course.title}
-              className="rounded-[18px] border border-[#e6ebf1] bg-white p-5 shadow-[0_18px_50px_-42px_rgba(10,37,64,0.58)]"
-              variants={{
-                hidden: { opacity: 0, y: 12 },
-                show: { opacity: 1, y: 0, transition: { duration: 0.34, ease: [0.2, 0.7, 0.2, 1] } },
-              }}
-            >
-              <p className="text-[12px] font-medium text-[#6b7c93]">{course.source}</p>
-              <h3 className="mt-4 min-h-12 text-[17px] font-semibold leading-6 tracking-[-0.02em] text-[#0a2540]">
-                {course.title}
-              </h3>
-              <div className="mt-5 space-y-2">
-                {course.lessons.map((lesson, index) => (
-                  <div key={lesson} className="flex items-center gap-2 text-[13px] text-[#425466]">
-                    <span className="size-1.5 rounded-full bg-[#635bff]" />
-                    <span>{lesson}</span>
-                    {index === 0 ? (
-                      <span className="ml-auto rounded-full bg-[#eef2ff] px-2 py-0.5 text-[11px] font-medium text-[#635bff]">
-                        start
-                      </span>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </motion.article>
-          ))}
-        </motion.div>
-      </div>
-    </section>
   );
 }
 
@@ -494,25 +406,11 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
                 Create your first course
                 <ArrowRight data-icon="inline-end" />
               </Link>
-              <a
-                href="#beta"
-                onClick={() => trackMarketingEvent("hero_beta_clicked", { source: copy.eventSource })}
-                className="inline-flex h-11 items-center rounded-full px-4 text-[14px] font-semibold text-[#635bff] hover:text-[#0a2540] sm:h-12 sm:px-5 sm:text-[15px]"
-              >
-                Join the beta
-              </a>
-            </div>
-            <div className="mt-12 grid max-w-2xl gap-3 border-t border-[#d9e2ec] pt-6 text-[13px] font-medium leading-6 text-[#425466] sm:grid-cols-3">
-              {copy.proof.map((proof) => (
-                <p key={proof}>{proof}</p>
-              ))}
             </div>
           </div>
           <CourseExamplesGraphic />
         </div>
       </section>
-
-      <CourseExampleStrip />
 
       <section className="border-y border-[#e6ebf1] bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-4 px-5 py-16 sm:px-7 lg:grid-cols-4">
@@ -565,12 +463,6 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
             <p className="mt-5 text-[18px] leading-8 text-white/[0.66]">
               We are prioritizing professional learners, tutors, coaches, and operators who have real material ready to test.
             </p>
-            <div className="mt-10 rounded-[20px] border border-white/10 bg-white/[0.055] p-5">
-              <FileText className="size-5 text-white" />
-              <p className="mt-6 text-[15px] leading-7 text-white/[0.68]">
-                Beta onboarding focuses on the first useful loop: upload or prompt, generate course, complete a lesson, and review the first weak spot.
-              </p>
-            </div>
           </div>
           <BetaForm eventSource={copy.eventSource} />
         </div>
