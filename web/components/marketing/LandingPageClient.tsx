@@ -1,9 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion, useMotionValue, useTransform, type MotionValue } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   BookOpenCheck,
@@ -15,7 +14,7 @@ import {
   Mail,
   Upload,
 } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { trackMarketingEvent } from "@/lib/marketing-client";
 import { cn } from "@/lib/utils";
 
@@ -133,55 +132,69 @@ const faqs = [
   },
 ];
 
+function LogoMark() {
+  return (
+    <span className="inline-flex items-center gap-2.5" aria-label="Tuto">
+      <span className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-[10px] bg-[#635bff] shadow-[0_12px_30px_-14px_rgba(99,91,255,0.9)]">
+        <span className="absolute inset-0 bg-[linear-gradient(135deg,#00d4ff_0%,#635bff_48%,#ff5a9e_100%)]" />
+        <span className="relative h-4 w-4 rounded-[5px] border-[2px] border-white/90 before:absolute before:left-1/2 before:top-[-5px] before:h-[22px] before:w-[2px] before:-translate-x-1/2 before:rotate-[24deg] before:bg-white/90" />
+      </span>
+      <span className="text-[19px] font-semibold tracking-[-0.02em] text-[#0a2540]">tuto</span>
+    </span>
+  );
+}
+
 function ProductPreview() {
   return (
-    <div className="relative rounded-[24px] border border-[var(--border)] bg-[#0f0f0f] p-3 shadow-[0_32px_90px_-60px_rgba(255,255,255,0.45)]">
-      <div className="rounded-[18px] border border-[var(--border)] bg-[#050505] p-4 sm:p-5">
-        <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+    <div className="relative rounded-[28px] bg-[#0a2540] p-3 shadow-[0_38px_90px_-38px_rgba(10,37,64,0.72)]">
+      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#00d4ff]/25 blur-3xl" aria-hidden="true" />
+      <div className="absolute -bottom-10 left-12 h-36 w-36 rounded-full bg-[#635bff]/30 blur-3xl" aria-hidden="true" />
+      <div className="relative rounded-[22px] border border-white/10 bg-[#06182c] p-4 text-white sm:p-5">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--text-faint)]">Course builder</p>
-            <h2 className="mt-2 text-[18px] font-medium tracking-normal text-[var(--text)]">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/[0.42]">Course builder</p>
+            <h2 className="mt-2 text-[18px] font-medium tracking-normal text-white">
               Photosynthesis from trusted notes
             </h2>
           </div>
-          <span className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-[12px] text-[var(--text-dim)]">
+          <span className="rounded-full border border-white/[0.18] bg-white/[0.08] px-3 py-1 text-[12px] text-white/[0.72]">
             Ready
           </span>
         </div>
 
         <div className="mt-5 grid gap-3 lg:grid-cols-[0.85fr_1.15fr]">
-          <div className="rounded-[14px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-elev)] p-4">
-            <div className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[#080808]">
-              <Upload className="size-4 text-[var(--text)]" />
+          <div className="rounded-[14px] border border-dashed border-white/20 bg-white/[0.045] p-4">
+            <div className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/20">
+              <Upload className="size-4 text-white" />
             </div>
-            <p className="mt-5 text-[13px] font-medium text-[var(--text)]">biology-notes.pdf</p>
-            <p className="mt-1 text-[12px] leading-5 text-[var(--text-dim)]">
+            <p className="mt-5 text-[13px] font-medium text-white">biology-notes.pdf</p>
+            <p className="mt-1 text-[12px] leading-5 text-white/[0.58]">
               Source material is attached to the course plan.
             </p>
           </div>
 
-          <div className="rounded-[14px] border border-[var(--border)] bg-[var(--bg-elev)] p-4">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--text-faint)]">Generated outline</p>
+          <div className="rounded-[14px] border border-white/10 bg-white/[0.045] p-4">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/[0.42]">Generated outline</p>
             <div className="mt-4 space-y-3">
               {["Big idea", "Light reactions", "Practice model", "Review weak spots"].map((item, index) => (
                 <div key={item} className="flex items-center gap-3">
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[11px] text-[var(--text-dim)]">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-white/10 text-[11px] text-white/[0.58]">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-[13px] text-[var(--text)]">{item}</span>
+                  <span className="text-[13px] text-white">{item}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="mt-3 rounded-[14px] border border-[var(--border)] bg-[var(--bg-elev)] p-4">
+        <div className="mt-3 rounded-[14px] border border-white/10 bg-white/[0.045] p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--text-faint)]">Review queue</p>
-              <p className="mt-2 text-[14px] text-[var(--text)]">Energy transfer and chlorophyll roles</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-white/[0.42]">Review queue</p>
+              <p className="mt-2 text-[14px] text-white">Energy transfer and chlorophyll roles</p>
             </div>
-            <span className="inline-flex items-center gap-2 text-[13px] text-[var(--text-dim)]">
+            <span className="inline-flex items-center gap-2 text-[13px] text-white/[0.62]">
               <BookOpenCheck className="size-4" />
               Practice next
             </span>
@@ -195,124 +208,102 @@ function ProductPreview() {
 function GeneratedOutlineRow({
   item,
   index,
-  scrollYProgress,
 }: {
   item: string;
   index: number;
-  scrollYProgress: MotionValue<number>;
 }) {
-  const start = 0.25 + index * 0.06;
-  const opacity = useTransform(scrollYProgress, [start, start + 0.12], [0, 1]);
-  const y = useTransform(scrollYProgress, [start, start + 0.12], [18, 0]);
-
   return (
-    <motion.div className="flex items-center gap-3" style={{ opacity, y }}>
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[11px] text-[var(--text-dim)] sm:size-8 sm:text-[12px]">
+    <motion.div
+      className="flex items-center gap-3"
+      initial={{ opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.8 }}
+      transition={{ duration: 0.42, delay: 0.32 + index * 0.08, ease: [0.2, 0.7, 0.2, 1] }}
+    >
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-white/10 text-[11px] text-white/[0.58] sm:size-8 sm:text-[12px]">
         {String(index + 1).padStart(2, "0")}
       </span>
-      <span className="text-[13px] text-[var(--text)] sm:text-[15px]">{item}</span>
+      <span className="text-[13px] text-white sm:text-[15px]">{item}</span>
     </motion.div>
   );
 }
 
 function ScrollBuildPreview() {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const scrollYProgress = useMotionValue(0);
-
-  useEffect(() => {
-    let frame = 0;
-
-    function updateProgress() {
-      const section = sectionRef.current;
-      if (!section) return;
-
-      const rect = section.getBoundingClientRect();
-      const sectionTop = rect.top + window.scrollY;
-      const distance = Math.max(1, rect.height - window.innerHeight);
-      const nextProgress = (window.scrollY - sectionTop) / distance;
-      scrollYProgress.set(Math.min(1, Math.max(0, nextProgress)));
-    }
-
-    function queueProgressUpdate() {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(updateProgress);
-    }
-
-    updateProgress();
-    window.addEventListener("scroll", queueProgressUpdate, { passive: true });
-    window.addEventListener("resize", queueProgressUpdate);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", queueProgressUpdate);
-      window.removeEventListener("resize", queueProgressUpdate);
-    };
-  }, [scrollYProgress]);
-
-  const shellOpacity = useTransform(scrollYProgress, [0, 0.12, 0.65], [0.2, 0.72, 1]);
-  const shellScale = useTransform(scrollYProgress, [0, 0.2, 0.65], [0.94, 0.98, 1]);
-  const glowOpacity = useTransform(scrollYProgress, [0, 0.34, 0.58], [0.05, 0.16, 0.32]);
-  const uploadOpacity = useTransform(scrollYProgress, [0.08, 0.18], [0, 1]);
-  const uploadY = useTransform(scrollYProgress, [0.08, 0.2], [30, 0]);
-  const outlineOpacity = useTransform(scrollYProgress, [0.18, 0.3], [0, 1]);
-  const outlineY = useTransform(scrollYProgress, [0.18, 0.32], [30, 0]);
-  const reviewOpacity = useTransform(scrollYProgress, [0.38, 0.5], [0, 1]);
-  const reviewY = useTransform(scrollYProgress, [0.38, 0.52], [28, 0]);
-  const readyOpacity = useTransform(scrollYProgress, [0.48, 0.6], [0, 1]);
-  const progressWidth = useTransform(scrollYProgress, [0.06, 0.62], ["6%", "100%"]);
-  const blankOpacity = useTransform(scrollYProgress, [0, 0.18], [1, 0]);
-  const titleOpacity = useTransform(scrollYProgress, [0.08, 0.24], [0, 1]);
-
   return (
-    <section ref={sectionRef} className="relative min-h-[170vh] border-y border-[var(--border)] bg-[#050505]">
-      <div className="sticky top-16 mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-5 overflow-hidden px-5 py-5 sm:gap-8 sm:px-7 sm:py-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:py-10">
+    <section className="relative overflow-hidden bg-[#f6f9fc] py-20 sm:py-28">
+      <div className="absolute inset-x-0 top-0 h-28 -skew-y-3 bg-[linear-gradient(90deg,#00d4ff_0%,#635bff_48%,#ff5a9e_100%)] opacity-90" aria-hidden="true" />
+      <div className="relative mx-auto grid w-full max-w-7xl gap-10 px-5 sm:px-7 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
         <div className="min-w-0 max-w-xl">
-          <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Course creation</p>
-          <h2 className="mt-3 text-[32px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:mt-4 sm:text-[52px]">
-            Watch a course build itself from a blank start.
+          <p className="text-[13px] font-semibold text-[#635bff]">Course creation</p>
+          <h2 className="mt-3 text-[34px] font-semibold leading-[1.04] tracking-[-0.035em] text-[#0a2540] sm:text-[54px]">
+            Watch the course take shape as you move down the page.
           </h2>
-          <p className="mt-4 text-[15px] leading-7 text-[var(--text-dim)] sm:mt-5 sm:text-[17px] sm:leading-8">
+          <p className="mt-5 text-[17px] leading-8 text-[#425466]">
             Tuto turns source material into a structured course plan, practice queue, and next action before the learner starts.
           </p>
-          <div className="mt-5 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-white/10 sm:mt-9">
-            <motion.div className="h-full rounded-full bg-[var(--text)]" style={{ width: progressWidth }} />
+          <div className="mt-9 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-[#d9e2ec]">
+            <motion.div
+              className="h-full rounded-full bg-[#635bff]"
+              initial={{ width: "8%" }}
+              whileInView={{ width: "100%" }}
+              viewport={{ once: true, amount: 0.55 }}
+              transition={{ duration: 1.1, ease: [0.2, 0.7, 0.2, 1] }}
+            />
           </div>
         </div>
 
         <motion.div
-          className="relative w-full min-w-0 rounded-[22px] border border-[var(--border)] bg-[#101010] p-2 shadow-[0_46px_120px_-74px_rgba(255,255,255,0.5)] sm:rounded-[28px] sm:p-3"
-          style={{ opacity: shellOpacity, scale: shellScale }}
+          className="relative w-full min-w-0 rounded-[28px] bg-[#0a2540] p-3 shadow-[0_42px_90px_-36px_rgba(10,37,64,0.72)]"
+          initial={{ opacity: 0.3, scale: 0.96, y: 24 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.45 }}
+          transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1] }}
         >
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-12 bottom-0 h-28 rounded-full bg-white/25 blur-3xl"
-            style={{ opacity: glowOpacity }}
+            className="pointer-events-none absolute inset-x-12 bottom-0 h-28 rounded-full bg-[#00d4ff]/28 blur-3xl"
+            initial={{ opacity: 0.04 }}
+            whileInView={{ opacity: 0.34 }}
+            viewport={{ once: true, amount: 0.45 }}
+            transition={{ duration: 1.1, delay: 0.25 }}
           />
-          <div className="relative overflow-hidden rounded-[17px] border border-[var(--border)] bg-[#050505] p-4 sm:rounded-[22px] sm:p-7">
+          <div className="relative overflow-hidden rounded-[22px] border border-white/10 bg-[#06182c] p-4 text-white sm:p-7">
             <motion.div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,rgba(255,255,255,0.08)_42%,transparent_72%)]"
-              style={{ opacity: blankOpacity }}
+              initial={{ opacity: 1 }}
+              whileInView={{ opacity: 0 }}
+              viewport={{ once: true, amount: 0.45 }}
+              transition={{ duration: 0.65, delay: 0.15 }}
             />
 
-            <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-5 sm:pb-5">
+            <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-5 sm:pb-5">
               <div className="min-w-0">
-                <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Course builder</p>
+                <p className="text-[12px] uppercase tracking-[0.24em] text-white/[0.42]">Course builder</p>
                 <motion.h3
-                  className="mt-2 text-[21px] font-medium leading-tight tracking-normal text-[var(--text)] sm:mt-3 sm:text-[31px]"
-                  style={{ opacity: titleOpacity }}
+                  className="mt-2 text-[21px] font-medium leading-tight tracking-normal text-white sm:mt-3 sm:text-[31px]"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, amount: 0.7 }}
+                  transition={{ duration: 0.45, delay: 0.18 }}
                 >
                   Photosynthesis from trusted notes
                 </motion.h3>
                 <motion.div
                   aria-hidden="true"
-                  className="mt-3 h-6 w-64 max-w-full rounded-full border border-dashed border-[var(--border-strong)] bg-[var(--bg-elev)] sm:mt-4 sm:h-7 sm:w-72"
-                  style={{ opacity: blankOpacity }}
+                  className="mt-3 h-6 w-64 max-w-full rounded-full border border-dashed border-white/[0.18] bg-white/[0.045] sm:mt-4 sm:h-7 sm:w-72"
+                  initial={{ opacity: 1 }}
+                  whileInView={{ opacity: 0 }}
+                  viewport={{ once: true, amount: 0.7 }}
+                  transition={{ duration: 0.42, delay: 0.16 }}
                 />
               </div>
               <motion.span
-                className="w-fit shrink-0 rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-[13px] text-[var(--text-dim)] sm:px-4 sm:py-2 sm:text-[15px]"
-                style={{ opacity: readyOpacity }}
+                className="w-fit shrink-0 rounded-full border border-white/[0.18] bg-white/[0.08] px-3 py-1.5 text-[13px] text-white/[0.72] sm:px-4 sm:py-2 sm:text-[15px]"
+                initial={{ opacity: 0, y: -8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.7 }}
+                transition={{ duration: 0.44, delay: 0.68 }}
               >
                 Ready
               </motion.span>
@@ -320,30 +311,35 @@ function ScrollBuildPreview() {
 
             <div className="mt-4 grid gap-3 sm:mt-5 sm:gap-4 lg:grid-cols-[0.88fr_1.12fr]">
               <motion.div
-                className="min-h-[150px] rounded-[14px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-elev)] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
-                style={{ opacity: uploadOpacity, y: uploadY }}
+                className="min-h-[150px] rounded-[14px] border border-dashed border-white/20 bg-white/[0.045] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.55 }}
+                transition={{ duration: 0.5, delay: 0.18, ease: [0.2, 0.7, 0.2, 1] }}
               >
-                <div className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[#080808] sm:size-12">
-                  <Upload className="size-4 text-[var(--text)] sm:size-5" />
+                <div className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-black/20 sm:size-12">
+                  <Upload className="size-4 text-white sm:size-5" />
                 </div>
-                <p className="mt-7 text-[17px] font-medium leading-6 text-[var(--text)] sm:mt-12 sm:text-[20px] sm:leading-7">biology-notes.pdf</p>
-                <p className="mt-2 max-w-sm text-[13px] leading-6 text-[var(--text-dim)] sm:mt-3 sm:text-[15px] sm:leading-7">
+                <p className="mt-7 text-[17px] font-medium leading-6 text-white sm:mt-12 sm:text-[20px] sm:leading-7">biology-notes.pdf</p>
+                <p className="mt-2 max-w-sm text-[13px] leading-6 text-white/[0.58] sm:mt-3 sm:text-[15px] sm:leading-7">
                   Source material is attached to the course plan.
                 </p>
               </motion.div>
 
               <motion.div
-                className="min-h-[194px] rounded-[14px] border border-[var(--border)] bg-[var(--bg-elev)] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
-                style={{ opacity: outlineOpacity, y: outlineY }}
+                className="min-h-[194px] rounded-[14px] border border-white/10 bg-white/[0.045] p-4 sm:min-h-[236px] sm:rounded-[18px] sm:p-5"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.55 }}
+                transition={{ duration: 0.5, delay: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
               >
-                <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Generated outline</p>
+                <p className="text-[12px] uppercase tracking-[0.24em] text-white/[0.42]">Generated outline</p>
                 <div className="mt-4 space-y-3 sm:mt-7 sm:space-y-5">
                   {["Big idea", "Light reactions", "Practice model", "Review weak spots"].map((item, index) => (
                     <GeneratedOutlineRow
                       key={item}
                       item={item}
                       index={index}
-                      scrollYProgress={scrollYProgress}
                     />
                   ))}
                 </div>
@@ -351,17 +347,20 @@ function ScrollBuildPreview() {
             </div>
 
             <motion.div
-              className="mt-3 rounded-[14px] border border-[var(--border)] bg-[var(--bg-elev)] p-4 sm:mt-4 sm:rounded-[18px] sm:p-5"
-              style={{ opacity: reviewOpacity, y: reviewY }}
+              className="mt-3 rounded-[14px] border border-white/10 bg-white/[0.045] p-4 sm:mt-4 sm:rounded-[18px] sm:p-5"
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.8 }}
+              transition={{ duration: 0.5, delay: 0.52, ease: [0.2, 0.7, 0.2, 1] }}
             >
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-[12px] uppercase tracking-[0.24em] text-[var(--text-faint)]">Review queue</p>
-                  <p className="mt-2 text-[16px] leading-6 text-[var(--text)] sm:mt-3 sm:text-[20px] sm:leading-7">
+                  <p className="text-[12px] uppercase tracking-[0.24em] text-white/[0.42]">Review queue</p>
+                  <p className="mt-2 text-[16px] leading-6 text-white sm:mt-3 sm:text-[20px] sm:leading-7">
                     Energy transfer and chlorophyll roles
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-2 text-[13px] text-[var(--text-dim)] sm:text-[16px]">
+                <span className="inline-flex items-center gap-2 text-[13px] text-white/[0.62] sm:text-[16px]">
                   <BookOpenCheck className="size-4 sm:size-5" />
                   Practice next
                 </span>
@@ -519,26 +518,25 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
   }, [copy.eventSource, variant]);
 
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-black/76 backdrop-blur-xl">
+    <main className="min-h-screen bg-white text-[#0a2540]">
+      <header className="sticky top-0 z-40 border-b border-[#e6ebf1]/70 bg-white/[0.82] backdrop-blur-xl">
         <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-7">
-          <Link href="/" className="flex items-center gap-3" onClick={() => trackMarketingEvent("nav_logo_clicked", { source: copy.eventSource })}>
-            <Image src="/logo.png" alt="" width={32} height={32} className="size-8 rounded-[9px]" />
-            <span className="text-[16px] font-semibold tracking-normal">Tuto</span>
+          <Link href="/" onClick={() => trackMarketingEvent("nav_logo_clicked", { source: copy.eventSource })}>
+            <LogoMark />
           </Link>
-          <div className="hidden items-center gap-7 text-[13px] text-[var(--text-dim)] md:flex">
-            <a href="#product" className="hover:text-[var(--text)]">Product</a>
-            <a href="#use-cases" className="hover:text-[var(--text)]">Use cases</a>
-            <a href="#pricing" className="hover:text-[var(--text)]">Pricing</a>
+          <div className="hidden items-center gap-7 text-[14px] font-medium text-[#425466] md:flex">
+            <a href="#product" className="hover:text-[#0a2540]">Product</a>
+            <a href="#use-cases" className="hover:text-[#0a2540]">Use cases</a>
+            <a href="#pricing" className="hover:text-[#0a2540]">Pricing</a>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+            <Link href="/dashboard" className="inline-flex h-9 items-center rounded-full px-4 text-[14px] font-semibold text-[#425466] hover:text-[#0a2540]">
               Open app
             </Link>
             <Link
               href="/create"
               onClick={() => trackMarketingEvent("hero_create_course_clicked", { source: copy.eventSource, location: "nav" })}
-              className={cn(buttonVariants({ size: "sm" }), "hidden sm:inline-flex")}
+              className="hidden h-9 items-center gap-2 rounded-full bg-[#0a2540] px-4 text-[14px] font-semibold text-white shadow-[0_12px_24px_-18px_rgba(10,37,64,0.7)] hover:bg-[#172b4d] sm:inline-flex"
             >
               Create course
               <ArrowRight data-icon="inline-end" />
@@ -547,60 +545,66 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </nav>
       </header>
 
-      <section id="product" className="mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-10 px-5 py-14 sm:px-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-center lg:py-16">
-        <div className="max-w-3xl">
-          <h1 className="text-[48px] font-semibold leading-[0.98] tracking-normal text-[var(--text)] sm:text-[68px] lg:text-[78px]">
-            {copy.headline}
-          </h1>
-          <p className="mt-6 max-w-2xl text-[19px] leading-8 text-[var(--text-dim)] sm:text-[21px]">
-            {copy.supporting}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/create"
-              onClick={() => trackMarketingEvent("hero_create_course_clicked", { source: copy.eventSource, location: "hero" })}
-              className={cn(buttonVariants({ size: "lg" }))}
-            >
-              Create your first course
-              <ArrowRight data-icon="inline-end" />
-            </Link>
-            <a
-              href="#beta"
-              onClick={() => trackMarketingEvent("hero_beta_clicked", { source: copy.eventSource })}
-              className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}
-            >
-              Join the beta
-            </a>
+      <section id="product" className="relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[520px] -skew-y-6 bg-[linear-gradient(120deg,#00d4ff_0%,#635bff_45%,#ff5a9e_100%)]" aria-hidden="true" />
+        <div className="absolute inset-x-0 top-[380px] h-44 -skew-y-6 bg-white" aria-hidden="true" />
+        <div className="relative mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-10 px-5 py-16 sm:px-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-center lg:py-20">
+          <div className="max-w-3xl pt-8 lg:pt-0">
+            <h1 className="text-[44px] font-semibold leading-[0.96] tracking-[-0.04em] text-[#0a2540] sm:text-[74px] sm:tracking-[-0.045em] lg:text-[86px]">
+              {copy.headline}
+            </h1>
+            <p className="mt-6 max-w-2xl text-[19px] leading-8 text-[#425466] sm:text-[21px]">
+              {copy.supporting}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/create"
+                onClick={() => trackMarketingEvent("hero_create_course_clicked", { source: copy.eventSource, location: "hero" })}
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-[#0a2540] px-5 text-[14px] font-semibold text-white shadow-[0_18px_34px_-22px_rgba(10,37,64,0.75)] hover:bg-[#172b4d] sm:h-12 sm:px-6 sm:text-[15px]"
+              >
+                Create your first course
+                <ArrowRight data-icon="inline-end" />
+              </Link>
+              <a
+                href="#beta"
+                onClick={() => trackMarketingEvent("hero_beta_clicked", { source: copy.eventSource })}
+                className="inline-flex h-11 items-center rounded-full px-4 text-[14px] font-semibold text-[#635bff] hover:text-[#0a2540] sm:h-12 sm:px-5 sm:text-[15px]"
+              >
+                Join the beta
+              </a>
+            </div>
+            <div className="mt-12 grid max-w-2xl gap-3 border-t border-[#d9e2ec] pt-6 text-[13px] font-medium leading-6 text-[#425466] sm:grid-cols-3">
+              {copy.proof.map((proof) => (
+                <p key={proof}>{proof}</p>
+              ))}
+            </div>
           </div>
-          <div className="mt-12 grid max-w-2xl gap-3 border-t border-[var(--border)] pt-6 text-[13px] leading-6 text-[var(--text-dim)] sm:grid-cols-3">
-            {copy.proof.map((proof) => (
-              <p key={proof}>{proof}</p>
-            ))}
-          </div>
+          <ProductPreview />
         </div>
-        <ProductPreview />
       </section>
 
       <ScrollBuildPreview />
 
-      <section className="border-y border-[var(--border)] bg-[#050505]">
-        <div className="mx-auto grid w-full max-w-7xl gap-4 px-5 py-14 sm:px-7 lg:grid-cols-4">
+      <section className="border-y border-[#e6ebf1] bg-white">
+        <div className="mx-auto grid w-full max-w-7xl gap-4 px-5 py-16 sm:px-7 lg:grid-cols-4">
           {steps.map((step, index) => (
-            <article key={step.title} className="min-h-[180px] border-l border-[var(--border)] px-5 py-2">
-              <span className="text-[12px] text-[var(--text-faint)]">{String(index + 1).padStart(2, "0")}</span>
-              <h2 className="mt-8 text-[20px] font-medium leading-7 tracking-normal text-[var(--text)]">{step.title}</h2>
-              <p className="mt-3 text-[14px] leading-6 text-[var(--text-dim)]">{step.body}</p>
+            <article key={step.title} className="min-h-[180px] border-l border-[#d9e2ec] px-5 py-2">
+              <span className="text-[12px] font-semibold text-[#635bff]">{String(index + 1).padStart(2, "0")}</span>
+              <h2 className="mt-8 text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#0a2540]">{step.title}</h2>
+              <p className="mt-3 text-[14px] leading-6 text-[#425466]">{step.body}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section id="use-cases" className="mx-auto w-full max-w-7xl px-5 py-20 sm:px-7">
+      <section id="use-cases" className="bg-[#f6f9fc]">
+        <div className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-7">
         <div className="max-w-3xl">
-          <h2 className="text-[38px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[52px]">
+          <p className="text-[13px] font-semibold text-[#635bff]">Use cases</p>
+          <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#0a2540] sm:text-[52px]">
             Built for dense material and real study loops.
           </h2>
-          <p className="mt-5 text-[18px] leading-8 text-[var(--text-dim)]">
+          <p className="mt-5 text-[18px] leading-8 text-[#425466]">
             Start where the pain is sharp: adult learners with material they need to understand, remember, and apply.
           </p>
         </div>
@@ -609,28 +613,32 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
           {useCases.map((item) => {
             const Icon = item.icon;
             return (
-              <article key={item.title} className="min-h-[250px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] p-6">
-                <Icon className="size-5 text-[var(--text)]" />
-                <h3 className="mt-12 text-[24px] font-medium leading-8 tracking-normal text-[var(--text)]">{item.title}</h3>
-                <p className="mt-4 text-[14px] leading-6 text-[var(--text-dim)]">{item.body}</p>
+              <article key={item.title} className="min-h-[250px] rounded-[20px] border border-[#e6ebf1] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(10,37,64,0.62)]">
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-[#eef2ff] text-[#635bff]">
+                  <Icon className="size-5" />
+                </span>
+                <h3 className="mt-12 text-[24px] font-semibold leading-8 tracking-[-0.025em] text-[#0a2540]">{item.title}</h3>
+                <p className="mt-4 text-[14px] leading-6 text-[#425466]">{item.body}</p>
               </article>
             );
           })}
         </div>
+        </div>
       </section>
 
-      <section id="beta" className="border-y border-[var(--border)] bg-[#050505]">
+      <section id="beta" className="border-y border-[#0a2540] bg-[#0a2540] text-white">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-20 sm:px-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,0.85fr)] lg:items-start">
           <div className="max-w-2xl">
-            <h2 className="text-[38px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[52px]">
+            <p className="text-[13px] font-semibold text-[#00d4ff]">Beta access</p>
+            <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-white sm:text-[52px]">
               Help shape the beta before the broad paid launch.
             </h2>
-            <p className="mt-5 text-[18px] leading-8 text-[var(--text-dim)]">
+            <p className="mt-5 text-[18px] leading-8 text-white/[0.66]">
               We are prioritizing professional learners, tutors, coaches, and operators who have real material ready to test.
             </p>
-            <div className="mt-10 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] p-5">
-              <FileText className="size-5 text-[var(--text)]" />
-              <p className="mt-6 text-[15px] leading-7 text-[var(--text-dim)]">
+            <div className="mt-10 rounded-[20px] border border-white/10 bg-white/[0.055] p-5">
+              <FileText className="size-5 text-white" />
+              <p className="mt-6 text-[15px] leading-7 text-white/[0.68]">
                 Beta onboarding focuses on the first useful loop: upload or prompt, generate course, complete a lesson, and review the first weak spot.
               </p>
             </div>
@@ -639,7 +647,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </div>
       </section>
 
-      <section id="pricing" className="mx-auto w-full max-w-7xl px-5 py-20 sm:px-7">
+      <section id="pricing" className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-7">
         <div className="grid gap-4 lg:grid-cols-3">
           {[
             ["Free starter", "$0", "Create the first course and feel the loop before upgrading."],
@@ -647,14 +655,19 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
             ["Team", "$65/mo", "Shared-use billing for small teams, tutors, coaches, and cohort operators."],
             ["Enterprise", "Custom", "For schools and companies that need seats, onboarding, and contract billing."],
           ].map(([name, price, body]) => (
-            <article key={name} className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] p-6">
-              <h3 className="text-[15px] font-medium text-[var(--text)]">{name}</h3>
-              <p className="mt-5 text-[34px] font-semibold tracking-normal text-[var(--text)]">{price}</p>
-              <p className="mt-4 min-h-16 text-[14px] leading-6 text-[var(--text-dim)]">{body}</p>
+            <article key={name} className="rounded-[20px] border border-[#e6ebf1] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(10,37,64,0.62)]">
+              <h3 className="text-[15px] font-semibold text-[#0a2540]">{name}</h3>
+              <p className="mt-5 text-[34px] font-semibold tracking-[-0.03em] text-[#0a2540]">{price}</p>
+              <p className="mt-4 min-h-16 text-[14px] leading-6 text-[#425466]">{body}</p>
               <Link
                 href={name === "Enterprise" ? "/pricing#enterprise" : name === "Pro" || name === "Team" ? "/pricing" : "/create"}
                 onClick={() => trackMarketingEvent("pricing_cta_clicked", { source: copy.eventSource, plan: name })}
-                className={cn(buttonVariants({ variant: name === "Pro" || name === "Enterprise" ? "default" : "secondary", size: "lg" }), "mt-7 w-full")}
+                className={cn(
+                  "mt-7 inline-flex h-11 w-full items-center justify-center rounded-full text-[14px] font-semibold",
+                  name === "Pro" || name === "Enterprise"
+                    ? "bg-[#0a2540] text-white hover:bg-[#172b4d]"
+                    : "bg-[#f6f9fc] text-[#0a2540] hover:bg-[#eef2ff]"
+                )}
               >
                 {name === "Enterprise" ? "Talk to us" : name === "Pro" || name === "Team" ? "View pricing" : "Start free"}
               </Link>
@@ -663,29 +676,29 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </div>
       </section>
 
-      <section className="border-t border-[var(--border)] bg-[#050505]">
+      <section className="border-t border-[#e6ebf1] bg-[#f6f9fc]">
         <div className="mx-auto w-full max-w-5xl px-5 py-16 sm:px-7">
-          <h2 className="text-[34px] font-semibold leading-tight tracking-normal text-[var(--text)]">Questions before you upload?</h2>
-          <div className="mt-8 divide-y divide-[var(--border)] border-y border-[var(--border)]">
+          <h2 className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#0a2540]">Questions before you upload?</h2>
+          <div className="mt-8 divide-y divide-[#d9e2ec] border-y border-[#d9e2ec]">
             {faqs.map((faq) => (
               <details key={faq.question} className="group py-5">
-                <summary className="flex items-center justify-between gap-6 text-[16px] font-medium text-[var(--text)]">
+                <summary className="flex items-center justify-between gap-6 text-[16px] font-semibold text-[#0a2540]">
                   {faq.question}
-                  <ArrowRight className="size-4 rotate-0 text-[var(--text-dim)] transition-transform group-open:rotate-90" />
+                  <ArrowRight className="size-4 rotate-0 text-[#635bff] transition-transform group-open:rotate-90" />
                 </summary>
-                <p className="mt-4 max-w-3xl text-[14px] leading-6 text-[var(--text-dim)]">{faq.answer}</p>
+                <p className="mt-4 max-w-3xl text-[14px] leading-6 text-[#425466]">{faq.answer}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      <footer className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-[13px] text-[var(--text-faint)] sm:px-7">
+      <footer className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-[13px] text-[#425466] sm:px-7">
         <p>Tuto © {year}</p>
         <div className="flex gap-5">
-          <Link href="/privacy" className="hover:text-[var(--text)]">Privacy</Link>
-          <Link href="/terms" className="hover:text-[var(--text)]">Terms</Link>
-          <Link href="/support" className="hover:text-[var(--text)]">Support</Link>
+          <Link href="/privacy" className="hover:text-[#0a2540]">Privacy</Link>
+          <Link href="/terms" className="hover:text-[#0a2540]">Terms</Link>
+          <Link href="/support" className="hover:text-[#0a2540]">Support</Link>
         </div>
       </footer>
     </main>
