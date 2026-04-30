@@ -65,7 +65,7 @@ Channels: LinkedIn, creator newsletters, webinars, direct outreach, partnerships
 
 ## Beachhead Recommendation
 
-Start with learners, students, tutors, and teams who already have trusted material they need to study or teach. Keep claims conservative and make the product feel open to all learning contexts.
+Start with learners, tutors, teams, schools, and companies that already have trusted material they need to study, teach, or operationalize. Keep claims conservative and make the product feel open to all learning contexts while giving institutions a clear Enterprise path.
 
 ## Launch Offer
 
@@ -74,7 +74,8 @@ Use a simple beta offer:
 - Free account: enough credits to create the first course and experience one complete learning loop.
 - Pro: $20/month for unlimited course creation, more knowledge bases, and unlimited guided practice.
 - Founding learner bonus: first 100 paid users get direct onboarding and early influence over the roadmap.
-- Team: waitlist only. Use it to collect demand from tutors, coaches, and cohort operators.
+- Team: shared-use billing for tutors, coaches, and cohort operators.
+- Enterprise: contract-based access for schools and companies that need onboarding, larger usage, and a direct handoff.
 
 ## 90-Day Go-To-Market Plan
 

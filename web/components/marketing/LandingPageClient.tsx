@@ -5,11 +5,14 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  Building2,
   BriefcaseBusiness,
   Check,
   ClipboardCheck,
+  DoorOpen,
   GraduationCap,
   Mail,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { trackMarketingEvent } from "@/lib/marketing-client";
@@ -32,7 +35,8 @@ const variantCopy: Record<
 > = {
   default: {
     headline: "Turn any PDF or topic into a guided course.",
-    supporting: "Tuto builds lessons, practice, and review loops from material you already trust.",
+    supporting:
+      "Tuto builds lessons, practice, and review loops from material you already trust, with a clear path back for existing learners and an Enterprise tier for institutions.",
     eventSource: "landing_default",
   },
   pdf: {
@@ -47,7 +51,8 @@ const variantCopy: Record<
   },
   training: {
     headline: "Turn training docs into guided practice.",
-    supporting: "Convert onboarding packets, SOPs, and internal docs into a course you can work through.",
+    supporting:
+      "Convert onboarding packets, SOPs, and internal docs into guided learning for teams, schools, and company rollouts.",
     eventSource: "landing_training",
   },
 };
@@ -66,8 +71,8 @@ const steps = [
     body: "Lessons, checks, and exercises stay attached to the course.",
   },
   {
-    title: "Review weak spots",
-    body: "Progress turns into a practical review loop.",
+    title: "Come back anytime",
+    body: "Returning users open the app directly from the dashboard and continue where they left off.",
   },
 ];
 
@@ -83,9 +88,27 @@ const useCases = [
     icon: GraduationCap,
   },
   {
-    title: "Training docs",
-    body: "Convert onboarding packets, SOPs, and internal docs into guided learning for yourself or a small cohort.",
+    title: "Enterprise training",
+    body: "Schools and companies can use contract-based Enterprise access for larger learning programs.",
     icon: BriefcaseBusiness,
+  },
+];
+
+const platformHighlights = [
+  {
+    title: "Existing customers go straight in",
+    body: "Returning learners can use tuto.chat/dashboard. If they need to sign in, the app brings them back to the dashboard afterward.",
+    icon: DoorOpen,
+  },
+  {
+    title: "Enterprise access is a real tier",
+    body: "Approved schools and companies can be placed on Enterprise with expanded usage, contract billing, and room for larger rollouts.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Built for institutional handoff",
+    body: "Enterprise inquiries route into the lead pipeline so a school, tutoring group, or company can move from interest to activation cleanly.",
+    icon: Building2,
   },
 ];
 
@@ -96,11 +119,18 @@ const faqs = [
   },
   {
     question: "Is this for schools?",
-    answer: "Tuto is built for learners, students, tutors, teams, and anyone turning material into something easier to study.",
+    answer:
+      "Yes. Tuto supports individual learners today, and Enterprise access is set up for schools, tutoring groups, and companies that need contract billing or larger rollouts.",
   },
   {
-    question: "What is Pro?",
-    answer: "Pro is planned at $20/month for more course creation room, more document knowledge bases, and guided practice.",
+    question: "How do existing customers get back in?",
+    answer:
+      "They can go straight to tuto.chat/dashboard. If they are signed out, the sign-in flow sends them back to the dashboard after authentication.",
+  },
+  {
+    question: "Is Enterprise actually available?",
+    answer:
+      "Yes. The Enterprise plan is wired into billing and access controls, and the Enterprise inquiry form starts the approval and onboarding flow.",
   },
   {
     question: "Why join the beta?",
@@ -368,6 +398,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
           <div className="hidden items-center gap-7 text-[14px] font-medium text-[#425466] md:flex">
             <a href="#product" className="hover:text-[#0a2540]">Product</a>
             <a href="#use-cases" className="hover:text-[#0a2540]">Use cases</a>
+            <a href="#enterprise" className="hover:text-[#0a2540]">Enterprise</a>
             <a href="#pricing" className="hover:text-[#0a2540]">Pricing</a>
           </div>
           <div className="flex items-center gap-2">
@@ -405,6 +436,13 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
               >
                 Create your first course
                 <ArrowRight data-icon="inline-end" />
+              </Link>
+              <Link
+                href="/dashboard"
+                onClick={() => trackMarketingEvent("hero_open_app_clicked", { source: copy.eventSource, location: "hero" })}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[#d9e2ec] bg-white px-5 text-[14px] font-semibold text-[#0a2540] shadow-[0_18px_34px_-28px_rgba(10,37,64,0.45)] hover:border-[#b8c6d8] sm:h-12 sm:px-6 sm:text-[15px]"
+              >
+                Open existing account
               </Link>
             </div>
           </div>
@@ -453,6 +491,55 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </div>
       </section>
 
+      <section id="enterprise" className="bg-white">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-24 sm:px-7 lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1fr)] lg:items-start">
+          <div className="max-w-2xl">
+            <p className="text-[13px] font-semibold text-[#635bff]">Access paths</p>
+            <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#0a2540] sm:text-[52px]">
+              One product path for learners, teams, and institutions.
+            </h2>
+            <p className="mt-5 text-[18px] leading-8 text-[#425466]">
+              Existing customers do not need to rebuy or start from the marketing page. New schools and companies can start an Enterprise conversation from pricing.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/dashboard"
+                onClick={() => trackMarketingEvent("enterprise_open_app_clicked", { source: copy.eventSource })}
+                className="inline-flex h-11 items-center justify-center rounded-full bg-[#0a2540] px-5 text-[14px] font-semibold text-white hover:bg-[#172b4d]"
+              >
+                Open app
+              </Link>
+              <Link
+                href="/pricing#enterprise"
+                onClick={() => trackMarketingEvent("enterprise_contact_clicked", { source: copy.eventSource })}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[#d9e2ec] bg-white px-5 text-[14px] font-semibold text-[#0a2540] hover:border-[#b8c6d8]"
+              >
+                Talk to enterprise
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {platformHighlights.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article key={item.title} className="rounded-[20px] border border-[#e6ebf1] bg-[#fbfdff] p-6 shadow-[0_20px_50px_-46px_rgba(10,37,64,0.56)]">
+                  <div className="flex gap-4">
+                    <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-[#635bff]">
+                      <Icon className="size-5" />
+                    </span>
+                    <div>
+                      <h3 className="text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#0a2540]">{item.title}</h3>
+                      <p className="mt-3 text-[14px] leading-6 text-[#425466]">{item.body}</p>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section id="beta" className="border-y border-[#0a2540] bg-[#0a2540] text-white">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-20 sm:px-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,0.85fr)] lg:items-start">
           <div className="max-w-2xl">
@@ -461,7 +548,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
               Help shape the beta before the broad paid launch.
             </h2>
             <p className="mt-5 text-[18px] leading-8 text-white/[0.66]">
-              We are prioritizing learners, students, tutors, teams, and operators who have real material ready to test.
+              We are prioritizing learners, tutors, schools, companies, and operators who have real material ready to test.
             </p>
           </div>
           <BetaForm eventSource={copy.eventSource} />
@@ -469,12 +556,12 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
       </section>
 
       <section id="pricing" className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-7">
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
             ["Free starter", "$0", "Create the first course and feel the loop before upgrading."],
             ["Pro", "$20/mo", "More generation room, more document knowledge bases, and guided practice."],
             ["Team", "$65/mo", "Shared-use billing for small teams, tutors, coaches, and cohort operators."],
-            ["Enterprise", "Custom", "For schools and companies that need seats, onboarding, and contract billing."],
+            ["Enterprise", "Custom", "Contract-based access for schools and companies that need onboarding, scale, and expanded limits."],
           ].map(([name, price, body]) => (
             <article key={name} className="rounded-[20px] border border-[#e6ebf1] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(10,37,64,0.62)]">
               <h3 className="text-[15px] font-semibold text-[#0a2540]">{name}</h3>
@@ -488,7 +575,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
                   "bg-[#0a2540] text-white hover:bg-[#172b4d]"
                 )}
               >
-                {name === "Enterprise" ? "Talk to us" : name === "Pro" || name === "Team" ? "View pricing" : "Start free"}
+                {name === "Enterprise" ? "Talk to enterprise" : name === "Pro" || name === "Team" ? "View pricing" : "Start free"}
               </Link>
             </article>
           ))}
