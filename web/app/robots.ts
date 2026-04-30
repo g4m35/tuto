@@ -23,6 +23,7 @@ export default function robots(): MetadataRoute.Robots {
         "/playground",
         "/review",
         "/settings",
+        "/share",
       ],
     },
     sitemap: new URL("/sitemap.xml", appUrl).toString(),

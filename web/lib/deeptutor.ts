@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { buildExerciseData, type GuideKnowledgePoint } from "@/lib/course-data";
+import { buildArtifactPromptDirective, getCourseArtifactOption, type CourseArtifactKind } from "@/lib/course-artifacts";
 import { getDeepTutorAuthHeaders, getDeepTutorUrl } from "@/lib/deeptutor-config";
 
 export interface IngestDocumentResult {
@@ -17,6 +18,7 @@ export interface GenerateCourseParams {
   subject: string;
   difficulty: string;
   prompt: string;
+  artifactKind?: CourseArtifactKind;
   sourceMode: "topic" | "upload";
   knowledgeBaseName?: string | null;
 }
@@ -252,21 +254,21 @@ async function fetchSse(path: string, body: Record<string, unknown>) {
   return events;
 }
 
-function buildStubKnowledgePoints(title: string): GuideKnowledgePoint[] {
-  return [
-    {
-      knowledge_title: `${title}: foundations`,
-      knowledge_summary: "Establish the vocabulary and baseline intuition for the topic.",
-    },
-    {
-      knowledge_title: `${title}: patterns`,
-      knowledge_summary: "Work through recurring structures and compare similar cases.",
-    },
-    {
-      knowledge_title: `${title}: application`,
-      knowledge_summary: "Apply the concept to a concrete task and explain the reasoning.",
-    },
-  ];
+function buildStubKnowledgePoints(title: string, artifactKind?: CourseArtifactKind): GuideKnowledgePoint[] {
+  const option = getCourseArtifactOption(artifactKind);
+  return option.previewItems.map((item, index) => ({
+    knowledge_title: item.replace(/^L\d+\s*[-·]\s*/i, "") || `${title}: part ${index + 1}`,
+    knowledge_summary:
+      option.kind === "slides"
+        ? `Slide-ready section for ${title}, with a single message and speaker-note summary.`
+        : option.kind === "study-guide"
+          ? `Review section for ${title}, focused on what to remember and how to check yourself.`
+          : option.kind === "quiz-set"
+            ? `Practice prompt area for ${title}, with rationale and remediation focus.`
+            : option.kind === "lesson-plan"
+              ? `Teachable segment for ${title}, including activity flow and a quick check.`
+              : "Establish the vocabulary, intuition, and next action for this part of the course.",
+  }));
 }
 
 function buildStubExercise(lessonId: string, context: GenerateExerciseContext) {
@@ -336,6 +338,7 @@ function buildGuidePrompt(params: GenerateCourseParams) {
     `Course title: ${params.title}`,
     `Subject: ${params.subject}`,
     `Difficulty: ${params.difficulty}`,
+    buildArtifactPromptDirective(params.artifactKind),
   ];
 
   const cleanedPrompt = params.prompt.trim();
@@ -361,7 +364,7 @@ export async function generateCourse(
     });
 
     const sessionId = `stub-session-${randomUUID()}`;
-    const knowledgePoints = buildStubKnowledgePoints(params.title);
+    const knowledgePoints = buildStubKnowledgePoints(params.title, params.artifactKind);
 
     return {
       sessionId,

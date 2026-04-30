@@ -15,6 +15,8 @@ import type {
   LessonState,
   MaterialItem,
 } from "@/lib/mock-data";
+import type { CourseArtifactKind } from "@/lib/course-artifacts";
+import { getCourseArtifactOption, normalizeCourseArtifactKind } from "@/lib/course-artifacts";
 
 export interface GuideKnowledgePoint {
   knowledge_title: string;
@@ -29,6 +31,7 @@ export interface StoredCourse {
   subject: string;
   difficulty: string;
   description: string;
+  artifactKind?: CourseArtifactKind;
   sourceMode: "topic" | "upload";
   sourceIds: string[];
   knowledgeBaseName: string | null;
@@ -45,6 +48,9 @@ export interface StoredCourse {
     progress?: number;
   };
   backendMode: "live" | "stub";
+  shareToken?: string | null;
+  shareEnabled?: boolean;
+  sharedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -195,6 +201,7 @@ export function toCourseCardData(course: StoredCourse): CourseCardData {
   const lessonsComplete = lessons.filter((lesson) => lesson.state === "complete").length;
   const currentLesson =
     lessons.find((lesson) => lesson.state === "current") ?? lessons[0] ?? null;
+  const artifact = getCourseArtifactOption(course.artifactKind);
 
   return {
     id: course.id,
@@ -205,7 +212,7 @@ export function toCourseCardData(course: StoredCourse): CourseCardData {
     lessonsComplete,
     lessonCount,
     duration: `${Math.max(1, lessonCount)} steps`,
-    intensity: "Adaptive guided path",
+    intensity: artifact.title,
     weakness: currentLesson?.title || "Foundational review",
   };
 }
@@ -227,6 +234,8 @@ export function toCourseDetailData(course: StoredCourse): CourseDetailData {
     projectCount: learningPath.length,
     materials: buildMaterials(course),
     learningPath,
+    artifactKind: normalizeCourseArtifactKind(course.artifactKind),
+    artifactTitle: getCourseArtifactOption(course.artifactKind).title,
   };
 }
 

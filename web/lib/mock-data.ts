@@ -53,6 +53,8 @@ export interface UnitProjectData {
 
 export interface CourseDetailData extends CourseCardData {
   level: CourseLevel
+  artifactKind?: string
+  artifactTitle?: string
   streak: number
   hoursInvested: number
   masteryPercent?: number

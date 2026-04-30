@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { toLessonId } from "@/lib/course-data";
+import { normalizeCourseArtifactKind } from "@/lib/course-artifacts";
 import { getCourseForUser, listCoursesForUser, saveCourse } from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
 import {
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
     const title = String(formData.get("title") || "").trim();
     const subject = String(formData.get("subject") || "Mathematics").trim();
     const difficulty = String(formData.get("difficulty") || "Intermediate").trim();
+    const artifactKind = normalizeCourseArtifactKind(formData.get("artifactKind"));
     const topicPrompt = String(formData.get("topicPrompt") || "").trim();
     const file = formData.get("file");
 
@@ -92,6 +94,7 @@ export async function POST(request: Request) {
         metadata: {
           fileName: file.name,
           fileSize: file.size,
+          artifactKind,
         },
       });
       if (!uploadLimit.ok) {
@@ -121,6 +124,7 @@ export async function POST(request: Request) {
         sourceId: ingested.id,
         knowledgeBaseName: ingested.knowledgeBaseName,
         backendMode: ingested.backendMode,
+        artifactKind,
       };
     }
 
@@ -128,6 +132,7 @@ export async function POST(request: Request) {
       title,
       subject,
       difficulty,
+      artifactKind,
       prompt: description,
       sourceMode: mode,
       knowledgeBaseName,
@@ -150,6 +155,7 @@ export async function POST(request: Request) {
       subject,
       difficulty,
       description,
+      artifactKind,
       sourceMode: mode,
       sourceIds,
       knowledgeBaseName,
@@ -177,6 +183,7 @@ export async function POST(request: Request) {
       courseId: course.id,
       backendMode: course.backendMode,
       sourceMode: course.sourceMode,
+      artifactKind: course.artifactKind,
     });
 
     const persisted = await getCourseForUser(userId, course.id);

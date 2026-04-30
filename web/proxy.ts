@@ -25,7 +25,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/health/deeptutor(.*)",
   "/api/beta-signups(.*)",
   "/api/marketing/events(.*)",
+  "/api/share(.*)",
   "/api/webhooks(.*)",
+  "/share(.*)",
 ]);
 
 function getSignInUrl(req: NextRequest) {

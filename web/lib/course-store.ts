@@ -13,6 +13,7 @@ import type {
   StoredExercise,
   StoredProjectSubmission,
 } from "@/lib/course-data";
+import { normalizeCourseArtifactKind } from "@/lib/course-artifacts";
 
 interface CourseRow {
   id: string;
@@ -21,6 +22,7 @@ interface CourseRow {
   subject: string;
   difficulty: string;
   description: string;
+  artifact_kind?: StoredCourse["artifactKind"] | null;
   source_mode: "topic" | "upload";
   source_ids: string[];
   knowledge_base_name: string | null;
@@ -30,6 +32,9 @@ interface CourseRow {
   current_lesson_id: string | null;
   guide_payload: StoredCourse["guidePayload"];
   backend_mode: "live" | "stub";
+  share_token?: string | null;
+  share_enabled?: boolean | null;
+  shared_at?: Date | string | null;
   created_at: Date | string;
   updated_at: Date | string;
 }
@@ -77,7 +82,9 @@ interface FileStoreShape {
   projectSubmissions: StoredProjectSubmission[];
 }
 
-const FILE_STORE_PATH = path.join(process.cwd(), ".local-data", "course-store.json");
+const FILE_STORE_PATH = process.env.TUTO_COURSE_STORE_PATH
+  ? path.resolve(process.env.TUTO_COURSE_STORE_PATH)
+  : path.join(process.cwd(), ".local-data", "course-store.json");
 
 function assertCourseStoreConfigured() {
   assertDatabaseConfigured("Course storage");
@@ -85,6 +92,16 @@ function assertCourseStoreConfigured() {
 
 function toIsoString(value: Date | string) {
   return typeof value === "string" ? value : value.toISOString();
+}
+
+function normalizeStoredCourse(course: StoredCourse): StoredCourse {
+  return {
+    ...course,
+    artifactKind: normalizeCourseArtifactKind(course.artifactKind),
+    shareToken: course.shareToken ?? null,
+    shareEnabled: course.shareEnabled === true,
+    sharedAt: course.sharedAt ?? null,
+  };
 }
 
 function mapCourseRow(row: CourseRow): StoredCourse {
@@ -95,6 +112,7 @@ function mapCourseRow(row: CourseRow): StoredCourse {
     subject: row.subject,
     difficulty: row.difficulty,
     description: row.description,
+    artifactKind: normalizeCourseArtifactKind(row.artifact_kind),
     sourceMode: row.source_mode,
     sourceIds: row.source_ids,
     knowledgeBaseName: row.knowledge_base_name,
@@ -104,6 +122,9 @@ function mapCourseRow(row: CourseRow): StoredCourse {
     currentLessonId: row.current_lesson_id,
     guidePayload: row.guide_payload,
     backendMode: row.backend_mode,
+    shareToken: row.share_token ?? null,
+    shareEnabled: row.share_enabled === true,
+    sharedAt: row.shared_at ? toIsoString(row.shared_at) : null,
     createdAt: toIsoString(row.created_at),
     updatedAt: toIsoString(row.updated_at),
   };
@@ -156,7 +177,7 @@ async function readFileStore(): Promise<FileStoreShape> {
     const raw = await readFile(FILE_STORE_PATH, "utf8");
     const parsed = JSON.parse(raw) as FileStoreShape;
     return {
-      courses: Array.isArray(parsed.courses) ? parsed.courses : [],
+      courses: Array.isArray(parsed.courses) ? parsed.courses.map(normalizeStoredCourse) : [],
       exercises: Array.isArray(parsed.exercises) ? parsed.exercises : [],
       attempts: Array.isArray(parsed.attempts) ? parsed.attempts : [],
       projectSubmissions: Array.isArray(parsed.projectSubmissions)
@@ -230,6 +251,10 @@ export async function saveCourse(course: Omit<StoredCourse, "createdAt" | "updat
   const now = new Date().toISOString();
   const stored: StoredCourse = {
     ...course,
+    artifactKind: normalizeCourseArtifactKind(course.artifactKind),
+    shareToken: course.shareToken ?? null,
+    shareEnabled: course.shareEnabled === true,
+    sharedAt: course.sharedAt ?? null,
     createdAt: now,
     updatedAt: now,
   };
@@ -257,6 +282,7 @@ export async function saveCourse(course: Omit<StoredCourse, "createdAt" | "updat
         subject,
         difficulty,
         description,
+        artifact_kind,
         source_mode,
         source_ids,
         knowledge_base_name,
@@ -265,10 +291,13 @@ export async function saveCourse(course: Omit<StoredCourse, "createdAt" | "updat
         current_lesson_index,
         current_lesson_id,
         guide_payload,
-        backend_mode
+        backend_mode,
+        share_token,
+        share_enabled,
+        shared_at
       )
       values (
-        $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb, $15
+        $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11, $12, $13, $14, $15::jsonb, $16, $17, $18, $19
       )
       returning *
     `,
@@ -279,6 +308,7 @@ export async function saveCourse(course: Omit<StoredCourse, "createdAt" | "updat
       stored.subject,
       stored.difficulty,
       stored.description,
+      stored.artifactKind,
       stored.sourceMode,
       JSON.stringify(stored.sourceIds),
       stored.knowledgeBaseName,
@@ -288,10 +318,152 @@ export async function saveCourse(course: Omit<StoredCourse, "createdAt" | "updat
       stored.currentLessonId,
       JSON.stringify(stored.guidePayload),
       stored.backendMode,
+      stored.shareToken,
+      stored.shareEnabled,
+      stored.sharedAt,
     ],
   );
 
   return mapCourseRow(result.rows[0]);
+}
+
+export async function enableCourseSharing(input: {
+  clerkId: string;
+  courseId: string;
+}): Promise<StoredCourse | null> {
+  const now = new Date().toISOString();
+  const token = randomUUID();
+
+  if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
+    const store = await readFileStore();
+    let updated: StoredCourse | null = null;
+    store.courses = store.courses.map((course) => {
+      if (course.clerkId !== input.clerkId || course.id !== input.courseId) {
+        return course;
+      }
+
+      updated = {
+        ...course,
+        artifactKind: normalizeCourseArtifactKind(course.artifactKind),
+        shareToken: course.shareToken || token,
+        shareEnabled: true,
+        sharedAt: course.sharedAt || now,
+        updatedAt: now,
+      };
+      return updated;
+    });
+
+    await writeFileStore(store);
+    return updated;
+  }
+
+  const result = await query<CourseRow>(
+    `
+      update courses
+      set share_token = coalesce(share_token, $3),
+          share_enabled = true,
+          shared_at = coalesce(shared_at, $4::timestamptz),
+          updated_at = now()
+      where clerk_id = $1
+        and id = $2
+      returning *
+    `,
+    [input.clerkId, input.courseId, token, now],
+  );
+
+  const row = result.rows[0];
+  return row ? mapCourseRow(row) : null;
+}
+
+export async function disableCourseSharing(input: {
+  clerkId: string;
+  courseId: string;
+}): Promise<StoredCourse | null> {
+  const now = new Date().toISOString();
+
+  if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
+    const store = await readFileStore();
+    let updated: StoredCourse | null = null;
+    store.courses = store.courses.map((course) => {
+      if (course.clerkId !== input.clerkId || course.id !== input.courseId) {
+        return course;
+      }
+
+      updated = {
+        ...course,
+        artifactKind: normalizeCourseArtifactKind(course.artifactKind),
+        shareEnabled: false,
+        updatedAt: now,
+      };
+      return updated;
+    });
+
+    await writeFileStore(store);
+    return updated;
+  }
+
+  const result = await query<CourseRow>(
+    `
+      update courses
+      set share_enabled = false,
+          updated_at = now()
+      where clerk_id = $1
+        and id = $2
+      returning *
+    `,
+    [input.clerkId, input.courseId],
+  );
+
+  const row = result.rows[0];
+  return row ? mapCourseRow(row) : null;
+}
+
+export async function getCourseByShareToken(token: string): Promise<StoredCourse | null> {
+  if (!token.trim()) {
+    return null;
+  }
+
+  if (!isDatabaseConfigured()) {
+    if (!canUseEphemeralDatabaseFallback()) {
+      assertCourseStoreConfigured();
+    }
+
+    const store = await readFileStore();
+    const course =
+      store.courses.find((item) => item.shareEnabled === true && item.shareToken === token) ??
+      null;
+    return course
+      ? {
+          ...course,
+          artifactKind: normalizeCourseArtifactKind(course.artifactKind),
+          shareToken: course.shareToken ?? null,
+          shareEnabled: course.shareEnabled === true,
+          sharedAt: course.sharedAt ?? null,
+        }
+      : null;
+  }
+
+  const result = await query<CourseRow>(
+    `
+      select *
+      from courses
+      where share_enabled = true
+        and share_token = $1
+      limit 1
+    `,
+    [token],
+  );
+
+  const row = result.rows[0];
+  return row ? mapCourseRow(row) : null;
 }
 
 export async function updateCourseProgress(input: {

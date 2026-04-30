@@ -2,12 +2,34 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, FileText, LoaderCircle, Upload, WandSparkles } from "lucide-react"
+import {
+  BookOpen,
+  ClipboardList,
+  FileQuestion,
+  FileText,
+  LoaderCircle,
+  Presentation,
+  Upload,
+  WandSparkles,
+} from "lucide-react"
 import { Button } from "@/components/ui/Button"
+import {
+  courseArtifactOptions,
+  getCourseArtifactOption,
+  type CourseArtifactKind,
+} from "@/lib/course-artifacts"
 import { trackMarketingEvent } from "@/lib/marketing-client"
 import { cn } from "@/lib/utils"
 
 type CreateMode = "upload" | "topic"
+
+const artifactIconMap = {
+  course: BookOpen,
+  "study-guide": FileText,
+  slides: Presentation,
+  "quiz-set": FileQuestion,
+  "lesson-plan": ClipboardList,
+} satisfies Record<CourseArtifactKind, typeof BookOpen>
 
 const createModes = [
   {
@@ -24,16 +46,17 @@ const createModes = [
   },
 ]
 
-function buildPreviewLessons(title: string, topicPrompt: string, mode: CreateMode) {
+function buildPreviewItems(
+  title: string,
+  topicPrompt: string,
+  mode: CreateMode,
+  artifactKind: CourseArtifactKind,
+) {
   const subject = (topicPrompt || title || "your topic").trim()
+  const artifact = getCourseArtifactOption(artifactKind)
 
   if (mode === "upload") {
-    return [
-      "Get the big idea",
-      "Break down the main points",
-      "Try a simple example",
-      "Review what to remember",
-    ].map((label, index) => `L0${index + 1} · ${label}`)
+    return artifact.previewItems.map((label, index) => `${String(index + 1).padStart(2, "0")} - ${label}`)
   }
 
   const token = subject
@@ -42,13 +65,9 @@ function buildPreviewLessons(title: string, topicPrompt: string, mode: CreateMod
     .slice(0, 2)
     .join(" ")
 
-  return [
-    `L01 · ${token || "Start with the topic"}`,
-    "L02 · Learn the basics",
-    "L03 · See an easy example",
-    "L04 · Try it yourself",
-    "L05 · Review the key ideas",
-  ]
+  return artifact.previewItems.map((label, index) =>
+    index === 0 && token ? `${String(index + 1).padStart(2, "0")} - ${token}` : `${String(index + 1).padStart(2, "0")} - ${label}`,
+  )
 }
 
 function CourseGenerationLoader() {
@@ -63,7 +82,7 @@ function CourseGenerationLoader() {
         <LoaderCircle className="size-4 animate-spin text-[var(--accent)]" aria-hidden="true" />
       </span>
       <span>
-        Building your course outline
+        Building your artifact
         <span className="ml-1 text-[var(--text-faint)]">This can take a moment.</span>
       </span>
     </div>
@@ -73,6 +92,7 @@ function CourseGenerationLoader() {
 export default function CreateCoursePage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [artifactKind, setArtifactKind] = useState<CourseArtifactKind>("course")
   const [mode, setMode] = useState<CreateMode>("upload")
   const [title, setTitle] = useState("")
   const [subject, setSubject] = useState("")
@@ -83,9 +103,10 @@ export default function CreateCoursePage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const previewLessons = useMemo(
-    () => buildPreviewLessons(title, topicPrompt, mode),
-    [mode, title, topicPrompt]
+  const selectedArtifact = getCourseArtifactOption(artifactKind)
+  const previewItems = useMemo(
+    () => buildPreviewItems(title, topicPrompt, mode, artifactKind),
+    [artifactKind, mode, title, topicPrompt]
   )
 
   useEffect(() => {
@@ -96,7 +117,7 @@ export default function CreateCoursePage() {
     setError(null)
 
     if (!title.trim()) {
-      setError("Give the course a title first.")
+      setError(`Give the ${selectedArtifact.noun} a title first.`)
       trackMarketingEvent("course_create_validation_failed", { reason: "missing_title", mode })
       return
     }
@@ -108,7 +129,7 @@ export default function CreateCoursePage() {
     }
 
     if (mode === "upload" && !selectedFile) {
-      setError("Upload a source document before generating the course.")
+      setError(`Upload a source document before generating the ${selectedArtifact.noun}.`)
       trackMarketingEvent("course_create_validation_failed", { reason: "missing_upload", mode })
       return
     }
@@ -116,6 +137,7 @@ export default function CreateCoursePage() {
     setSubmitting(true)
     trackMarketingEvent("course_create_started", {
       mode,
+      artifact_kind: artifactKind,
       difficulty,
       has_subject: Boolean(subject.trim()),
       has_topic_prompt: Boolean(topicPrompt.trim()),
@@ -126,6 +148,7 @@ export default function CreateCoursePage() {
     try {
       const formData = new FormData()
       formData.set("mode", mode)
+      formData.set("artifactKind", artifactKind)
       formData.set("title", title.trim())
       formData.set("subject", subject.trim() || title.trim())
       formData.set("difficulty", difficulty)
@@ -167,6 +190,7 @@ export default function CreateCoursePage() {
 
       trackMarketingEvent("course_create_completed", {
         mode,
+        artifact_kind: artifactKind,
         course_id: courseId,
         backend_mode: data?.course?.backendMode,
       })
@@ -175,6 +199,7 @@ export default function CreateCoursePage() {
       setError(nextError instanceof Error ? nextError.message : "Course generation failed.")
       trackMarketingEvent("course_create_failed", {
         mode,
+        artifact_kind: artifactKind,
         error: nextError instanceof Error ? nextError.message : "Course generation failed.",
       })
     } finally {
@@ -191,53 +216,94 @@ export default function CreateCoursePage() {
             <span>Create</span>
           </p>
           <h1 className="max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[48px]">
-            Create new course
+            Create something new
           </h1>
           <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
-            Turn a source or a prompt into a simple course outline before you create it.
+            Choose what you need, then turn a source or prompt into a downloadable artifact.
           </p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          {createModes.map((item, index) => {
-            const active = mode === item.id
-            const Icon = item.icon
+        <div className="space-y-3">
+          <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">
+            What do you want to make?
+          </p>
+          <div className="grid gap-3 lg:grid-cols-5">
+            {courseArtifactOptions.map((item, index) => {
+              const active = artifactKind === item.kind
+              const Icon = artifactIconMap[item.kind]
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                disabled={submitting}
-                onClick={() => {
-                  setMode(item.id)
-                  setError(null)
-                  trackMarketingEvent("course_create_mode_selected", { mode: item.id })
-                }}
-                className={cn(
-                  "editorial-card interactive-card t-lift text-left px-5 py-5 disabled:pointer-events-none disabled:opacity-60",
-                  index === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
-                  active
-                    ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
-                    : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
-                )}
-              >
-                <Icon className="size-4 text-[var(--text-faint)]" />
-                <p className="mt-4 text-sm font-medium text-[var(--text)]">{item.title}</p>
-                <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">{item.description}</p>
-              </button>
-            )
-          })}
+              return (
+                <button
+                  key={item.kind}
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => {
+                    setArtifactKind(item.kind)
+                    setError(null)
+                    trackMarketingEvent("course_create_artifact_selected", { artifact_kind: item.kind })
+                  }}
+                  className={cn(
+                    "editorial-card interactive-card t-lift min-h-[150px] text-left px-4 py-4 disabled:pointer-events-none disabled:opacity-60",
+                    index % 2 === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
+                    active
+                      ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
+                      : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
+                  )}
+                >
+                  <Icon className="size-4 text-[var(--text-faint)]" />
+                  <p className="mt-4 text-sm font-medium text-[var(--text)]">{item.title}</p>
+                  <p className="mt-1 text-[13px] leading-5 text-[var(--text-dim)]">{item.description}</p>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">
+            What should Tuto use?
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {createModes.map((item, index) => {
+              const active = mode === item.id
+              const Icon = item.icon
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => {
+                    setMode(item.id)
+                    setError(null)
+                    trackMarketingEvent("course_create_mode_selected", { mode: item.id })
+                  }}
+                  className={cn(
+                    "editorial-card interactive-card t-lift text-left px-5 py-5 disabled:pointer-events-none disabled:opacity-60",
+                    index === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
+                    active
+                      ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
+                      : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
+                  )}
+                >
+                  <Icon className="size-4 text-[var(--text-faint)]" />
+                  <p className="mt-4 text-sm font-medium text-[var(--text)]">{item.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">{item.description}</p>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="editorial-card animate-rise-in p-5 sm:p-6">
           <div className="space-y-6">
             <div className="space-y-2">
-              <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">What do you want to learn?</p>
+              <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">What is it about?</p>
               <input
                 id="course-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="How photosynthesis works"
+                placeholder={artifactKind === "slides" ? "Photosynthesis presentation" : "How photosynthesis works"}
                 className="w-full border-0 bg-transparent p-0 text-[28px] font-medium leading-tight tracking-normal text-[var(--text)] outline-none placeholder:text-[var(--text-faint)]"
               />
             </div>
@@ -247,7 +313,7 @@ export default function CreateCoursePage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.txt,.md"
+                  accept=".pdf,.txt,.md,.doc,.docx,.ppt,.pptx"
                   className="hidden"
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null
@@ -328,7 +394,7 @@ export default function CreateCoursePage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3 text-sm text-[var(--text-faint)]">
                 <BookOpen className="size-4" />
-                Private by default. Only you see your courses and notes.
+                Private by default. You can share or download it after generation.
               </div>
               <Button size="lg" onClick={() => void handleSubmit()} disabled={submitting}>
                 {submitting ? (
@@ -337,7 +403,7 @@ export default function CreateCoursePage() {
                     Composing...
                   </>
                 ) : (
-                  "Generate course"
+                  `Generate ${selectedArtifact.noun}`
                 )}
               </Button>
             </div>
@@ -352,7 +418,7 @@ export default function CreateCoursePage() {
             <span>Preview</span>
           </p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
-            You will see the first few lessons here before creating the course.
+            You will see the first few sections here before generation.
           </p>
         </div>
 
@@ -360,24 +426,24 @@ export default function CreateCoursePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
               <span>Draft</span>
-              <span>{subject.trim() || "Custom topic"}</span>
+              <span>{selectedArtifact.title}</span>
             </div>
 
             <div className="space-y-3">
               <h2 className="text-2xl font-medium tracking-normal text-[var(--text)]">
-                {title.trim() || "Your next course"}
+                {title.trim() || `Your next ${selectedArtifact.noun}`}
               </h2>
               <p className="text-sm leading-6 text-[var(--text-dim)]">
                 {mode === "upload"
                   ? selectedFile
                     ? `Built from ${selectedFile.name}.`
                     : "Built from a source document once you choose one."
-                  : topicPrompt.trim() || "Type what you want to learn and a simple course outline will appear here."}
+                  : topicPrompt.trim() || `Type what you want and a ${selectedArtifact.noun} outline will appear here.`}
               </p>
             </div>
 
             <div className="space-y-2 border-t border-[var(--border)] pt-4">
-              {previewLessons.map((lesson) => (
+              {previewItems.map((lesson) => (
                 <div
                   key={lesson}
                   className="flex items-center gap-3 border-b border-[var(--border)] py-3 text-sm text-[var(--text)] last:border-b-0"
@@ -389,7 +455,7 @@ export default function CreateCoursePage() {
             </div>
 
             <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4 text-sm text-[var(--text-dim)]">
-              Estimate <span className="text-[var(--text)]">5 lessons · 1h 40m total</span>
+              Estimate <span className="text-[var(--text)]">{selectedArtifact.estimate}</span>
             </div>
           </div>
         </div>

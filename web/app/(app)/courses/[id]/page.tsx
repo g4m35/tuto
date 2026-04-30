@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
 import { ArrowLeft, ArrowRight, CalendarClock, Hammer, LockKeyhole, Target } from "lucide-react"
+import { CourseArtifactActions } from "@/components/courses/CourseArtifactActions"
 import { buttonVariants } from "@/components/ui/Button"
 import { Progress } from "@/components/ui/progress"
 import { findLesson, toCourseDetailData } from "@/lib/course-data"
@@ -68,6 +69,8 @@ export default async function CourseDetailPage({
               <span>{course.subject}</span>
               <span className="size-1 rounded-full bg-[var(--text-faint)]" />
               <span>{course.level}</span>
+              <span className="size-1 rounded-full bg-[var(--text-faint)]" />
+              <span>{course.artifactTitle}</span>
             </div>
 
             <div className="space-y-4">
@@ -104,6 +107,13 @@ export default async function CourseDetailPage({
             <Progress value={course.progress} className="gap-2" />
           </div>
         </section>
+
+        <CourseArtifactActions
+          courseId={courseRecord.id}
+          artifactTitle={course.artifactTitle || "Artifact"}
+          initialShareEnabled={courseRecord.shareEnabled}
+          initialShareToken={courseRecord.shareToken}
+        />
 
         <section className="grid gap-3 md:grid-cols-3">
           <div className="editorial-card animate-rise-in-delay-1 px-5 py-5">

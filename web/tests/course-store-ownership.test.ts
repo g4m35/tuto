@@ -247,3 +247,63 @@ test("course-store file fallback preserves attempts and project submissions", as
     process.chdir(previousCwd);
   }
 });
+
+test("course-store file fallback preserves artifact kind and share controls", async () => {
+  const previousCwd = process.cwd();
+  const tempDir = await mkdtemp(path.join(tmpdir(), "tuto-course-share-store-"));
+
+  process.chdir(tempDir);
+
+  try {
+    const store = await importFresh<typeof import("../lib/course-store")>("../lib/course-store");
+
+    await store.saveCourse({
+      id: "course-share",
+      clerkId: "user-share",
+      title: "Cell biology slides",
+      subject: "Biology",
+      difficulty: "Beginner",
+      description: "Slides for cell biology.",
+      artifactKind: "slides",
+      sourceMode: "topic",
+      sourceIds: [],
+      knowledgeBaseName: null,
+      deeptutorSessionId: "session-share",
+      deeptutorStatus: "initialized",
+      currentLessonIndex: 0,
+      currentLessonId: null,
+      guidePayload: {
+        knowledge_points: [],
+        progress: 0,
+      },
+      backendMode: "stub",
+    });
+
+    const enabled = await store.enableCourseSharing({
+      clerkId: "user-share",
+      courseId: "course-share",
+    });
+    const shared = enabled?.shareToken
+      ? await store.getCourseByShareToken(enabled.shareToken)
+      : null;
+
+    assert.equal(enabled?.artifactKind, "slides");
+    assert.equal(enabled?.shareEnabled, true);
+    assert.equal(Boolean(enabled?.shareToken), true);
+    assert.equal(shared?.id, "course-share");
+    assert.equal(shared?.artifactKind, "slides");
+
+    await store.disableCourseSharing({
+      clerkId: "user-share",
+      courseId: "course-share",
+    });
+
+    const disabledLookup = enabled?.shareToken
+      ? await store.getCourseByShareToken(enabled.shareToken)
+      : null;
+
+    assert.equal(disabledLookup, null);
+  } finally {
+    process.chdir(previousCwd);
+  }
+});
