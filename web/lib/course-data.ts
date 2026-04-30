@@ -10,6 +10,7 @@ import type {
   ExerciseOption,
   LessonInteractiveData,
   LessonStepData,
+  LessonStepKind,
   LearningLevel,
   LessonNode,
   LessonState,
@@ -22,6 +23,21 @@ export interface GuideKnowledgePoint {
   knowledge_title: string;
   knowledge_summary?: string;
   user_difficulty?: string;
+}
+
+export interface LessonScriptStepDraft {
+  kind?: LessonStepKind;
+  title?: string;
+  body?: string;
+  prompt?: string;
+  hint?: string;
+  interactive?: Partial<LessonInteractiveData>;
+}
+
+export interface LessonScriptDraft {
+  objective?: string;
+  steps?: LessonScriptStepDraft[];
+  interactive?: Partial<LessonInteractiveData>;
 }
 
 export interface StoredCourse {
@@ -257,6 +273,186 @@ function getInteractionKind(seed: string): LessonInteractiveData["kind"] {
   return kinds[score % kinds.length] ?? "compare";
 }
 
+function isMeaningfulText(value: unknown, minLength = 32) {
+  return typeof value === "string" && value.trim().length >= minLength;
+}
+
+function cleanText(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeLessonTopic(title: string, courseTitle?: string) {
+  const cleaned = cleanText(title)
+    .replace(/\s+/g, " ")
+    .replace(/^lesson\s+\d+\s*[:.-]\s*/i, "");
+
+  if (cleaned.includes(":")) {
+    const [subject, focus] = cleaned.split(":").map((part) => part.trim());
+    if (subject && focus) return `${focus} in ${subject}`;
+  }
+
+  return cleaned || cleanText(courseTitle) || "this topic";
+}
+
+function buildFallbackLessonSteps(input: {
+  lessonTitle: string;
+  courseTitle?: string;
+  lessonSummary: string;
+  explanation: string;
+  interaction: LessonInteractiveData;
+}): LessonStepData[] {
+  const topic = normalizeLessonTopic(input.lessonTitle, input.courseTitle);
+  const lowerContext = `${input.lessonTitle} ${input.courseTitle ?? ""} ${input.lessonSummary}`.toLowerCase();
+
+  if (lowerContext.includes("hockey")) {
+    return [
+      {
+        id: "hook",
+        kind: "hook",
+        title: "What hockey is trying to do",
+        body:
+          "Hockey is a fast invasion game: one team tries to move the puck into the opponent's net while the other team protects space, wins the puck back, and starts its own attack. The foundations are the rules and habits that keep that speed organized.",
+      },
+      {
+        id: "concept",
+        kind: "concept",
+        title: "The core loop",
+        body:
+          "A hockey shift is built around four repeating jobs: gain possession, create skating or passing space, turn that space into a shot chance, then recover defensively if the puck changes hands. For beginners, most plays make sense when you ask who has the puck, where the open ice is, and whether the defending team is protecting the middle of the ice.",
+      },
+      {
+        id: "example",
+        kind: "example",
+        title: "A simple rush",
+        body:
+          "Imagine a winger carrying the puck through the neutral zone. A teammate must wait until the puck crosses the attacking blue line before entering the offensive zone, or the play is offside. Once the puck is in legally, the puck carrier can shoot, pass to the slot, or send the puck deep so teammates can chase and pressure the defense.",
+      },
+      {
+        id: "interactive",
+        kind: "interactive",
+        title: "Compare the parts",
+        body:
+          "Use the cards to separate the three foundations that beginners mix together: the objective of the game, the roles players use to create structure, and the boundary rules that stop unfair attacking advantages.",
+        interactive: {
+          ...input.interaction,
+          prompt: "Reveal each card and connect it to what you would watch for during a real shift.",
+          items: [
+            {
+              id: "objective",
+              label: "Objective",
+              body: "Create a better scoring chance than the other team by moving the puck into dangerous ice and shooting on net.",
+              matchId: "objective",
+            },
+            {
+              id: "roles",
+              label: "Roles",
+              body: "Forwards pressure and create chances, defensemen protect space and move the puck, and the goalie protects the net.",
+              matchId: "roles",
+            },
+            {
+              id: "rules",
+              label: "Boundaries",
+              body: "Offside, icing, penalties, and faceoffs keep the game fair and reset play when a team gains an illegal advantage.",
+              matchId: "rules",
+            },
+          ],
+        },
+      },
+    ];
+  }
+
+  return [
+    {
+      id: "hook",
+      kind: "hook",
+      title: "What this lesson answers",
+      body: `This lesson turns ${topic} into something you can use. By the end, you should be able to explain the idea, recognize it in a simple situation, and avoid the most tempting wrong interpretation.`,
+    },
+    {
+      id: "concept",
+      kind: "concept",
+      title: "Core idea",
+      body: input.lessonSummary,
+    },
+    {
+      id: "example",
+      kind: "example",
+      title: "A worked example",
+      body: `Use this concrete pattern for ${topic}: identify the situation, decide which rule or relationship applies, predict the result, then compare that result with the explanation. ${input.explanation}`,
+    },
+    {
+      id: "interactive",
+      kind: "interactive",
+      title: "Check the boundaries",
+      body:
+        "Use the cards to compare the main idea, a tempting mistake, and the limit where the idea stops applying cleanly.",
+      interactive: input.interaction,
+    },
+  ];
+}
+
+function normalizeInteractiveDraft(
+  draft: Partial<LessonInteractiveData> | undefined,
+  fallback: LessonInteractiveData,
+): LessonInteractiveData {
+  if (!draft || !Array.isArray(draft.items) || draft.items.length < 2) {
+    return fallback;
+  }
+
+  const items = draft.items
+    .filter((item) => isMeaningfulText(item.body, 24))
+    .slice(0, 4)
+    .map((item, index) => ({
+      id: cleanText(item.id) || `item-${index + 1}`,
+      label: cleanText(item.label) || `Part ${index + 1}`,
+      body: cleanText(item.body),
+      matchId: cleanText(item.matchId) || undefined,
+    }));
+
+  return items.length >= 2
+    ? {
+        kind: draft.kind ?? fallback.kind,
+        prompt: isMeaningfulText(draft.prompt, 16) ? cleanText(draft.prompt) : fallback.prompt,
+        items,
+        minLabel: cleanText(draft.minLabel) || fallback.minLabel,
+        maxLabel: cleanText(draft.maxLabel) || fallback.maxLabel,
+      }
+    : fallback;
+}
+
+function applyLessonScriptDraft(
+  fallbackSteps: LessonStepData[],
+  draft: LessonScriptDraft | null | undefined,
+  fallbackInteractive: LessonInteractiveData,
+): LessonStepData[] {
+  if (!draft || !Array.isArray(draft.steps)) {
+    return fallbackSteps;
+  }
+
+  return fallbackSteps.map((fallbackStep) => {
+    const drafted = draft.steps?.find((step) => step.kind === fallbackStep.kind);
+    const body = cleanText(drafted?.body);
+
+    if (!isMeaningfulText(body, fallbackStep.kind === "hook" ? 60 : 80)) {
+      return fallbackStep;
+    }
+
+    const interactive =
+      fallbackStep.kind === "interactive"
+        ? normalizeInteractiveDraft(draft.interactive ?? drafted?.interactive, fallbackInteractive)
+        : fallbackStep.interactive;
+
+    return {
+      ...fallbackStep,
+      title: cleanText(drafted?.title) || fallbackStep.title,
+      body,
+      prompt: isMeaningfulText(drafted?.prompt, 16) ? cleanText(drafted?.prompt) : fallbackStep.prompt,
+      hint: isMeaningfulText(drafted?.hint, 16) ? cleanText(drafted?.hint) : fallbackStep.hint,
+      interactive,
+    };
+  });
+}
+
 export function toDashboardViewData(courses: StoredCourse[]): DashboardViewData {
   const mappedCourses = courses.map(toCourseCardData);
   const continueCourse = mappedCourses[0] ?? null;
@@ -279,7 +475,9 @@ export function buildExerciseData(input: {
   courseId: string;
   lessonId: string;
   lessonTitle: string;
+  courseTitle?: string;
   lessonSummary?: string;
+  lessonScript?: LessonScriptDraft | null;
   question: string;
   options: Record<string, string>;
   explanation: string;
@@ -343,32 +541,22 @@ export function buildExerciseData(input: {
     minLabel: "Vague",
     maxLabel: "Precise",
   };
+  const lessonSteps = applyLessonScriptDraft(
+    buildFallbackLessonSteps({
+      lessonTitle: input.lessonTitle,
+      courseTitle: input.courseTitle,
+      lessonSummary,
+      explanation: input.explanation,
+      interaction,
+    }).map((step) => ({
+      ...step,
+      id: `${input.lessonId}-${step.id}`,
+    })),
+    input.lessonScript,
+    interaction,
+  );
   const steps: LessonStepData[] = [
-    {
-      id: `${input.lessonId}-hook`,
-      kind: "hook",
-      title: "Why this matters",
-      body: `This lesson helps you use ${input.lessonTitle} instead of only recognizing the words. Read the idea, try it in a small case, then answer the checkpoint.`,
-    },
-    {
-      id: `${input.lessonId}-model`,
-      kind: "concept",
-      title: "Core idea",
-      body: lessonSummary,
-    },
-    {
-      id: `${input.lessonId}-example`,
-      kind: "example",
-      title: "See it in action",
-      body: `Use this pattern: identify the situation, name the moving parts, predict what should happen, then check the result against the lesson idea. For ${input.lessonTitle}, the important move is explaining why the answer follows, not only which answer wins.`,
-    },
-    {
-      id: `${input.lessonId}-interactive`,
-      kind: "interactive",
-      title: "Compare the parts",
-      body: "Compare the cards and notice which one describes the mechanism, which one describes a trap, and which one marks the edge of the idea.",
-      interactive: interaction,
-    },
+    ...lessonSteps,
     {
       id: `${input.lessonId}-practice`,
       kind: "practice",
@@ -394,7 +582,9 @@ export function buildExerciseData(input: {
     lessonId: input.lessonId,
     title: input.lessonTitle,
     subtitle: "Guided lesson",
-    objective: `Understand and apply ${input.lessonTitle}.`,
+    objective: isMeaningfulText(input.lessonScript?.objective, 24)
+      ? cleanText(input.lessonScript?.objective)
+      : `Understand and apply ${normalizeLessonTopic(input.lessonTitle, input.courseTitle)}.`,
     prompt: input.question,
     step: steps.length,
     stepCount: steps.length,

@@ -98,3 +98,22 @@ test("evaluateCourseLessonQuality rejects thin quiz-only lessons", () => {
   assert.equal(report.checks.find((check) => check.id === "lesson-script")?.passed, false);
   assert.equal(report.checks.find((check) => check.id === "interactive-component")?.passed, false);
 });
+
+test("evaluateCourseLessonQuality rejects generic lesson-template copy", () => {
+  const exercise = buildQualityExercise();
+  const report = evaluateCourseLessonQuality({
+    ...exercise,
+    steps: exercise.steps?.map((step) =>
+      step.kind === "example"
+        ? {
+            ...step,
+            body:
+              "Use this pattern: identify the situation, name the moving parts, predict what should happen, then check the result against the lesson idea. The important move is explaining why the answer follows, not only which answer wins.",
+          }
+        : step,
+    ),
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.checks.find((check) => check.id === "specificity")?.passed, false);
+});

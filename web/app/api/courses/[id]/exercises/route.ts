@@ -52,6 +52,8 @@ export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
         courseTitle: course.title,
         lessonTitle: lesson.title,
         lessonSummary: lesson.summary,
+        sessionId: course.deeptutorSessionId,
+        knowledgeIndex: lessonIndex,
         knowledgeBaseName: course.knowledgeBaseName,
         recentPerformance: Array.isArray(body.userHistory) ? body.userHistory : [],
       });

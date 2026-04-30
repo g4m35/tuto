@@ -1,7 +1,12 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { buildExerciseData, type GuideKnowledgePoint } from "@/lib/course-data";
+import {
+  buildExerciseData,
+  type GuideKnowledgePoint,
+  type LessonScriptDraft,
+  type LessonScriptStepDraft,
+} from "@/lib/course-data";
 import { buildArtifactPromptDirective, getCourseArtifactOption, type CourseArtifactKind } from "@/lib/course-artifacts";
 import { getDeepTutorAuthHeaders, getDeepTutorUrl } from "@/lib/deeptutor-config";
 
@@ -42,6 +47,8 @@ export interface GenerateExerciseContext {
   lessonTitle: string;
   courseTitle: string;
   lessonSummary?: string;
+  sessionId?: string;
+  knowledgeIndex?: number | null;
   knowledgeBaseName?: string | null;
   recentPerformance?: string[];
 }
@@ -276,6 +283,7 @@ function buildStubExercise(lessonId: string, context: GenerateExerciseContext) {
     courseId: context.courseId,
     lessonId,
     lessonTitle: context.lessonTitle,
+    courseTitle: context.courseTitle,
     lessonSummary: context.lessonSummary,
     question: `Which statement best captures the core idea behind ${context.lessonTitle}?`,
     options: {
@@ -481,6 +489,153 @@ export async function askQuestion(
   };
 }
 
+function stripJsonFence(value: string) {
+  const trimmed = value.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return fenced ? fenced[1].trim() : trimmed;
+}
+
+function parseJsonObject(value: string): Record<string, unknown> | null {
+  const stripped = stripJsonFence(value);
+
+  try {
+    const parsed = JSON.parse(stripped) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    const firstBrace = stripped.indexOf("{");
+    const lastBrace = stripped.lastIndexOf("}");
+    if (firstBrace === -1 || lastBrace <= firstBrace) return null;
+
+    try {
+      const parsed = JSON.parse(stripped.slice(firstBrace, lastBrace + 1)) as unknown;
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+}
+
+function text(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function isSpecificText(value: unknown, minLength = 60) {
+  const cleaned = text(value);
+  return cleaned.length >= minLength && !hasGenericLessonSmell(cleaned);
+}
+
+function hasGenericLessonSmell(value: string) {
+  const cleaned = value.toLowerCase();
+  return [
+    "before naming the rule",
+    "lesson idea",
+    "a lesson should earn",
+    "invisible mechanism visible",
+    "name the moving parts",
+    "which answer wins",
+    "hard situation easier to reason",
+  ].some((phrase) => cleaned.includes(phrase));
+}
+
+function normalizeScriptStep(value: unknown): LessonScriptStepDraft | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const kind = text(raw.kind);
+  const allowedKinds = new Set(["hook", "concept", "example", "interactive"]);
+  const body = text(raw.body);
+
+  if (!allowedKinds.has(kind) || !isSpecificText(body, 80)) {
+    return null;
+  }
+
+  return {
+    kind: kind as LessonScriptStepDraft["kind"],
+    title: text(raw.title),
+    body,
+  };
+}
+
+function normalizeScriptDraft(value: Record<string, unknown> | null): LessonScriptDraft | null {
+  if (!value) return null;
+  const rawSteps = Array.isArray(value.steps) ? value.steps : [];
+  const steps = rawSteps.map(normalizeScriptStep).filter((step): step is LessonScriptStepDraft => Boolean(step));
+
+  if (steps.length < 4 || !["hook", "concept", "example", "interactive"].every((kind) => steps.some((step) => step.kind === kind))) {
+    return null;
+  }
+
+  const rawInteractive =
+    value.interactive && typeof value.interactive === "object" && !Array.isArray(value.interactive)
+      ? (value.interactive as Record<string, unknown>)
+      : null;
+  const rawItems = Array.isArray(rawInteractive?.items) ? rawInteractive.items : [];
+  const items = rawItems
+    .filter((item) => item && typeof item === "object" && !Array.isArray(item))
+    .map((item, index) => {
+      const raw = item as Record<string, unknown>;
+      return {
+        id: text(raw.id) || `item-${index + 1}`,
+        label: text(raw.label) || `Part ${index + 1}`,
+        body: text(raw.body),
+        matchId: text(raw.matchId) || undefined,
+      };
+    })
+    .filter((item) => isSpecificText(item.body, 40))
+    .slice(0, 4);
+
+  return {
+    objective: isSpecificText(value.objective, 32) ? text(value.objective) : undefined,
+    steps,
+    interactive: items.length >= 2
+      ? {
+          kind: "compare",
+          prompt: isSpecificText(rawInteractive?.prompt, 24)
+            ? text(rawInteractive?.prompt)
+            : "Compare the cards and connect each one to the lesson.",
+          items,
+        }
+      : undefined,
+  };
+}
+
+async function generateLessonScript(
+  context: GenerateExerciseContext,
+): Promise<LessonScriptDraft | null> {
+  if (!context.sessionId) return null;
+
+  const prompt = [
+    `Write the actual lesson content for "${context.lessonTitle}" in the course "${context.courseTitle}".`,
+    context.lessonSummary ? `Course planner summary: ${context.lessonSummary}` : "",
+    "Return ONLY valid JSON. Do not include markdown fences.",
+    "The lesson must be concrete, accurate, and subject-specific. Do not describe how a lesson should work. Teach the topic itself.",
+    "Do not repeat the lesson title as if it were an explanation. Avoid generic phrases like 'moving parts', 'lesson idea', 'mechanism visible', or 'which answer wins'.",
+    "JSON shape:",
+    `{"objective":"one sentence","steps":[{"kind":"hook","title":"short title","body":"120-180 words that make the topic feel useful"},{"kind":"concept","title":"short title","body":"160-240 words explaining the core facts, vocabulary, and relationships"},{"kind":"example","title":"short title","body":"140-220 words with a worked example or realistic scenario"},{"kind":"interactive","title":"short title","body":"80-140 words introducing a comparison activity"}],"interactive":{"prompt":"one sentence","items":[{"id":"first","label":"short label","body":"specific card text"},{"id":"second","label":"short label","body":"specific card text"},{"id":"third","label":"short label","body":"specific card text"}]}}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const data = await fetchJson<{
+    response?: string;
+    answer?: string;
+    message?: string;
+  }>("/api/v1/guide/chat", {
+    method: "POST",
+    body: JSON.stringify({
+      session_id: context.sessionId,
+      message: prompt,
+      knowledge_index:
+        typeof context.knowledgeIndex === "number" ? context.knowledgeIndex : null,
+    }),
+  });
+
+  return normalizeScriptDraft(parseJsonObject(data.response ?? data.answer ?? data.message ?? ""));
+}
+
 export async function generateExercise(
   lessonId: string,
   userHistory: GenerateExerciseContext,
@@ -509,6 +664,14 @@ export async function generateExercise(
   ]
     .filter(Boolean)
     .join("\n");
+
+  const lessonScript = await generateLessonScript(userHistory).catch((error: unknown) => {
+    console.warn("[DeepTutor] lesson script generation failed; using fallback lesson script", {
+      lessonId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  });
 
   const events = await fetchSse("/api/v1/plugins/capabilities/deep_question/execute-stream", {
     content: prompt,
@@ -559,7 +722,9 @@ export async function generateExercise(
       courseId: userHistory.courseId,
       lessonId,
       lessonTitle: userHistory.lessonTitle,
+      courseTitle: userHistory.courseTitle,
       lessonSummary: userHistory.lessonSummary,
+      lessonScript,
       question: qaPair.question,
       options,
       correctAnswer:

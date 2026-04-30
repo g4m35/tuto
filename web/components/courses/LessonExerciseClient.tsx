@@ -120,19 +120,54 @@ function displayStepBody(step: LessonStepData, lessonTitle: string) {
   return step.body
 }
 
+function hasTemplateLeak(value: string) {
+  const lower = value.toLowerCase()
+  return [
+    "before naming the rule",
+    "lesson idea",
+    "a lesson should earn",
+    "invisible mechanism visible",
+    "name the moving parts",
+    "which answer wins",
+    "hard situation easier to reason",
+  ].some((phrase) => lower.includes(phrase))
+}
+
+function isLegacyTemplateExercise(exercise: ExerciseData | null) {
+  if (!exercise) return false
+  const visibleText = [
+    exercise.objective,
+    exercise.title,
+    ...(exercise.steps ?? []).flatMap((step) => [
+      step.title,
+      step.body,
+      step.takeaway,
+      step.prompt,
+      step.hint,
+    ]),
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  return hasTemplateLeak(visibleText)
+}
+
 export function LessonExerciseClient({
   courseId,
   lessonId,
   initialExercise,
 }: LessonExerciseClientProps) {
   const router = useRouter()
-  const [exercise, setExercise] = useState<ExerciseData | null>(initialExercise)
+  const initialExerciseIsLegacy = isLegacyTemplateExercise(initialExercise)
+  const [exercise, setExercise] = useState<ExerciseData | null>(
+    initialExerciseIsLegacy ? null : initialExercise,
+  )
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [showHint, setShowHint] = useState(false)
   const [checked, setChecked] = useState(false)
   const [checking, setChecking] = useState(false)
   const [checkResult, setCheckResult] = useState<CheckResult | null>(null)
-  const [loading, setLoading] = useState(!initialExercise)
+  const [loading, setLoading] = useState(!initialExercise || initialExerciseIsLegacy)
   const [error, setError] = useState<string | null>(null)
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [revealedCards, setRevealedCards] = useState<Set<string>>(() => new Set())

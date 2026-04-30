@@ -20,12 +20,32 @@ function hasStepKind(steps: LessonStepData[], kind: LessonStepData["kind"]) {
   return steps.some((step) => step.kind === kind);
 }
 
+function hasTemplateLeak(value: string) {
+  const lower = value.toLowerCase();
+  return [
+    "before naming the rule",
+    "lesson idea",
+    "a lesson should earn",
+    "invisible mechanism visible",
+    "name the moving parts",
+    "which answer wins",
+    "hard situation easier to reason",
+  ].some((phrase) => lower.includes(phrase));
+}
+
 export function evaluateCourseLessonQuality(exercise: ExerciseData): CourseLessonQualityReport {
   const steps = Array.isArray(exercise.steps) ? exercise.steps : [];
   const checkpointStep = steps.find(
     (step) => step.id === exercise.checkpointStepId || step.kind === "checkpoint",
   );
   const interactionStep = steps.find((step) => step.kind === "interactive" && step.interactive);
+  const visibleLessonText = [
+    exercise.objective,
+    exercise.title,
+    ...steps.flatMap((step) => [step.title, step.body, step.takeaway, step.prompt, step.hint]),
+  ]
+    .filter(Boolean)
+    .join("\n");
   const checks: CourseLessonQualityCheck[] = [
     {
       id: "lesson-script",
@@ -40,6 +60,11 @@ export function evaluateCourseLessonQuality(exercise: ExerciseData): CourseLesso
         hasStepKind(steps, "concept") &&
         hasStepKind(steps, "example") &&
         hasStepKind(steps, "practice"),
+    },
+    {
+      id: "specificity",
+      label: "Avoids generic lesson-template copy",
+      passed: !hasTemplateLeak(visibleLessonText),
     },
     {
       id: "interactive-component",
