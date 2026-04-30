@@ -96,7 +96,7 @@ const faqs = [
   },
   {
     question: "Is this for schools?",
-    answer: "The first launch is built for adult learners, professional learning, tutors, and operators.",
+    answer: "Tuto is built for learners, students, tutors, teams, and anyone turning material into something easier to study.",
   },
   {
     question: "What is Pro?",
@@ -312,7 +312,7 @@ function BetaForm({ eventSource }: { eventSource: string }) {
             <option>Class notes</option>
             <option>Training docs</option>
             <option>Tutoring or coaching</option>
-            <option>Other adult learning</option>
+            <option>Other learning</option>
           </select>
         </label>
         <label className="space-y-2">
@@ -432,7 +432,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
             Built for dense material and real study loops.
           </h2>
           <p className="mt-5 text-[18px] leading-8 text-[#425466]">
-            Start where the pain is sharp: adult learners with material they need to understand, remember, and apply.
+            Start where the pain is sharp: learners with material they need to understand, remember, and apply.
           </p>
         </div>
 
@@ -461,7 +461,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
               Help shape the beta before the broad paid launch.
             </h2>
             <p className="mt-5 text-[18px] leading-8 text-white/[0.66]">
-              We are prioritizing professional learners, tutors, coaches, and operators who have real material ready to test.
+              We are prioritizing learners, students, tutors, teams, and operators who have real material ready to test.
             </p>
           </div>
           <BetaForm eventSource={copy.eventSource} />
@@ -485,9 +485,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
                 onClick={() => trackMarketingEvent("pricing_cta_clicked", { source: copy.eventSource, plan: name })}
                 className={cn(
                   "mt-7 inline-flex h-11 w-full items-center justify-center rounded-full text-[14px] font-semibold",
-                  name === "Pro" || name === "Enterprise"
-                    ? "bg-[#0a2540] text-white hover:bg-[#172b4d]"
-                    : "bg-[#f6f9fc] text-[#0a2540] hover:bg-[#eef2ff]"
+                  "bg-[#0a2540] text-white hover:bg-[#172b4d]"
                 )}
               >
                 {name === "Enterprise" ? "Talk to us" : name === "Pro" || name === "Team" ? "View pricing" : "Start free"}

@@ -43,9 +43,9 @@ Offer: "Upload your source and get a guided course in minutes."
 
 Channels: SEO, Reddit, LinkedIn content, YouTube demos, certification communities, newsletter sponsorships.
 
-### ICP 2: College And Adult Learners
+### ICP 2: Students And Independent Learners
 
-Students and adult learners with lecture notes, readings, syllabi, and online resources.
+Students and independent learners with lecture notes, readings, syllabi, and online resources.
 
 Pain: Notes are passive; ChatGPT gives answers, but does not become a course with review.
 
@@ -65,7 +65,7 @@ Channels: LinkedIn, creator newsletters, webinars, direct outreach, partnerships
 
 ## Beachhead Recommendation
 
-Start with professional learners and technical learners. They are easier to monetize at $20/month, have clearer pain, and can safely use their own adult-learning materials. Keep student content in organic demos, but avoid building the first funnel around minors or school districts.
+Start with learners, students, tutors, and teams who already have trusted material they need to study or teach. Keep claims conservative and make the product feel open to all learning contexts.
 
 ## Launch Offer
 
@@ -148,7 +148,7 @@ Use the smallest stack that can run 24/7 and still leave consequential decisions
 - SEO: Google Search Console plus Ahrefs or Semrush.
 - Social: Buffer for lightweight scheduling; Hootsuite/OwlyGPT if real-time social listening and trend-driven content become important.
 - Newsletter: beehiiv if you want a media-style newsletter with growth loops; Customer.io if the newsletter is mostly product lifecycle.
-- Lead research/outbound: Clay plus Apollo for tutor, coach, training, creator, and B2B lists. Use this only for adult/professional audiences and keep human review before sending.
+- Lead research/outbound: Clay plus Apollo for tutor, coach, training, creator, and B2B lists. Keep human review before sending and make sure audience targeting stays appropriate for each channel.
 
 ### Customer Support And Feedback
 
