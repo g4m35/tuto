@@ -10,7 +10,6 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  CircleDot,
   Layers3,
   Lightbulb,
   ListChecks,
@@ -78,7 +77,7 @@ function fallbackSteps(exercise: ExerciseData): LessonStepData[] {
 function stepLabel(kind: LessonStepData["kind"]) {
   switch (kind) {
     case "hook":
-      return "Hook"
+      return "Start"
     case "concept":
       return "Concept"
     case "example":
@@ -92,6 +91,33 @@ function stepLabel(kind: LessonStepData["kind"]) {
     case "checkpoint":
       return "Checkpoint"
   }
+}
+
+function displayStepTitle(step: LessonStepData) {
+  switch (step.title) {
+    case "Start with the puzzle":
+      return "Why this matters"
+    case "Build the model":
+      return "Core idea"
+    case "Work a small example":
+      return "See it in action"
+    case "Test the moving parts":
+      return "Compare the parts"
+    case "Try it before the checkpoint":
+      return "Try the question"
+    case "Checkpoint":
+      return "Check your understanding"
+    default:
+      return step.title
+  }
+}
+
+function displayStepBody(step: LessonStepData, lessonTitle: string) {
+  if (step.kind === "hook" && step.body.startsWith("Before naming the rule,")) {
+    return `This lesson helps you use ${lessonTitle} instead of only recognizing the words. Read the idea, try it in a small case, then answer the checkpoint.`
+  }
+
+  return step.body
 }
 
 export function LessonExerciseClient({
@@ -313,7 +339,7 @@ export function LessonExerciseClient({
       <section className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="editorial-card h-fit overflow-hidden px-4 py-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="eyebrow">Lesson path</p>
+            <p className="eyebrow">Steps</p>
             <span className="text-xs text-[var(--text-dim)]">{progress}%</span>
           </div>
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
@@ -329,11 +355,14 @@ export function LessonExerciseClient({
               const Icon = stepIconByKind[step.kind]
               const active = index === activeStepIndex
               const complete = index < activeStepIndex || (index === activeStepIndex && checked)
+              const title = displayStepTitle(step)
+              const ariaLabel = `${stepLabel(step.kind)}: ${title}`
 
               return (
                 <button
                   key={step.id}
                   type="button"
+                  aria-label={ariaLabel}
                   onClick={() => setActiveStepIndex(index)}
                   className={cn(
                     "group flex w-[174px] shrink-0 items-center gap-3 rounded-[var(--radius-sm)] border px-3 py-3 text-left transition lg:w-full",
@@ -352,10 +381,7 @@ export function LessonExerciseClient({
                     {complete && !active ? <Check className="size-4" /> : <Icon className="size-4" />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-[11px] uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                      {stepLabel(step.kind)}
-                    </span>
-                    <span className="mt-1 block truncate text-sm">{step.title}</span>
+                    <span className="block truncate text-sm">{title}</span>
                   </span>
                 </button>
               )
@@ -366,9 +392,7 @@ export function LessonExerciseClient({
         <div className="min-w-0 space-y-5">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-              <span>{exercise.subtitle || "Interactive lesson"}</span>
-              <span className="size-1 rounded-full bg-[var(--text-faint)]" />
-              <span>{activeStepIndex + 1}/{steps.length}</span>
+              <span>Step {activeStepIndex + 1} of {steps.length}</span>
             </div>
             <div className="space-y-3">
               <h1 className="max-w-4xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
@@ -398,7 +422,7 @@ export function LessonExerciseClient({
                       const Icon = stepIconByKind[activeStep.kind]
                       return <Icon className="size-4 text-[var(--text)]" />
                     })()}
-                    {stepLabel(activeStep.kind)}
+                    Step {activeStepIndex + 1}
                   </div>
                   <div className="flex items-center gap-1.5">
                     {steps.map((step, index) => (
@@ -418,14 +442,14 @@ export function LessonExerciseClient({
               </div>
 
               <div className="px-5 py-6 sm:px-7 sm:py-8">
-                <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_220px]">
+                <div className="grid gap-7">
                   <div className="min-w-0 space-y-6">
                     <div className="space-y-4">
                       <h2 className="text-[32px] font-semibold leading-[1.08] tracking-normal text-[var(--text)] sm:text-[42px]">
-                        {activeStep.title}
+                        {displayStepTitle(activeStep)}
                       </h2>
                       <p className="max-w-3xl text-lg leading-8 text-[var(--text-dim)]">
-                        {activeStep.body}
+                        {displayStepBody(activeStep, exercise.title)}
                       </p>
                     </div>
 
@@ -461,15 +485,6 @@ export function LessonExerciseClient({
                       />
                     ) : null}
 
-                    {activeStep.takeaway ? (
-                      <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
-                        <div className="flex items-start gap-3">
-                          <CircleDot className="mt-1 size-4 text-[var(--text)]" />
-                          <p>{activeStep.takeaway}</p>
-                        </div>
-                      </div>
-                    ) : null}
-
                     {showHint ? (
                       <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
                         {activeStep.hint || exercise.hint}
@@ -483,14 +498,6 @@ export function LessonExerciseClient({
                     ) : null}
                   </div>
 
-                  <div className="hidden xl:block">
-                    <div className="sticky top-24 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev-2)] px-4 py-4">
-                      <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">Focus</p>
-                      <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
-                        Move one step at a time. Interact before the checkpoint, then use the result to decide whether this concept is ready to advance.
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </motion.article>
