@@ -264,7 +264,7 @@ function ProductOutputGraphic() {
           })}
         </div>
 
-        <div className="mt-6 h-px overflow-hidden bg-[#d9e2ec]">
+        <div className="mt-6 h-px overflow-hidden bg-[#d9e8e4]">
           <motion.div
             className="h-full w-full origin-left bg-[linear-gradient(90deg,#2f8f83,#56c4a8,#f2c94c)]"
             initial={{ scaleX: 0 }}
@@ -431,8 +431,8 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
   }, [copy.eventSource, variant]);
 
   return (
-    <main className="min-h-screen bg-[#fffef8] text-[#102a43]">
-      <header className="sticky top-0 z-40 border-b border-[#d9e8e4]/80 bg-[#fffef8]/[0.86] backdrop-blur-xl">
+    <main className="min-h-screen bg-[#fbfffd] text-[#102a43]">
+      <header className="sticky top-0 z-40 border-b border-[#d9e8e4]/80 bg-[#fbfffd]/[0.88] backdrop-blur-xl">
         <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-7">
           <Link href="/" onClick={() => trackMarketingEvent("nav_logo_clicked", { source: copy.eventSource })}>
             <LogoMark />
@@ -459,7 +459,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </nav>
       </header>
 
-      <section id="product" className="relative overflow-hidden bg-[#fffef8]">
+      <section id="product" className="relative overflow-hidden bg-[#fbfffd]">
         <div className="absolute right-[-18%] top-[-28%] h-[520px] w-[520px] rounded-full bg-[#56c4a8]/18 blur-3xl" aria-hidden="true" />
         <div className="absolute right-[12%] top-[12%] h-[300px] w-[300px] rounded-full bg-[#f2c94c]/14 blur-3xl" aria-hidden="true" />
         <div className="relative mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-10 px-5 py-16 sm:px-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-center lg:py-20">
@@ -492,26 +492,26 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </div>
       </section>
 
-      <section className="border-y border-[#e6ebf1] bg-white">
+      <section className="border-y border-[#d9e8e4] bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-4 px-5 py-16 sm:px-7 lg:grid-cols-4">
           {steps.map((step, index) => (
-            <article key={step.title} className="min-h-[180px] border-l border-[#d9e2ec] px-5 py-2">
-              <span className="text-[12px] font-semibold text-[#635bff]">{String(index + 1).padStart(2, "0")}</span>
-              <h2 className="mt-8 text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#0a2540]">{step.title}</h2>
-              <p className="mt-3 text-[14px] leading-6 text-[#425466]">{step.body}</p>
+            <article key={step.title} className="min-h-[180px] border-l border-[#d9e8e4] px-5 py-2">
+              <span className="text-[12px] font-semibold text-[#2f8f83]">{String(index + 1).padStart(2, "0")}</span>
+              <h2 className="mt-8 text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#102a43]">{step.title}</h2>
+              <p className="mt-3 text-[14px] leading-6 text-[#486581]">{step.body}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section id="use-cases" className="bg-[#f6f9fc]">
+      <section id="use-cases" className="bg-[#f5fbf8]">
         <div className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-7">
         <div className="max-w-3xl">
-          <p className="text-[13px] font-semibold text-[#635bff]">Use cases</p>
-          <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#0a2540] sm:text-[52px]">
+          <p className="text-[13px] font-semibold text-[#2f8f83]">Use cases</p>
+          <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
             Built for dense material and real study loops.
           </h2>
-          <p className="mt-5 text-[18px] leading-8 text-[#425466]">
+          <p className="mt-5 text-[18px] leading-8 text-[#486581]">
             Start where the pain is sharp: learners with material they need to understand, remember, and apply.
           </p>
         </div>
@@ -520,12 +520,12 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
           {useCases.map((item) => {
             const Icon = item.icon;
             return (
-              <article key={item.title} className="min-h-[250px] rounded-[20px] border border-[#e6ebf1] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(10,37,64,0.62)]">
-                <span className="inline-flex size-10 items-center justify-center rounded-full bg-[#eef2ff] text-[#635bff]">
+              <article key={item.title} className="min-h-[250px] rounded-[20px] border border-[#d9e8e4] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(16,42,67,0.45)]">
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-[#e6f7f2] text-[#2f8f83]">
                   <Icon className="size-5" />
                 </span>
-                <h3 className="mt-12 text-[24px] font-semibold leading-8 tracking-[-0.025em] text-[#0a2540]">{item.title}</h3>
-                <p className="mt-4 text-[14px] leading-6 text-[#425466]">{item.body}</p>
+                <h3 className="mt-12 text-[24px] font-semibold leading-8 tracking-[-0.025em] text-[#102a43]">{item.title}</h3>
+                <p className="mt-4 text-[14px] leading-6 text-[#486581]">{item.body}</p>
               </article>
             );
           })}
@@ -536,25 +536,25 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
       <section id="enterprise" className="bg-white">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-24 sm:px-7 lg:grid-cols-[minmax(0,0.82fr)_minmax(520px,1fr)] lg:items-start">
           <div className="max-w-2xl">
-            <p className="text-[13px] font-semibold text-[#635bff]">Access paths</p>
-            <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#0a2540] sm:text-[52px]">
+            <p className="text-[13px] font-semibold text-[#2f8f83]">Access paths</p>
+            <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
               One product path for learners, teams, and institutions.
             </h2>
-            <p className="mt-5 text-[18px] leading-8 text-[#425466]">
+            <p className="mt-5 text-[18px] leading-8 text-[#486581]">
               Existing customers do not need to rebuy or start from the marketing page. New schools and companies can start an Enterprise conversation from pricing.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/dashboard"
                 onClick={() => trackMarketingEvent("enterprise_open_app_clicked", { source: copy.eventSource })}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[#0a2540] px-5 text-[14px] font-semibold text-white hover:bg-[#172b4d]"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-[#102a43] px-5 text-[14px] font-semibold text-white hover:bg-[#243b53]"
               >
                 Open app
               </Link>
               <Link
                 href="/pricing#enterprise"
                 onClick={() => trackMarketingEvent("enterprise_contact_clicked", { source: copy.eventSource })}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[#d9e2ec] bg-white px-5 text-[14px] font-semibold text-[#0a2540] hover:border-[#b8c6d8]"
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[#cfe1dd] bg-white px-5 text-[14px] font-semibold text-[#102a43] hover:border-[#9fbfb7]"
               >
                 Talk to enterprise
               </Link>
@@ -565,14 +565,14 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
             {platformHighlights.map((item) => {
               const Icon = item.icon;
               return (
-                <article key={item.title} className="rounded-[20px] border border-[#e6ebf1] bg-[#fbfdff] p-6 shadow-[0_20px_50px_-46px_rgba(10,37,64,0.56)]">
+                <article key={item.title} className="rounded-[20px] border border-[#d9e8e4] bg-[#f8fcfa] p-6 shadow-[0_20px_50px_-46px_rgba(16,42,67,0.42)]">
                   <div className="flex gap-4">
-                    <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-[#635bff]">
+                    <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-[#e6f7f2] text-[#2f8f83]">
                       <Icon className="size-5" />
                     </span>
                     <div>
-                      <h3 className="text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#0a2540]">{item.title}</h3>
-                      <p className="mt-3 text-[14px] leading-6 text-[#425466]">{item.body}</p>
+                      <h3 className="text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#102a43]">{item.title}</h3>
+                      <p className="mt-3 text-[14px] leading-6 text-[#486581]">{item.body}</p>
                     </div>
                   </div>
                 </article>
@@ -582,14 +582,14 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </div>
       </section>
 
-      <section id="beta" className="border-y border-[#0a2540] bg-[#0a2540] text-white">
+      <section id="beta" className="border-y border-[#d9e8e4] bg-[#eaf7f1]">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 py-20 sm:px-7 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,0.85fr)] lg:items-start">
           <div className="max-w-2xl">
-            <p className="text-[13px] font-semibold text-[#00d4ff]">Beta access</p>
-            <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-white sm:text-[52px]">
+            <p className="text-[13px] font-semibold text-[#2f8f83]">Beta access</p>
+            <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
               Help shape the beta before the broad paid launch.
             </h2>
-            <p className="mt-5 text-[18px] leading-8 text-white/[0.66]">
+            <p className="mt-5 text-[18px] leading-8 text-[#486581]">
               We are prioritizing learners, tutors, schools, companies, and operators who have real material ready to test.
             </p>
           </div>
@@ -605,16 +605,16 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
             ["Team", "$65/mo", "Shared-use billing for small teams, tutors, coaches, and cohort operators."],
             ["Enterprise", "Custom", "Contract-based access for schools and companies that need onboarding, scale, and expanded limits."],
           ].map(([name, price, body]) => (
-            <article key={name} className="rounded-[20px] border border-[#e6ebf1] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(10,37,64,0.62)]">
-              <h3 className="text-[15px] font-semibold text-[#0a2540]">{name}</h3>
-              <p className="mt-5 text-[34px] font-semibold tracking-[-0.03em] text-[#0a2540]">{price}</p>
-              <p className="mt-4 min-h-16 text-[14px] leading-6 text-[#425466]">{body}</p>
+            <article key={name} className="rounded-[20px] border border-[#d9e8e4] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(16,42,67,0.45)]">
+              <h3 className="text-[15px] font-semibold text-[#102a43]">{name}</h3>
+              <p className="mt-5 text-[34px] font-semibold tracking-[-0.03em] text-[#102a43]">{price}</p>
+              <p className="mt-4 min-h-16 text-[14px] leading-6 text-[#486581]">{body}</p>
               <Link
                 href={name === "Enterprise" ? "/pricing#enterprise" : name === "Pro" || name === "Team" ? "/pricing" : "/create"}
                 onClick={() => trackMarketingEvent("pricing_cta_clicked", { source: copy.eventSource, plan: name })}
                 className={cn(
                   "mt-7 inline-flex h-11 w-full items-center justify-center rounded-full text-[14px] font-semibold",
-                  "bg-[#0a2540] text-white hover:bg-[#172b4d]"
+                  "bg-[#102a43] text-white hover:bg-[#243b53]"
                 )}
               >
                 {name === "Enterprise" ? "Talk to enterprise" : name === "Pro" || name === "Team" ? "View pricing" : "Start free"}
@@ -624,29 +624,29 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </div>
       </section>
 
-      <section className="border-t border-[#e6ebf1] bg-[#f6f9fc]">
+      <section className="border-t border-[#d9e8e4] bg-[#f5fbf8]">
         <div className="mx-auto w-full max-w-5xl px-5 py-16 sm:px-7">
-          <h2 className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#0a2540]">Questions before you upload?</h2>
-          <div className="mt-8 divide-y divide-[#d9e2ec] border-y border-[#d9e2ec]">
+          <h2 className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#102a43]">Questions before you upload?</h2>
+          <div className="mt-8 divide-y divide-[#d9e8e4] border-y border-[#d9e8e4]">
             {faqs.map((faq) => (
               <details key={faq.question} className="group py-5">
-                <summary className="flex items-center justify-between gap-6 text-[16px] font-semibold text-[#0a2540]">
+                <summary className="flex items-center justify-between gap-6 text-[16px] font-semibold text-[#102a43]">
                   {faq.question}
-                  <ArrowRight className="size-4 rotate-0 text-[#635bff] transition-transform group-open:rotate-90" />
+                  <ArrowRight className="size-4 rotate-0 text-[#2f8f83] transition-transform group-open:rotate-90" />
                 </summary>
-                <p className="mt-4 max-w-3xl text-[14px] leading-6 text-[#425466]">{faq.answer}</p>
+                <p className="mt-4 max-w-3xl text-[14px] leading-6 text-[#486581]">{faq.answer}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      <footer className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-[13px] text-[#425466] sm:px-7">
+      <footer className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-[13px] text-[#486581] sm:px-7">
         <p>Tuto © {year}</p>
         <div className="flex gap-5">
-          <Link href="/privacy" className="hover:text-[#0a2540]">Privacy</Link>
-          <Link href="/terms" className="hover:text-[#0a2540]">Terms</Link>
-          <Link href="/support" className="hover:text-[#0a2540]">Support</Link>
+          <Link href="/privacy" className="hover:text-[#102a43]">Privacy</Link>
+          <Link href="/terms" className="hover:text-[#102a43]">Terms</Link>
+          <Link href="/support" className="hover:text-[#102a43]">Support</Link>
         </div>
       </footer>
     </main>
