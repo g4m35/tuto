@@ -10,8 +10,12 @@ import {
   Check,
   ClipboardCheck,
   DoorOpen,
+  FileQuestion,
+  FileText,
   GraduationCap,
   Mail,
+  NotebookTabs,
+  Presentation,
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -34,41 +38,41 @@ const variantCopy: Record<
   }
 > = {
   default: {
-    headline: "Turn any PDF or topic into a guided course.",
+    headline: "Turn any source into study-ready outputs.",
     supporting:
-      "Tuto builds lessons, practice, and review loops from material you already trust, with a clear path back for existing learners and an Enterprise tier for institutions.",
+      "Tuto can make courses, study guides, Google Docs-ready docs, slide decks, quizzes, notes, and lesson plans from PDFs, uploads, or a topic prompt.",
     eventSource: "landing_default",
   },
   pdf: {
-    headline: "Turn a dense PDF into a guided course.",
-    supporting: "Upload a trusted source and Tuto turns it into lessons, practice, and review.",
+    headline: "Turn a dense PDF into study-ready outputs.",
+    supporting: "Upload a trusted source and Tuto turns it into courses, guides, quizzes, notes, slides, and lesson plans.",
     eventSource: "landing_pdf",
   },
   notes: {
-    headline: "Turn class notes into lessons and practice.",
-    supporting: "Move from passive notes to a course path that helps you study before the next exam.",
+    headline: "Turn class notes into courses, quizzes, and guides.",
+    supporting: "Move from passive notes to a study system with lessons, review docs, quizzes, and Google Docs-ready exports.",
     eventSource: "landing_notes",
   },
   training: {
-    headline: "Turn training docs into guided practice.",
+    headline: "Turn training docs into reusable learning assets.",
     supporting:
-      "Convert onboarding packets, SOPs, and internal docs into guided learning for teams, schools, and company rollouts.",
+      "Convert onboarding packets, SOPs, and internal docs into courses, slides, lesson plans, quizzes, and uploadable docs for teams.",
     eventSource: "landing_training",
   },
 };
 
 const steps = [
   {
-    title: "Bring trusted material",
-    body: "Upload a PDF, notes packet, or start from a focused topic.",
+    title: "Bring the source",
+    body: "Upload a PDF, notes packet, document, training deck, or start from a focused topic.",
   },
   {
-    title: "Generate a course",
-    body: "Tuto shapes a lesson path before you begin studying.",
+    title: "Choose the output",
+    body: "Make a course, study guide, quiz set, slide deck, notes packet, doc, or lesson plan.",
   },
   {
-    title: "Practice inside the flow",
-    body: "Lessons, checks, and exercises stay attached to the course.",
+    title: "Export or keep learning",
+    body: "Use the guided course flow or download Docs/Slides-ready files you can upload to Google.",
   },
   {
     title: "Come back anytime",
@@ -79,17 +83,17 @@ const steps = [
 const useCases = [
   {
     title: "Certification prep",
-    body: "Turn dense standards, exam guides, and study PDFs into a course you can actually work through.",
+    body: "Turn dense standards, exam guides, and study PDFs into a course, quiz set, and exam-ready study guide.",
     icon: ClipboardCheck,
   },
   {
     title: "Class notes",
-    body: "Move from passive lecture notes to lessons, practice, and review before the next exam.",
+    body: "Move from lecture notes to structured notes, practice quizzes, lesson paths, and Google Docs-ready review docs.",
     icon: GraduationCap,
   },
   {
     title: "Enterprise training",
-    body: "Schools and companies can use contract-based Enterprise access for larger learning programs.",
+    body: "Schools and companies can turn internal docs into lesson plans, slide shows, quizzes, courses, and reusable handouts.",
     icon: BriefcaseBusiness,
   },
 ];
@@ -115,7 +119,7 @@ const platformHighlights = [
 const faqs = [
   {
     question: "What can I upload?",
-    answer: "The course flow currently supports PDFs, Markdown, and text files, plus topic-only course creation.",
+    answer: "Tuto supports PDFs, text, Markdown, office-style source files, and topic prompts. Outputs can be downloaded as document or slide files that are ready to upload into Google Docs or Google Slides.",
   },
   {
     question: "Is this for schools?",
@@ -138,124 +142,131 @@ const faqs = [
   },
 ];
 
-const courseExamples = [
+const artifactOutputs = [
   {
-    source: "biology-notes.pdf",
-    title: "Photosynthesis from trusted notes",
-    subject: "Biology",
-    type: "Full course",
-    progress: "38%",
-    detail: "4 lessons / 1h 20m estimate",
-    next: "Light reactions and electron flow",
-    lessons: ["Big idea", "Light reactions", "Calvin cycle", "Exam review"],
+    title: "Study guide",
+    detail: "Key terms, worked examples, mistakes, review checklist",
+    format: "DOCX / Google Docs-ready",
+    icon: FileText,
   },
   {
-    source: "topic prompt",
-    title: "Hockey fundamentals",
-    subject: "Sports",
-    type: "Study guide",
-    progress: "0%",
-    detail: "3 sections / quick review",
-    next: "Rules that shape live play",
-    lessons: ["Rules", "Positioning", "Practice plan"],
+    title: "Slide show",
+    detail: "Clean slide outline, speaker notes, teaching flow",
+    format: "PPTX / Google Slides-ready",
+    icon: Presentation,
   },
   {
-    source: "training-docs.md",
-    title: "Support onboarding",
-    subject: "Training",
-    type: "Lesson plan",
-    progress: "80%",
-    detail: "5 parts / classroom-ready",
-    next: "Escalation roleplay",
-    lessons: ["Workflow", "Escalation", "Quality checks"],
+    title: "Quiz set",
+    detail: "Recall, concept checks, application, trap answers",
+    format: "Practice with answer rationales",
+    icon: FileQuestion,
+  },
+  {
+    title: "Full course",
+    detail: "Guided lesson path with checkpoints and review",
+    format: "Interactive Tuto course",
+    icon: GraduationCap,
+  },
+  {
+    title: "Notes",
+    detail: "Structured notes from messy PDFs or class material",
+    format: "DOCX / Markdown",
+    icon: NotebookTabs,
+  },
+  {
+    title: "Lesson plan",
+    detail: "Objectives, warm-up, guided practice, exit check",
+    format: "Teacher-ready document",
+    icon: ClipboardCheck,
   },
 ];
 
 function LogoMark() {
   return (
-    <span className="inline-flex items-center gap-2.5" aria-label="Tuto">
-      <span className="relative inline-flex size-8 items-center justify-center overflow-hidden rounded-[10px] bg-[#635bff] shadow-[0_12px_30px_-14px_rgba(99,91,255,0.9)]">
-        <span className="absolute inset-0 bg-[linear-gradient(135deg,#00d4ff_0%,#635bff_48%,#ff5a9e_100%)]" />
-        <span className="relative h-4 w-4 rounded-[5px] border-[2px] border-white/90 before:absolute before:left-1/2 before:top-[-5px] before:h-[22px] before:w-[2px] before:-translate-x-1/2 before:rotate-[24deg] before:bg-white/90" />
-      </span>
-      <span className="text-[19px] font-semibold tracking-[-0.02em] text-[#0a2540]">tuto</span>
+    <span
+      className="[font-family:var(--font-serif)] text-[34px] font-normal italic leading-none tracking-normal text-[#102a43]"
+      aria-label="Tuto"
+    >
+      tuto.
     </span>
   );
 }
 
-function CourseExamplesGraphic() {
+function ProductOutputGraphic() {
   return (
     <motion.div
-      className="relative rounded-[24px] border border-[#dbe6f2] bg-white p-3 shadow-[0_34px_80px_-54px_rgba(10,37,64,0.7)]"
+      className="relative rounded-[28px] border border-[#cfe1dd] bg-[#fffef8] p-3 shadow-[0_34px_80px_-54px_rgba(16,42,67,0.58)]"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.35 }}
       transition={{ duration: 0.48, ease: [0.2, 0.7, 0.2, 1] }}
     >
-      <div className="rounded-[18px] bg-[#f7fbff] p-5">
+      <div className="rounded-[22px] bg-[#f5fbf8] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[12px] font-semibold text-[#635bff]">Example course cards</p>
-            <h2 className="mt-2 text-[20px] font-semibold tracking-[-0.025em] text-[#0a2540]">
-              Saved with the details learners need
+            <p className="text-[12px] font-semibold text-[#2f8f83]">One source, many outputs</p>
+            <h2 className="mt-2 text-[21px] font-semibold tracking-[-0.025em] text-[#102a43]">
+              Choose what Tuto should make
             </h2>
           </div>
-          <span className="rounded-full border border-[#d9e2ec] bg-white px-3 py-1 text-[12px] font-medium text-[#425466]">
-            Real dashboard view
+          <span className="rounded-full border border-[#cfe1dd] bg-white px-3 py-1 text-[12px] font-medium text-[#486581]">
+            Export-ready
           </span>
         </div>
 
-        <div className="mt-6 space-y-3">
-          {courseExamples.map((course, index) => (
+        <div className="mt-5 rounded-[18px] border border-[#cfe1dd] bg-white p-4">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-[#829ab1]">Uploaded source</p>
+          <h3 className="mt-2 text-[18px] font-semibold leading-6 text-[#102a43]">
+            Biology notes, class slides, or a topic prompt
+          </h3>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {["PDF", "DOCX", "Topic"].map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-[#d9e8e4] bg-[#f5fbf8] px-3 py-1.5 text-center text-[12px] font-semibold text-[#2f8f83]"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {artifactOutputs.map((output, index) => {
+            const Icon = output.icon;
+            return (
             <motion.article
-              key={course.title}
-              className="rounded-[16px] border border-[#e6ebf1] bg-white p-4 transition-transform duration-200 ease-[var(--ease-signature)] hover:-translate-y-0.5"
+              key={output.title}
+              className="min-h-[150px] rounded-[18px] border border-[#d9e8e4] bg-white p-4 transition-transform duration-200 ease-[var(--ease-signature)] hover:-translate-y-0.5"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.36, delay: index * 0.08, ease: [0.2, 0.7, 0.2, 1] }}
             >
-              <div className="flex items-start justify-between gap-3">
-                <span className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#635bff]">
-                  {course.type}
+              <div className="flex items-start gap-3">
+                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-[#e6f7f2] text-[#2f8f83]">
+                  <Icon className="size-5" />
                 </span>
-                <span className="text-[12px] font-semibold text-[#0a2540]">{course.progress}</span>
-              </div>
-              <div className="mt-4 min-w-0">
-                <p className="text-[11px] uppercase tracking-[0.14em] text-[#6b7c93]">
-                  {String(index + 1).padStart(2, "0")} / {course.subject}
-                </p>
-                <h3 className="mt-1 text-[16px] font-semibold leading-5 tracking-[-0.015em] text-[#0a2540]">
-                  {course.title}
-                </h3>
-                <p className="mt-1 text-[12px] text-[#6b7c93]">Source: {course.source}</p>
-                <div className="mt-4 h-1.5 rounded-full bg-[#edf2f7]">
-                  <div
-                    className="h-full rounded-full bg-[linear-gradient(90deg,#00d4ff,#635bff,#ff5a9e)]"
-                    style={{ width: course.progress }}
-                  />
-                </div>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[#425466]">
-                  <span>{course.detail}</span>
-                  <span>Next: {course.next}</span>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {course.lessons.map((lesson) => (
-                    <span
-                      key={lesson}
-                      className="rounded-full border border-[#dbe6f2] px-2.5 py-1 text-[12px] text-[#425466]"
-                    >
-                      {lesson}
-                    </span>
-                  ))}
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2f8f83]">
+                    {String(index + 1).padStart(2, "0")}
+                  </p>
+                  <h3 className="mt-1 text-[16px] font-semibold leading-5 tracking-[-0.015em] text-[#102a43]">
+                    {output.title}
+                  </h3>
+                  <p className="mt-2 text-[12px] leading-5 text-[#486581]">{output.detail}</p>
                 </div>
               </div>
+              <p className="mt-4 rounded-full border border-[#d9e8e4] bg-[#f8fcfa] px-3 py-1.5 text-[12px] font-medium text-[#486581]">
+                {output.format}
+              </p>
             </motion.article>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-6 h-px overflow-hidden bg-[#d9e2ec]">
           <motion.div
-            className="h-full w-full origin-left bg-[linear-gradient(90deg,#00d4ff,#635bff,#ff5a9e)]"
+            className="h-full w-full origin-left bg-[linear-gradient(90deg,#2f8f83,#56c4a8,#f2c94c)]"
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true, amount: 0.8 }}
@@ -323,14 +334,14 @@ function BetaForm({ eventSource }: { eventSource: string }) {
 
   if (state === "success") {
     return (
-      <div className="rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--bg-elev)] p-6">
-        <div className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)]">
-          <Check className="size-4 text-[var(--text)]" />
+      <div className="rounded-[24px] border border-[#cfe1dd] bg-white p-6 shadow-[0_22px_58px_-46px_rgba(16,42,67,0.6)]">
+        <div className="inline-flex size-10 items-center justify-center rounded-full bg-[#e6f7f2] text-[#2f8f83]">
+          <Check className="size-4" />
         </div>
-        <h3 className="mt-5 text-[24px] font-medium leading-8 tracking-normal text-[var(--text)]">
+        <h3 className="mt-5 text-[24px] font-semibold leading-8 tracking-[-0.02em] text-[#102a43]">
           You are on the beta list.
         </h3>
-        <p className="mt-3 text-[14px] leading-6 text-[var(--text-dim)]">
+        <p className="mt-3 text-[14px] leading-6 text-[#486581]">
           We will use your notes to prioritize onboarding and the first automation workflows.
         </p>
       </div>
@@ -338,29 +349,32 @@ function BetaForm({ eventSource }: { eventSource: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] p-5 sm:p-6">
+    <form
+      onSubmit={onSubmit}
+      className="rounded-[24px] border border-[#cfe1dd] bg-white p-5 text-[#102a43] shadow-[0_22px_58px_-46px_rgba(16,42,67,0.6)] sm:p-6"
+    >
       <div className="flex items-center gap-3">
-        <span className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)]">
-          <Mail className="size-4 text-[var(--text)]" />
+        <span className="inline-flex size-10 items-center justify-center rounded-full bg-[#e6f7f2] text-[#2f8f83]">
+          <Mail className="size-4" />
         </span>
         <div>
-          <h3 className="text-[20px] font-medium leading-7 tracking-normal text-[var(--text)]">Join the beta</h3>
-          <p className="text-[13px] leading-5 text-[var(--text-dim)]">Tell us what you want Tuto to turn into a course.</p>
+          <h3 className="text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#102a43]">Join the beta</h3>
+          <p className="text-[13px] leading-5 text-[#486581]">Tell us what you want Tuto to create first.</p>
         </div>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <label className="space-y-2">
-          <span className="text-[12px] text-[var(--text-dim)]">Name</span>
-          <input name="name" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+          <span className="text-[12px] font-medium text-[#486581]">Name</span>
+          <input name="name" className="h-11 w-full rounded-[12px] border border-[#d9e8e4] bg-[#f8fcfa] px-3 text-[14px] text-[#102a43] outline-none focus:border-[#2f8f83]" />
         </label>
         <label className="space-y-2">
-          <span className="text-[12px] text-[var(--text-dim)]">Email</span>
-          <input name="email" type="email" required className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+          <span className="text-[12px] font-medium text-[#486581]">Email</span>
+          <input name="email" type="email" required className="h-11 w-full rounded-[12px] border border-[#d9e8e4] bg-[#f8fcfa] px-3 text-[14px] text-[#102a43] outline-none focus:border-[#2f8f83]" />
         </label>
         <label className="space-y-2">
-          <span className="text-[12px] text-[var(--text-dim)]">Use case</span>
-          <select name="useCase" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]">
+          <span className="text-[12px] font-medium text-[#486581]">Use case</span>
+          <select name="useCase" className="h-11 w-full rounded-[12px] border border-[#d9e8e4] bg-[#f8fcfa] px-3 text-[14px] text-[#102a43] outline-none focus:border-[#2f8f83]">
             <option>Certification prep</option>
             <option>Class notes</option>
             <option>Training docs</option>
@@ -369,8 +383,8 @@ function BetaForm({ eventSource }: { eventSource: string }) {
           </select>
         </label>
         <label className="space-y-2">
-          <span className="text-[12px] text-[var(--text-dim)]">Material</span>
-          <select name="materialType" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]">
+          <span className="text-[12px] font-medium text-[#486581]">Material</span>
+          <select name="materialType" className="h-11 w-full rounded-[12px] border border-[#d9e8e4] bg-[#f8fcfa] px-3 text-[14px] text-[#102a43] outline-none focus:border-[#2f8f83]">
             <option>PDF</option>
             <option>Notes</option>
             <option>Topic prompt</option>
@@ -381,18 +395,23 @@ function BetaForm({ eventSource }: { eventSource: string }) {
       </div>
 
       <label className="mt-3 block space-y-2">
-        <span className="text-[12px] text-[var(--text-dim)]">What would you study first?</span>
-        <textarea name="notes" rows={4} className="w-full resize-none rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 py-3 text-[14px] leading-6 outline-none focus:border-[var(--border-strong)]" />
+        <span className="text-[12px] font-medium text-[#486581]">What would you create first?</span>
+        <textarea name="notes" rows={4} className="w-full resize-none rounded-[12px] border border-[#d9e8e4] bg-[#f8fcfa] px-3 py-3 text-[14px] leading-6 text-[#102a43] outline-none focus:border-[#2f8f83]" />
       </label>
 
-      <label className="mt-4 flex items-start gap-3 text-[13px] leading-5 text-[var(--text-dim)]">
-        <input name="marketingOptIn" type="checkbox" className="mt-1 size-4 rounded border-[var(--border)] bg-[#080808]" />
+      <label className="mt-4 flex items-start gap-3 text-[13px] leading-5 text-[#486581]">
+        <input name="marketingOptIn" type="checkbox" className="mt-1 size-4 rounded border-[#cfe1dd] bg-white accent-[#2f8f83]" />
         <span>Send me beta updates, onboarding notes, and launch emails. I can unsubscribe anytime.</span>
       </label>
 
-      {error ? <p className="mt-4 text-[13px] text-red-300">{error}</p> : null}
+      {error ? <p className="mt-4 text-[13px] text-[#b42318]">{error}</p> : null}
 
-      <Button type="submit" size="lg" className="mt-5 w-full" disabled={state === "submitting"}>
+      <Button
+        type="submit"
+        size="lg"
+        className="mt-5 w-full bg-[#102a43] text-white hover:bg-[#243b53]"
+        disabled={state === "submitting"}
+      >
         {state === "submitting" ? "Joining beta" : "Join the beta"}
         <ArrowRight data-icon="inline-end" />
       </Button>
@@ -412,26 +431,26 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
   }, [copy.eventSource, variant]);
 
   return (
-    <main className="min-h-screen bg-white text-[#0a2540]">
-      <header className="sticky top-0 z-40 border-b border-[#e6ebf1]/70 bg-white/[0.82] backdrop-blur-xl">
+    <main className="min-h-screen bg-[#fffef8] text-[#102a43]">
+      <header className="sticky top-0 z-40 border-b border-[#d9e8e4]/80 bg-[#fffef8]/[0.86] backdrop-blur-xl">
         <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-7">
           <Link href="/" onClick={() => trackMarketingEvent("nav_logo_clicked", { source: copy.eventSource })}>
             <LogoMark />
           </Link>
-          <div className="hidden items-center gap-7 text-[14px] font-medium text-[#425466] md:flex">
-            <a href="#product" className="hover:text-[#0a2540]">Product</a>
-            <a href="#use-cases" className="hover:text-[#0a2540]">Use cases</a>
-            <a href="#enterprise" className="hover:text-[#0a2540]">Enterprise</a>
-            <a href="#pricing" className="hover:text-[#0a2540]">Pricing</a>
+          <div className="hidden items-center gap-7 text-[14px] font-medium text-[#486581] md:flex">
+            <a href="#product" className="hover:text-[#102a43]">Product</a>
+            <a href="#use-cases" className="hover:text-[#102a43]">Use cases</a>
+            <a href="#enterprise" className="hover:text-[#102a43]">Enterprise</a>
+            <a href="#pricing" className="hover:text-[#102a43]">Pricing</a>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/dashboard" className="inline-flex h-9 items-center rounded-full px-4 text-[14px] font-semibold text-[#425466] hover:text-[#0a2540]">
+            <Link href="/dashboard" className="inline-flex h-9 items-center rounded-full px-4 text-[14px] font-semibold text-[#486581] hover:text-[#102a43]">
               Open app
             </Link>
             <Link
               href="/create"
               onClick={() => trackMarketingEvent("hero_create_course_clicked", { source: copy.eventSource, location: "nav" })}
-              className="hidden h-9 items-center gap-2 rounded-full bg-[#0a2540] px-4 text-[14px] font-semibold text-white shadow-[0_12px_24px_-18px_rgba(10,37,64,0.7)] hover:bg-[#172b4d] sm:inline-flex"
+              className="hidden h-9 items-center gap-2 rounded-full bg-[#102a43] px-4 text-[14px] font-semibold text-white shadow-[0_12px_24px_-18px_rgba(16,42,67,0.7)] hover:bg-[#243b53] sm:inline-flex"
             >
               Create course
               <ArrowRight data-icon="inline-end" />
@@ -440,22 +459,22 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         </nav>
       </header>
 
-      <section id="product" className="relative overflow-hidden bg-[#fbfdff]">
-        <div className="absolute right-[-18%] top-[-28%] h-[520px] w-[520px] rounded-full bg-[#00d4ff]/18 blur-3xl" aria-hidden="true" />
-        <div className="absolute right-[12%] top-[12%] h-[300px] w-[300px] rounded-full bg-[#635bff]/12 blur-3xl" aria-hidden="true" />
+      <section id="product" className="relative overflow-hidden bg-[#fffef8]">
+        <div className="absolute right-[-18%] top-[-28%] h-[520px] w-[520px] rounded-full bg-[#56c4a8]/18 blur-3xl" aria-hidden="true" />
+        <div className="absolute right-[12%] top-[12%] h-[300px] w-[300px] rounded-full bg-[#f2c94c]/14 blur-3xl" aria-hidden="true" />
         <div className="relative mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-10 px-5 py-16 sm:px-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-center lg:py-20">
           <div className="max-w-3xl pt-8 lg:pt-0">
-            <h1 className="text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-[#0a2540] sm:text-[68px] lg:text-[78px]">
+            <h1 className="text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-[#102a43] sm:text-[68px] lg:text-[78px]">
               {copy.headline}
             </h1>
-            <p className="mt-6 max-w-2xl text-[19px] leading-8 text-[#425466] sm:text-[21px]">
+            <p className="mt-6 max-w-2xl text-[19px] leading-8 text-[#486581] sm:text-[21px]">
               {copy.supporting}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/create"
                 onClick={() => trackMarketingEvent("hero_create_course_clicked", { source: copy.eventSource, location: "hero" })}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-[#0a2540] px-5 text-[14px] font-semibold text-white shadow-[0_18px_34px_-22px_rgba(10,37,64,0.75)] hover:bg-[#172b4d] sm:h-12 sm:px-6 sm:text-[15px]"
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-[#102a43] px-5 text-[14px] font-semibold text-white shadow-[0_18px_34px_-22px_rgba(16,42,67,0.75)] hover:bg-[#243b53] sm:h-12 sm:px-6 sm:text-[15px]"
               >
                 Create your first course
                 <ArrowRight data-icon="inline-end" />
@@ -463,13 +482,13 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
               <Link
                 href="/dashboard"
                 onClick={() => trackMarketingEvent("hero_open_app_clicked", { source: copy.eventSource, location: "hero" })}
-                className="inline-flex h-11 items-center gap-2 rounded-full border border-[#d9e2ec] bg-white px-5 text-[14px] font-semibold text-[#0a2540] shadow-[0_18px_34px_-28px_rgba(10,37,64,0.45)] hover:border-[#b8c6d8] sm:h-12 sm:px-6 sm:text-[15px]"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[#cfe1dd] bg-white px-5 text-[14px] font-semibold text-[#102a43] shadow-[0_18px_34px_-28px_rgba(16,42,67,0.42)] hover:border-[#9fbfb7] sm:h-12 sm:px-6 sm:text-[15px]"
               >
                 Open existing account
               </Link>
             </div>
           </div>
-          <CourseExamplesGraphic />
+          <ProductOutputGraphic />
         </div>
       </section>
 
