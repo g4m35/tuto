@@ -4,7 +4,13 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient, QueryResultRow } from "pg";
 import { getEffectiveBillingTier } from "@/lib/billing-status";
 import { getTierLimits, hasUnlimitedAllowance, type BillingTier } from "@/lib/limits";
-import { assertDatabaseConfigured, isDatabaseConfigured, query, transaction } from "@/lib/db";
+import {
+  assertDatabaseConfigured,
+  canUseEphemeralDatabaseFallback,
+  isDatabaseConfigured,
+  query,
+  transaction,
+} from "@/lib/db";
 
 export type UsageEventType = "message" | "doc_upload" | "course_created";
 
@@ -71,6 +77,21 @@ function getLimitForEventType(tier: BillingTier, eventType: UsageEventType): num
     default:
       return null;
   }
+}
+
+function buildEphemeralUsageSnapshot(eventType: UsageEventType, resetsAt: Date): UsageSnapshot {
+  const tier: BillingTier = "free";
+  const tierLimit = getLimitForEventType(tier, eventType);
+
+  return {
+    allowed: true,
+    current: 0,
+    used: 0,
+    reserved: 0,
+    limit: tierLimit ?? Number.POSITIVE_INFINITY,
+    resetsAt,
+    tier,
+  };
 }
 
 async function runQuery<T extends QueryResultRow = QueryResultRow>(
@@ -236,6 +257,10 @@ export async function checkLimit(clerkId: string, eventType: UsageEventType): Pr
   const { monthStart, resetsAt } = getMonthWindow();
 
   if (!isDatabaseConfigured()) {
+    if (canUseEphemeralDatabaseFallback()) {
+      return buildEphemeralUsageSnapshot(eventType, resetsAt);
+    }
+
     assertDatabaseConfigured("Usage limits");
   }
 
@@ -286,6 +311,25 @@ export async function reserveUsage(
   const ttlSeconds = Math.max(30, Math.floor(options.ttlSeconds ?? 10 * 60));
 
   if (!isDatabaseConfigured()) {
+    if (canUseEphemeralDatabaseFallback()) {
+      const snapshot = buildEphemeralUsageSnapshot(eventType, resetsAt);
+
+      return {
+        ok: true,
+        reservation: {
+          id: null,
+          clerkId,
+          eventType,
+          quantity,
+          limit: snapshot.limit,
+          current: snapshot.current,
+          resetsAt,
+          tier: snapshot.tier,
+          metadata: options.metadata ?? {},
+        },
+      };
+    }
+
     assertDatabaseConfigured("Usage limits");
   }
 

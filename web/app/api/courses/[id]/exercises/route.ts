@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { buildRecentPerformanceSummary } from "@/lib/course-adaptation";
 import { findLesson } from "@/lib/course-data";
 import { evaluateCourseLessonQuality } from "@/lib/course-quality";
-import { getCourseForUser, saveExercise, updateCourseProgress } from "@/lib/course-store";
+import {
+  getCourseForUser,
+  listCourseAttempts,
+  saveExercise,
+  updateCourseProgress,
+} from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
 import { DeepTutorClientError, generateExercise } from "@/lib/deeptutor";
 import { withUsageLimit } from "@/lib/withUsageLimit";
@@ -46,6 +52,16 @@ export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
       const lessonIndex = course.guidePayload.knowledge_points?.findIndex(
         (point) => lesson.title === point.knowledge_title,
       ) ?? 0;
+      const recentPerformance = Array.isArray(body.userHistory) && body.userHistory.length
+        ? body.userHistory
+        : buildRecentPerformanceSummary(
+            await listCourseAttempts({
+              clerkId,
+              courseId: course.id,
+              workflowKind: "lesson",
+            }),
+            body.lessonId,
+          );
 
       const generated = await generateExercise(body.lessonId, {
         courseId: course.id,
@@ -55,7 +71,7 @@ export const POST = withUsageLimit<{ params: Promise<{ id: string }> }>(
         sessionId: course.deeptutorSessionId,
         knowledgeIndex: lessonIndex,
         knowledgeBaseName: course.knowledgeBaseName,
-        recentPerformance: Array.isArray(body.userHistory) ? body.userHistory : [],
+        recentPerformance,
       });
       const quality = evaluateCourseLessonQuality(generated.exercise);
 

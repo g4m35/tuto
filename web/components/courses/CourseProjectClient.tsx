@@ -99,7 +99,7 @@ export function CourseProjectClient({
           </p>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
-          <div className="h-full rounded-full bg-[var(--text)] transition-[width] duration-200" style={{ width: `${progress}%` }} />
+          <div className="h-full rounded-full bg-[var(--accent-strong)] transition-[width] duration-200" style={{ width: `${progress}%` }} />
         </div>
       </section>
 
@@ -132,7 +132,7 @@ export function CourseProjectClient({
                 setConfidence(Number(event.target.value))
                 setSaved(false)
               }}
-              className="mt-4 w-full accent-[var(--text)]"
+              className="mt-4 w-full accent-[var(--accent-strong)]"
             />
             <div className="mt-2 flex justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
               <span>Needs review</span>
@@ -163,7 +163,7 @@ export function CourseProjectClient({
                   <span
                     className={cn(
                       "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-[var(--border)]",
-                      selected && "border-[var(--text)] bg-[var(--text)] text-[var(--accent-ink)]",
+                      selected && "border-[var(--accent-strong)] bg-[var(--accent)] text-[var(--accent-ink)]",
                     )}
                   >
                     {selected ? <Check className="size-3.5" /> : null}
@@ -175,7 +175,7 @@ export function CourseProjectClient({
           </div>
 
           {error ? (
-            <div className="mt-4 rounded-[var(--radius-sm)] border border-red-300/60 bg-red-300/10 px-4 py-3 text-sm leading-6 text-red-100">
+            <div className="mt-4 rounded-[var(--radius-sm)] border border-red-300/60 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
               {error}
             </div>
           ) : null}

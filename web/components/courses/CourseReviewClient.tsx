@@ -151,7 +151,7 @@ export function CourseReviewClient({ courseId, courseTitle, prompts }: CourseRev
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
           <motion.div
-            className="h-full rounded-full bg-[var(--text)]"
+            className="h-full rounded-full bg-[var(--accent-strong)]"
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.2 }}
           />
@@ -203,7 +203,7 @@ export function CourseReviewClient({ courseId, courseTitle, prompts }: CourseRev
                     "editorial-card interactive-card t-lift w-full px-5 py-5 text-left",
                     isSelected && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]",
                     isCorrect && "border-emerald-300/70 bg-emerald-300/10",
-                    isWrong && "border-red-300/70 bg-red-300/10",
+                    isWrong && "border-red-300/70 bg-red-50",
                   )}
                 >
                   <div className="flex items-start gap-4">
@@ -226,9 +226,9 @@ export function CourseReviewClient({ courseId, courseTitle, prompts }: CourseRev
             <div className="mt-5 rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
               <div className="flex items-start gap-3">
                 {selected === "mechanism" ? (
-                  <Check className="mt-1 size-4 text-emerald-200" />
+                  <Check className="mt-1 size-4 text-emerald-700" />
                 ) : (
-                  <X className="mt-1 size-4 text-red-200" />
+                  <X className="mt-1 size-4 text-red-700" />
                 )}
                 <p>
                   {selected === "mechanism"
@@ -239,7 +239,7 @@ export function CourseReviewClient({ courseId, courseTitle, prompts }: CourseRev
             </div>
           ) : null}
           {error ? (
-            <div className="mt-4 rounded-[var(--radius-sm)] border border-red-300/60 bg-red-300/10 px-5 py-4 text-sm leading-7 text-red-100">
+            <div className="mt-4 rounded-[var(--radius-sm)] border border-red-300/60 bg-red-50 px-5 py-4 text-sm leading-7 text-red-700">
               {error}
             </div>
           ) : null}
