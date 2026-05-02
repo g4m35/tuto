@@ -660,8 +660,6 @@ export async function generateExercise(
     userHistory.recentPerformance?.length
       ? `Recent learner history: ${userHistory.recentPerformance.join(" ")}`
       : "",
-    "Adapt the lesson to that history: if the learner missed the checkpoint, reteach with a smaller prerequisite example before testing; if they answered correctly, ask a slightly harder transfer question.",
-    "Teach the topic before the checkpoint. The answer options should diagnose reasoning, not trivia or memorization.",
     "Keep the question focused, concept-checking, and suitable for a single lesson step.",
   ]
     .filter(Boolean)

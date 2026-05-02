@@ -112,7 +112,7 @@ function CourseGenerationProgress({
       </div>
       <div className="mt-3 h-3 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
         <div
-          className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),#2cb7a4,#4a8cff)] transition-[width] duration-500 ease-[var(--ease-signature)]"
+          className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),#8b5cf6,#ec4899)] transition-[width] duration-500 ease-[var(--ease-signature)]"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -124,7 +124,7 @@ function CourseGenerationProgress({
               key={item}
               className={cn(
                 "h-1 rounded-full transition-colors duration-300",
-                active ? "bg-[var(--accent-strong)]" : "bg-[var(--border-strong)]"
+                active ? "bg-[var(--text)]" : "bg-[var(--border-strong)]"
               )}
             />
           )

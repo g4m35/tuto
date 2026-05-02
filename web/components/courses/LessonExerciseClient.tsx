@@ -379,7 +379,7 @@ export function LessonExerciseClient({
           </div>
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
             <motion.div
-              className="h-full rounded-full bg-[var(--accent-strong)]"
+              className="h-full rounded-full bg-[var(--text)]"
               initial={false}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.22, ease: [0.2, 0.7, 0.2, 1] }}
@@ -402,14 +402,14 @@ export function LessonExerciseClient({
                   className={cn(
                     "group flex w-[174px] shrink-0 items-center gap-3 rounded-[var(--radius-sm)] border px-3 py-3 text-left transition lg:w-full",
                     active
-                      ? "border-[var(--border-strong)] bg-[var(--accent-soft)] text-[var(--text)]"
+                      ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)] text-[var(--text)]"
                       : "border-transparent text-[var(--text-dim)] hover:border-[var(--border)] hover:bg-[var(--bg-elev-2)]",
                   )}
                 >
                   <span
                     className={cn(
                       "inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)]",
-                      active && "border-[var(--border-strong)] bg-[var(--accent)] text-[var(--accent-ink)]",
+                      active && "border-[var(--border-strong)] bg-[var(--text)] text-[var(--accent-ink)]",
                       complete && !active && "border-[var(--border-strong)] text-[var(--text)]",
                     )}
                   >
@@ -468,7 +468,7 @@ export function LessonExerciseClient({
                         onClick={() => setActiveStepIndex(index)}
                         className={cn(
                           "size-2.5 rounded-full border border-[var(--border)] bg-[var(--bg-soft)]",
-                          index <= activeStepIndex && "border-transparent bg-[var(--accent-strong)]",
+                          index <= activeStepIndex && "border-transparent bg-[var(--text)]",
                         )}
                       />
                     ))}
@@ -517,14 +517,6 @@ export function LessonExerciseClient({
                           setChecked(false)
                           setCheckResult(null)
                         }}
-                        onRetryLesson={() => {
-                          setExercise(null)
-                          setLoading(true)
-                          setSelectedOption(null)
-                          setChecked(false)
-                          setCheckResult(null)
-                          setShowHint(false)
-                        }}
                       />
                     ) : null}
 
@@ -535,7 +527,7 @@ export function LessonExerciseClient({
                     ) : null}
 
                     {error ? (
-                      <div className="rounded-[var(--radius-sm)] border border-red-300/60 bg-red-50 px-5 py-4 text-sm leading-7 text-red-700">
+                      <div className="rounded-[var(--radius-sm)] border border-red-300/60 bg-red-300/10 px-5 py-4 text-sm leading-7 text-red-100">
                         {error}
                       </div>
                     ) : null}
@@ -592,7 +584,6 @@ function CheckpointPanel({
   checked,
   checkResult,
   onSelect,
-  onRetryLesson,
 }: {
   step: LessonStepData
   exercise: ExerciseData
@@ -600,7 +591,6 @@ function CheckpointPanel({
   checked: boolean
   checkResult: CheckResult | null
   onSelect: (optionId: string) => void
-  onRetryLesson: () => void
 }) {
   const options = step.options?.length ? step.options : exercise.options
   const prompt = step.prompt || exercise.prompt
@@ -648,9 +638,9 @@ function CheckpointPanel({
         <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
           <div className="flex items-start gap-3">
             {checkResult.isCorrect ? (
-              <Check className="mt-1 size-4 text-emerald-700" />
+              <Check className="mt-1 size-4 text-emerald-200" />
             ) : (
-              <X className="mt-1 size-4 text-red-700" />
+              <X className="mt-1 size-4 text-red-200" />
             )}
             <div>
               <p className="text-sm font-medium text-[var(--text)]">
@@ -666,14 +656,6 @@ function CheckpointPanel({
                 )}
               </p>
               <p className="mt-3">{checkResult.explanation}</p>
-              {!checkResult.isCorrect ? (
-                <div className="mt-4">
-                  <Button variant="secondary" size="sm" onClick={onRetryLesson}>
-                    Build another example
-                    <RotateCcw data-icon="inline-end" />
-                  </Button>
-                </div>
-              ) : null}
             </div>
           </div>
         </div>
@@ -726,7 +708,7 @@ function InteractiveLessonPanel({
               max="100"
               value={sliderValue}
               onChange={(event) => onSliderChange(Number(event.target.value))}
-              className="mt-4 w-full accent-[var(--accent-strong)]"
+              className="mt-4 w-full accent-[var(--text)]"
             />
           </div>
           <motion.div

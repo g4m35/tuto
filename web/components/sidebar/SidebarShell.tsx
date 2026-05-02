@@ -83,7 +83,7 @@ export function SidebarShell({
   /* ---- Collapsed state ---- */
   if (collapsed) {
     return (
-      <aside className="group/sb relative flex h-screen w-16 shrink-0 flex-col items-center border-r border-[var(--border)] bg-white/88 py-3 backdrop-blur-[14px] transition-[width] duration-300 ease-[var(--ease-signature)]">
+      <aside className="group/sb relative flex h-screen w-16 shrink-0 flex-col items-center border-r border-[var(--border)] bg-[linear-gradient(180deg,rgba(17,17,17,0.82),rgba(10,10,10,0.72))] py-3 backdrop-blur-[14px] transition-[width] duration-300 ease-[var(--ease-signature)]">
         <div className="relative mb-2 flex h-9 w-9 items-center justify-center">
           <Link
             href="/chat"
@@ -169,7 +169,7 @@ export function SidebarShell({
   }
 
   return (
-    <aside className="flex h-screen w-[248px] shrink-0 flex-col border-r border-[var(--border)] bg-white/88 backdrop-blur-[14px] transition-[width] duration-300 ease-[var(--ease-signature)]">
+    <aside className="flex h-screen w-[248px] shrink-0 flex-col border-r border-[var(--border)] bg-[linear-gradient(180deg,rgba(17,17,17,0.86),rgba(10,10,10,0.76))] backdrop-blur-[14px] transition-[width] duration-300 ease-[var(--ease-signature)]">
       <div className="flex h-16 items-center justify-between px-4">
         <Link href="/chat" className="group flex items-center">
           <span className="[font-family:var(--font-serif)] text-[34px] font-normal italic leading-none tracking-normal text-[var(--text)] transition-opacity duration-200 ease-[var(--ease-signature)] group-hover:opacity-80">

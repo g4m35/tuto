@@ -186,7 +186,7 @@ export default async function CourseDetailPage({
                     <span
                       className={cn(
                         "relative z-10 inline-flex size-7 items-center justify-center rounded-full border text-[10px] font-medium uppercase tracking-[0.08em]",
-                        current && "border-[var(--accent-strong)] bg-[var(--accent)] text-[var(--accent-ink)]",
+                        current && "border-[var(--text)] bg-[var(--text)] text-[var(--accent-ink)]",
                         done && "border-[var(--border-strong)] bg-[var(--bg-soft)] text-[var(--text)]",
                         locked && "border-[var(--border)] bg-[var(--bg-elev-2)] text-[var(--text-faint)]"
                       )}

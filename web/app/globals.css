@@ -4,33 +4,33 @@
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: dark;
 
-    --bg: #f7fbff;
-    --ink-warm: #ffffff;
-    --bg-elev: #ffffff;
-    --bg-elev-2: #f0f8f5;
-    --bg-soft: #eaf5f1;
-    --border: rgba(27, 52, 72, 0.12);
-    --border-strong: rgba(27, 52, 72, 0.24);
-    --text: #132434;
-    --text-dim: #526575;
-    --text-faint: #7c8b97;
-    --text-mute: #b7c4cc;
-    --accent: #ffd84d;
-    --accent-soft: rgba(255, 216, 77, 0.24);
-    --accent-line: rgba(21, 119, 107, 0.34);
-    --accent-strong: #15776b;
-    --accent-ink: #14202b;
-    --success: #15776b;
-    --danger: #c2413a;
-    --shadow: 0 12px 34px -28px rgba(19, 36, 52, 0.55);
-    --shadow-card-hover: 0 22px 52px -34px rgba(19, 36, 52, 0.48), 0 0 0 1px rgba(21, 119, 107, 0.08);
+    --bg: #0a0a0a;
+    --ink-warm: #000000;
+    --bg-elev: #111111;
+    --bg-elev-2: #161616;
+    --bg-soft: #1f1f1f;
+    --border: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --text: #fafafa;
+    --text-dim: #a3a3a3;
+    --text-faint: #6b6b6b;
+    --text-mute: #454545;
+    --accent: #fafafa;
+    --accent-soft: rgba(250, 250, 250, 0.1);
+    --accent-line: rgba(250, 250, 250, 0.3);
+    --accent-strong: #fafafa;
+    --accent-ink: #0a0a0a;
+    --success: #d4d4d4;
+    --danger: #d4d4d4;
+    --shadow: none;
+    --shadow-card-hover: 0 18px 40px -20px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.16) inset;
     --ease-signature: cubic-bezier(0.2, 0.7, 0.2, 1);
-    --radius: 8px;
-    --radius-md: 10px;
-    --radius-sm: 8px;
-    --radius-lg: 12px;
+    --radius: 14px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --radius-lg: 20px;
 
     --background: var(--bg);
     --foreground: var(--text);
@@ -53,7 +53,7 @@
 
   .theme-snow,
   .theme-glass {
-    color-scheme: light;
+    color-scheme: dark;
   }
 
   * {
@@ -71,8 +71,8 @@
   body {
     min-height: 100vh;
     background:
-      linear-gradient(180deg, #ffffff 0%, var(--bg) 54%, #eef8f4 100%),
-      var(--bg);
+      radial-gradient(circle at 50% 0%, var(--bg) 0%, var(--ink-warm) 72%),
+      var(--ink-warm);
     color: var(--text);
     font-family: var(--font-sans), sans-serif;
     text-rendering: optimizeLegibility;
@@ -91,7 +91,7 @@
   }
 
   body.t-command-palette-open #tuto-app-shell {
-    filter: blur(16px) brightness(0.92) saturate(0.82);
+    filter: blur(16px) brightness(0.42) saturate(0.62);
     transform: scale(1.012);
     pointer-events: none;
   }
@@ -160,8 +160,8 @@
 
   .accent-ring {
     box-shadow:
-      inset 0 0 0 1px rgba(21, 119, 107, 0.18),
-      0 0 0 1px rgba(255, 216, 77, 0.22);
+      inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.06);
   }
 
   .eyebrow {
@@ -177,7 +177,6 @@
     background: var(--bg-elev);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
     transition:
       transform 160ms var(--ease-signature),
       border-color 140ms ease,
@@ -189,7 +188,6 @@
     background: var(--bg-elev);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
     transition:
       transform 160ms var(--ease-signature),
       border-color 140ms ease,
