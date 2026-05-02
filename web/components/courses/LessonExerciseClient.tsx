@@ -517,6 +517,13 @@ export function LessonExerciseClient({
                           setChecked(false)
                           setCheckResult(null)
                         }}
+                        onRetryLesson={() => {
+                          setExercise(null)
+                          setSelectedOption(null)
+                          setChecked(false)
+                          setCheckResult(null)
+                          setShowHint(false)
+                        }}
                       />
                     ) : null}
 
@@ -584,6 +591,7 @@ function CheckpointPanel({
   checked,
   checkResult,
   onSelect,
+  onRetryLesson,
 }: {
   step: LessonStepData
   exercise: ExerciseData
@@ -591,6 +599,7 @@ function CheckpointPanel({
   checked: boolean
   checkResult: CheckResult | null
   onSelect: (optionId: string) => void
+  onRetryLesson: () => void
 }) {
   const options = step.options?.length ? step.options : exercise.options
   const prompt = step.prompt || exercise.prompt
@@ -656,6 +665,14 @@ function CheckpointPanel({
                 )}
               </p>
               <p className="mt-3">{checkResult.explanation}</p>
+              {!checkResult.isCorrect ? (
+                <div className="mt-4">
+                  <Button variant="secondary" size="sm" onClick={onRetryLesson}>
+                    Build another example
+                    <RotateCcw data-icon="inline-end" />
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

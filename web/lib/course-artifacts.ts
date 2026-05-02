@@ -196,6 +196,8 @@ export function buildArtifactPromptDirective(kind: unknown) {
   return [
     `Artifact to make: ${option.title}.`,
     option.promptDirective,
+    "Teach in a step-by-step sequence: start with the useful question, define the core idea, show a concrete example, add a learner action, then close with a checkpoint or review prompt.",
+    "Prefer source-grounded, accurate, subject-specific explanations over generic study advice. Call out prerequisites, common misconceptions, and what mastery should look like.",
     "Keep the output practical, structured, and useful as a downloadable document.",
   ].join("\n");
 }
