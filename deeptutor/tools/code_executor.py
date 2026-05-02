@@ -22,13 +22,22 @@ from deeptutor.services.path_service import get_path_service
 
 RUN_CODE_WORKSPACE_ENV = "RUN_CODE_WORKSPACE"
 RUN_CODE_ALLOWED_ROOTS_ENV = "RUN_CODE_ALLOWED_ROOTS"
+RUN_CODE_ENABLED_ENV = "DEEPTUTOR_ENABLE_CODE_EXECUTION"
+LEGACY_RUN_CODE_ENABLED_ENV = "RUN_CODE_ENABLED"
 DEFAULT_WORKSPACE_NAME = "_detached_code_execution"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_SAFE_IMPORTS = [
-    "math", "numpy", "pandas", "matplotlib", "plt", "seaborn",
-    "scipy", "statsmodels", "json", "datetime", "re", "collections",
-    "itertools", "functools", "random", "time", "statistics", "sympy",
+    "collections",
+    "datetime",
+    "functools",
+    "itertools",
+    "json",
+    "math",
+    "random",
+    "re",
+    "statistics",
+    "time",
 ]
 DISALLOWED_CALL_NAMES = {
     "open",
@@ -54,6 +63,39 @@ logger = get_logger("CodeExecutor")
 
 # Files managed by the executor itself (excluded from user-artifact lists)
 _META_FILES = frozenset({"code.py", "output.log", ".gitkeep"})
+
+
+def _parse_bool(value: str | None) -> bool | None:
+    if value is None:
+        return None
+
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on", "enabled"}:
+        return True
+    if normalized in {"0", "false", "no", "off", "disabled"}:
+        return False
+    return None
+
+
+def _is_hosted_mode() -> bool:
+    hosted_values = {"production", "prod", "server", "hosted"}
+    for key in ("DEEPTUTOR_MODE", "TUTO_RUNTIME_MODE", "APP_ENV", "ENVIRONMENT", "NODE_ENV"):
+        value = os.getenv(key, "").strip().lower()
+        if value in hosted_values:
+            return True
+    return False
+
+
+def is_code_execution_enabled() -> bool:
+    explicit = _parse_bool(os.getenv(RUN_CODE_ENABLED_ENV))
+    if explicit is not None:
+        return explicit
+
+    legacy = _parse_bool(os.getenv(LEGACY_RUN_CODE_ENABLED_ENV))
+    if legacy is not None:
+        return legacy
+
+    return not _is_hosted_mode()
 
 
 def _load_config() -> dict[str, Any]:
@@ -307,6 +349,12 @@ async def run_code(
     status = "error"
 
     try:
+        if not is_code_execution_enabled():
+            raise CodeExecutionError(
+                "Code execution is disabled for this runtime. Set "
+                f"{RUN_CODE_ENABLED_ENV}=true only when execution runs in a hardened sandbox."
+            )
+
         if allowed_imports is None:
             allowed_imports = DEFAULT_SAFE_IMPORTS
         ImportGuard.validate(code, allowed_imports)

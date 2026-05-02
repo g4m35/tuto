@@ -41,13 +41,56 @@ function getStatementTimeoutMillis() {
   return Number.isFinite(configured) && configured > 0 ? configured : 15_000;
 }
 
-function shouldUseSsl(connectionString: string) {
+type DatabaseSslConfig = { rejectUnauthorized: boolean };
+
+function parseBooleanFlag(value: string | undefined): boolean | null {
+  if (value === undefined) {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+  if (["0", "false", "no", "off", "disable", "disabled"].includes(normalized)) {
+    return false;
+  }
+
+  return null;
+}
+
+function getSslMode(connectionString: string) {
   const sslMode = new URL(connectionString).searchParams.get("sslmode") ?? process.env.PGSSLMODE;
+  return sslMode?.trim().toLowerCase() ?? null;
+}
+
+function shouldUseSsl(connectionString: string) {
+  const sslMode = getSslMode(connectionString);
   if (sslMode === "disable") {
     return false;
   }
 
-  return sslMode === "require" || process.env.DATABASE_SSL === "true";
+  if (["require", "verify-ca", "verify-full"].includes(sslMode ?? "")) {
+    return true;
+  }
+
+  return parseBooleanFlag(process.env.DATABASE_SSL) === true;
+}
+
+function shouldRejectUnauthorized() {
+  return (
+    parseBooleanFlag(
+      process.env.DATABASE_SSL_REJECT_UNAUTHORIZED ?? process.env.PGSSLREJECTUNAUTHORIZED,
+    ) ?? true
+  );
+}
+
+export function getDatabaseSslConfig(connectionString: string): DatabaseSslConfig | undefined {
+  if (!shouldUseSsl(connectionString)) {
+    return undefined;
+  }
+
+  return { rejectUnauthorized: shouldRejectUnauthorized() };
 }
 
 function getPool(): Pool {
@@ -72,7 +115,7 @@ function getPool(): Pool {
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
     statement_timeout: getStatementTimeoutMillis(),
-    ssl: shouldUseSsl(connectionString) ? { rejectUnauthorized: false } : undefined,
+    ssl: getDatabaseSslConfig(connectionString),
   });
 
   globalForPg.__tutoPgPool = pool;

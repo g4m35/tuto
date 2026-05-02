@@ -46,11 +46,13 @@ test('getBaseUrl prefers configured app URL for billing redirects', () => {
   }
 })
 
-test('getBaseUrl uses forwarded host in production when app URL is unset', () => {
+test('getBaseUrl fails closed in production when no trusted app URL is configured', () => {
   const env = process.env as Record<string, string | undefined>
   const previousAppUrl = process.env.NEXT_PUBLIC_APP_URL
+  const previousVercelUrl = process.env.VERCEL_URL
   const previousNodeEnv = env.NODE_ENV
   delete process.env.NEXT_PUBLIC_APP_URL
+  delete process.env.VERCEL_URL
   env.NODE_ENV = 'production'
 
   const request = new Request('http://localhost:3000/api/billing/checkout', {
@@ -61,12 +63,17 @@ test('getBaseUrl uses forwarded host in production when app URL is unset', () =>
   })
 
   try {
-    assert.equal(getBaseUrl(request), 'https://attacker.example.com')
+    assert.throws(() => getBaseUrl(request), /NEXT_PUBLIC_APP_URL/)
   } finally {
     if (previousAppUrl === undefined) {
       delete process.env.NEXT_PUBLIC_APP_URL
     } else {
       process.env.NEXT_PUBLIC_APP_URL = previousAppUrl
+    }
+    if (previousVercelUrl === undefined) {
+      delete process.env.VERCEL_URL
+    } else {
+      process.env.VERCEL_URL = previousVercelUrl
     }
     if (previousNodeEnv === undefined) {
       delete env.NODE_ENV

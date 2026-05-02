@@ -37,6 +37,13 @@ interface CheckoutResultBody {
 
 export type CheckoutPlan = 'pro' | 'team'
 
+export class BillingConfigurationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'BillingConfigurationError'
+  }
+}
+
 export function isCheckoutPlan(value: string): value is CheckoutPlan {
   return value === 'pro' || value === 'team'
 }
@@ -49,22 +56,55 @@ export function isLaunchReadyCheckoutPlan(plan: CheckoutPlan) {
   return plan === 'pro' || plan === 'team'
 }
 
+function trimTrailingSlashes(value: string) {
+  return value.trim().replace(/\/+$/, '')
+}
+
+function getConfiguredAppUrl() {
+  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (configuredAppUrl) {
+    return trimTrailingSlashes(configuredAppUrl)
+  }
+
+  return null
+}
+
+function getVercelBaseUrl() {
+  const vercelUrl = process.env.VERCEL_URL
+  if (!vercelUrl) {
+    return null
+  }
+
+  const host = trimTrailingSlashes(vercelUrl).replace(/^https?:\/\//, '')
+  if (!host) {
+    return null
+  }
+
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
+  return `${protocol}://${host}`
+}
+
 export function getBaseUrl(request: Request) {
-  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+  const configuredAppUrl = getConfiguredAppUrl()
   if (configuredAppUrl) {
     return configuredAppUrl
+  }
+
+  const vercelUrl = getVercelBaseUrl()
+  if (vercelUrl) {
+    return vercelUrl
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new BillingConfigurationError(
+      'NEXT_PUBLIC_APP_URL must be configured for production billing redirects.'
+    )
   }
 
   const forwardedProto = request.headers.get('x-forwarded-proto')
   const forwardedHost = request.headers.get('x-forwarded-host')
   if (forwardedProto && forwardedHost) {
     return `${forwardedProto}://${forwardedHost}`
-  }
-
-  const vercelUrl = process.env.VERCEL_URL?.replace(/\/$/, '')
-  if (vercelUrl) {
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
-    return `${protocol}://${vercelUrl}`
   }
 
   const origin = request.headers.get('origin')
@@ -88,7 +128,16 @@ function getHeaderOrigin(value: string | null): string | null {
 }
 
 export function hasValidBillingRequestOrigin(request: Request) {
-  const expectedOrigin = new URL(getBaseUrl(request)).origin
+  let expectedOrigin: string
+  try {
+    expectedOrigin = new URL(getBaseUrl(request)).origin
+  } catch (error) {
+    if (error instanceof BillingConfigurationError) {
+      return false
+    }
+    throw error
+  }
+
   const suppliedOrigin =
     getHeaderOrigin(request.headers.get('origin')) ??
     getHeaderOrigin(request.headers.get('referer'))

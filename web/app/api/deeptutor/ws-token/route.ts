@@ -1,5 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { canAccessOperatorSettings } from "@/lib/admin-access";
+import { getDeepTutorWsPathAccess } from "@/lib/deeptutor-access";
 import { createDeepTutorWsToken } from "@/lib/deeptutor-ws-token";
 import { getDeepTutorUrl } from "@/lib/deeptutor-config";
 
@@ -26,6 +28,18 @@ export async function GET(request: Request) {
   const path = new URL(request.url).searchParams.get("path");
   if (!path || !path.startsWith("/")) {
     return NextResponse.json({ error: "Invalid WebSocket path." }, { status: 400 });
+  }
+
+  const access = getDeepTutorWsPathAccess(path);
+  if (access === "forbidden") {
+    return NextResponse.json({ error: "Unsupported WebSocket path." }, { status: 400 });
+  }
+
+  if (access === "operator") {
+    const user = await currentUser();
+    if (!canAccessOperatorSettings(userId, user)) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
   }
 
   const token = createDeepTutorWsToken({ path, clerkId: userId });

@@ -1,6 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { canAccessOperatorSettings } from "@/lib/admin-access";
+import {
+  isOperatorOnlyDeepTutorHttpPath,
+  normalizeDeepTutorPath,
+} from "@/lib/deeptutor-access";
 import { getDeepTutorAuthHeaders, getDeepTutorUrl } from "@/lib/deeptutor-config";
 
 export const runtime = "nodejs";
@@ -48,8 +52,8 @@ async function proxy(request: Request, context: { params: Promise<{ path: string
   }
 
   const { path } = await context.params;
-  const targetPath = path.join("/");
-  if (targetPath.startsWith("api/v1/settings")) {
+  const targetPath = normalizeDeepTutorPath(path);
+  if (isOperatorOnlyDeepTutorHttpPath(targetPath)) {
     const user = await currentUser();
     if (!canAccessOperatorSettings(userId, user)) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -62,7 +66,7 @@ async function proxy(request: Request, context: { params: Promise<{ path: string
   }
 
   const incomingUrl = new URL(request.url);
-  const targetUrl = new URL(`/${path.join("/")}${incomingUrl.search}`, `${baseUrl}/`);
+  const targetUrl = new URL(`${targetPath}${incomingUrl.search}`, `${baseUrl}/`);
   const body =
     request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
 
