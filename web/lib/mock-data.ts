@@ -14,6 +14,7 @@ export interface CourseCardData {
   duration: string
   intensity: string
   weakness: string
+  sourceLabel?: string
 }
 
 export interface MaterialItem {

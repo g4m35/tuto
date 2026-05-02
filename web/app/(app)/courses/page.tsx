@@ -74,7 +74,7 @@ export default async function CoursesPage() {
             <div className="mt-8 space-y-5">
               <div className="space-y-3">
                 <p className="text-[12px] uppercase tracking-[0.18em] text-[var(--text-dim)]">
-                  {course.subject}
+                  {course.subject} / {course.intensity}
                 </p>
                 <h2 className="max-w-[320px] text-[21px] font-medium leading-[1.25] tracking-normal text-[var(--text)]">
                   {course.title}
@@ -83,12 +83,22 @@ export default async function CoursesPage() {
               <p className="min-h-[54px] text-[14px] leading-6 text-[var(--text-dim)]">
                 {course.description}
               </p>
+              <div className="grid gap-2 text-[13px] text-[var(--text-dim)]">
+                <p>
+                  Next: <span className="text-[var(--text)]">{course.weakness}</span>
+                </p>
+                <p>
+                  Source: <span className="text-[var(--text)]">{course.sourceLabel || "Tuto"}</span>
+                </p>
+              </div>
             </div>
 
             <div className="mt-8 border-t border-[var(--border)] pt-4">
               <div className="flex items-center justify-between text-[13px] text-[var(--text-dim)]">
                 <span>
                   <span className="text-[var(--text)]">{course.lessonsComplete}</span>/{course.lessonCount} lessons
+                  <span className="mx-2 text-[var(--text-mute)]">/</span>
+                  {course.duration}
                 </span>
                 <span className="inline-flex items-center gap-2 text-[var(--text)]">
                   Open

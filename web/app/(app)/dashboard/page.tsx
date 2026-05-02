@@ -87,13 +87,15 @@ export default async function DashboardPage() {
             <Eyebrow>This week · {getWeekday()}</Eyebrow>
             <div className="max-w-[760px]">
               <h1 className="text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
-                {hasCourses ? `Welcome back, ${displayName}.` : `Welcome, ${displayName}.`}
+                {`Welcome back, ${displayName}.`}
               </h1>
-              <p className="mt-1 text-[40px] font-light leading-[1.05] tracking-normal text-[var(--text-dim)] sm:text-[56px]">
-                {continueCourse
-                  ? `Pick up where you left - ${continueCourse.weakness}.`
-                  : "Create your first course to start learning."}
-              </p>
+              {continueCourse ? (
+                <p className="mt-4 max-w-2xl text-[17px] leading-7 text-[var(--text-dim)]">
+                  Next lesson: <span className="text-[var(--text)]">{continueCourse.weakness}</span>
+                  <span className="mx-2 text-[var(--text-mute)]">/</span>
+                  {continueCourse.title}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -174,9 +176,12 @@ export default async function DashboardPage() {
                       {course.title}
                     </h3>
                     <p className="text-[13px] text-[var(--text-dim)]">
-                      Next - <span className="text-[var(--text)]">{course.weakness}</span>
+                      <span className="text-[var(--text)]">{course.intensity}</span>
                       <span className="mx-2 text-[var(--text-mute)]">·</span>
                       <span>{course.duration}</span>
+                    </p>
+                    <p className="text-[13px] text-[var(--text-dim)]">
+                      Next: <span className="text-[var(--text)]">{course.weakness}</span>
                     </p>
                   </div>
 

@@ -7,7 +7,6 @@ import {
   ClipboardList,
   FileQuestion,
   FileText,
-  LoaderCircle,
   Presentation,
   Upload,
   WandSparkles,
@@ -46,6 +45,14 @@ const createModes = [
   },
 ]
 
+const generationStages = [
+  "Reading source",
+  "Building outline",
+  "Writing sections",
+  "Adding practice",
+  "Saving course card",
+] as const
+
 function buildPreviewItems(
   title: string,
   topicPrompt: string,
@@ -70,21 +77,60 @@ function buildPreviewItems(
   )
 }
 
-function CourseGenerationLoader() {
+function getReadableSource(mode: CreateMode, selectedFile: File | null, topicPrompt: string) {
+  if (mode === "upload") {
+    return selectedFile?.name || "Source document";
+  }
+
+  const prompt = topicPrompt.trim().replace(/\s+/g, " ")
+  return prompt ? prompt.slice(0, 96) : "Topic prompt"
+}
+
+function getPreviewTitle(title: string, artifactKind: CourseArtifactKind) {
+  const artifact = getCourseArtifactOption(artifactKind)
+  return title.trim() || `Untitled ${artifact.noun}`
+}
+
+function CourseGenerationProgress({
+  artifactTitle,
+  progress,
+  stage,
+}: {
+  artifactTitle: string
+  progress: number
+  stage: string
+}) {
   return (
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center gap-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm text-[var(--text-dim)]"
+      className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4"
     >
-      <span className="relative inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--bg-elev)]">
-        <span className="absolute size-8 rounded-full border border-[var(--accent)]/25 animate-[t-pulse-soft_1.4s_ease-in-out_infinite]" />
-        <LoaderCircle className="size-4 animate-spin text-[var(--accent)]" aria-hidden="true" />
-      </span>
-      <span>
-        Building your artifact
-        <span className="ml-1 text-[var(--text-faint)]">This can take a moment.</span>
-      </span>
+      <div className="flex items-center justify-between gap-4 text-sm">
+        <span className="font-medium text-[var(--text)]">Building {artifactTitle.toLowerCase()}</span>
+        <span className="text-[var(--text-faint)]">{progress}%</span>
+      </div>
+      <div className="mt-3 h-3 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
+        <div
+          className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),#8b5cf6,#ec4899)] transition-[width] duration-500 ease-[var(--ease-signature)]"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <div className="mt-3 grid grid-cols-5 gap-1" aria-hidden="true">
+        {generationStages.map((item) => {
+          const active = item === stage
+          return (
+            <span
+              key={item}
+              className={cn(
+                "h-1 rounded-full transition-colors duration-300",
+                active ? "bg-[var(--text)]" : "bg-[var(--border-strong)]"
+              )}
+            />
+          )
+        })}
+      </div>
+      <p className="mt-3 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">{stage}</p>
     </div>
   )
 }
@@ -101,6 +147,7 @@ export default function CreateCoursePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [status, setStatus] = useState("Drop a PDF, notes bundle, or reading packet here.")
   const [submitting, setSubmitting] = useState(false)
+  const [generationStep, setGenerationStep] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   const selectedArtifact = getCourseArtifactOption(artifactKind)
@@ -112,6 +159,19 @@ export default function CreateCoursePage() {
   useEffect(() => {
     trackMarketingEvent("course_create_page_viewed")
   }, [])
+
+  useEffect(() => {
+    if (!submitting) {
+      setGenerationStep(0)
+      return
+    }
+
+    const timer = window.setInterval(() => {
+      setGenerationStep((step) => Math.min(step + 1, generationStages.length - 1))
+    }, 2400)
+
+    return () => window.clearInterval(timer)
+  }, [submitting])
 
   async function handleSubmit() {
     setError(null)
@@ -389,22 +449,13 @@ export default function CreateCoursePage() {
               </div>
             ) : null}
 
-            {submitting ? <CourseGenerationLoader /> : null}
-
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3 text-sm text-[var(--text-faint)]">
                 <BookOpen className="size-4" />
                 Private by default. You can share or download it after generation.
               </div>
               <Button size="lg" onClick={() => void handleSubmit()} disabled={submitting}>
-                {submitting ? (
-                  <>
-                    <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-                    Composing...
-                  </>
-                ) : (
-                  `Generate ${selectedArtifact.noun}`
-                )}
+                {submitting ? `Generating ${selectedArtifact.noun}` : `Generate ${selectedArtifact.noun}`}
               </Button>
             </div>
           </div>
@@ -418,28 +469,43 @@ export default function CreateCoursePage() {
             <span>Preview</span>
           </p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
-            You will see the first few sections here before generation.
+            This is how the saved card will read once Tuto finishes.
           </p>
         </div>
 
         <div className="editorial-card animate-rise-in-delay-2 min-h-[28rem] p-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-              <span>Draft</span>
+              <span>{mode === "upload" ? "From material" : "From topic"}</span>
               <span>{selectedArtifact.title}</span>
             </div>
 
             <div className="space-y-3">
               <h2 className="text-2xl font-medium tracking-normal text-[var(--text)]">
-                {title.trim() || `Your next ${selectedArtifact.noun}`}
+                {getPreviewTitle(title, artifactKind)}
               </h2>
               <p className="text-sm leading-6 text-[var(--text-dim)]">
-                {mode === "upload"
-                  ? selectedFile
-                    ? `Built from ${selectedFile.name}.`
-                    : "Built from a source document once you choose one."
-                  : topicPrompt.trim() || `Type what you want and a ${selectedArtifact.noun} outline will appear here.`}
+                {selectedArtifact.description}
               </p>
+            </div>
+
+            <div className="grid gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[var(--text-faint)]">Source</span>
+                <span className="max-w-[230px] truncate text-right text-[var(--text)]">
+                  {getReadableSource(mode, selectedFile, topicPrompt)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[var(--text-faint)]">Topic</span>
+                <span className="max-w-[230px] truncate text-right text-[var(--text)]">
+                  {subject.trim() || title.trim() || "Not set yet"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[var(--text-faint)]">Depth</span>
+                <span className="text-[var(--text)]">{difficulty}</span>
+              </div>
             </div>
 
             <div className="space-y-2 border-t border-[var(--border)] pt-4">
@@ -457,6 +523,14 @@ export default function CreateCoursePage() {
             <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4 text-sm text-[var(--text-dim)]">
               Estimate <span className="text-[var(--text)]">{selectedArtifact.estimate}</span>
             </div>
+
+            {submitting ? (
+              <CourseGenerationProgress
+                artifactTitle={selectedArtifact.title}
+                progress={Math.min(94, 18 + generationStep * 19)}
+                stage={generationStages[generationStep] ?? generationStages[0]}
+              />
+            ) : null}
           </div>
         </div>
       </aside>

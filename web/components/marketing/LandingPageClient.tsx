@@ -142,19 +142,31 @@ const courseExamples = [
   {
     source: "biology-notes.pdf",
     title: "Photosynthesis from trusted notes",
-    detail: "4 lessons",
-    lessons: ["Big idea", "Light reactions", "Review weak spots"],
+    subject: "Biology",
+    type: "Full course",
+    progress: "38%",
+    detail: "4 lessons / 1h 20m estimate",
+    next: "Light reactions and electron flow",
+    lessons: ["Big idea", "Light reactions", "Calvin cycle", "Exam review"],
   },
   {
     source: "topic prompt",
     title: "Hockey fundamentals",
-    detail: "3 lessons",
+    subject: "Sports",
+    type: "Study guide",
+    progress: "0%",
+    detail: "3 sections / quick review",
+    next: "Rules that shape live play",
     lessons: ["Rules", "Positioning", "Practice plan"],
   },
   {
     source: "training-docs.md",
     title: "Support onboarding",
-    detail: "5 lessons",
+    subject: "Training",
+    type: "Lesson plan",
+    progress: "80%",
+    detail: "5 parts / classroom-ready",
+    next: "Escalation roleplay",
     lessons: ["Workflow", "Escalation", "Quality checks"],
   },
 ];
@@ -183,13 +195,13 @@ function CourseExamplesGraphic() {
       <div className="rounded-[18px] bg-[#f7fbff] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[12px] font-semibold text-[#635bff]">Example courses</p>
+            <p className="text-[12px] font-semibold text-[#635bff]">Example course cards</p>
             <h2 className="mt-2 text-[20px] font-semibold tracking-[-0.025em] text-[#0a2540]">
-              From source to lesson path
+              Saved with the details learners need
             </h2>
           </div>
           <span className="rounded-full border border-[#d9e2ec] bg-white px-3 py-1 text-[12px] font-medium text-[#425466]">
-            Simple output
+            Real dashboard view
           </span>
         </div>
 
@@ -202,28 +214,39 @@ function CourseExamplesGraphic() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.36, delay: index * 0.08, ease: [0.2, 0.7, 0.2, 1] }}
             >
-              <div className="flex items-start gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-[12px] font-semibold text-[#635bff]">
-                  {String(index + 1).padStart(2, "0")}
+              <div className="flex items-start justify-between gap-3">
+                <span className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#635bff]">
+                  {course.type}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-[15px] font-semibold leading-5 tracking-[-0.015em] text-[#0a2540]">
-                      {course.title}
-                    </h3>
-                    <span className="text-[12px] font-medium text-[#635bff]">{course.detail}</span>
-                  </div>
-                  <p className="mt-1 text-[12px] text-[#6b7c93]">{course.source}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {course.lessons.map((lesson) => (
-                      <span
-                        key={lesson}
-                        className="rounded-full border border-[#dbe6f2] px-2.5 py-1 text-[12px] text-[#425466]"
-                      >
-                        {lesson}
-                      </span>
-                    ))}
-                  </div>
+                <span className="text-[12px] font-semibold text-[#0a2540]">{course.progress}</span>
+              </div>
+              <div className="mt-4 min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[#6b7c93]">
+                  {String(index + 1).padStart(2, "0")} / {course.subject}
+                </p>
+                <h3 className="mt-1 text-[16px] font-semibold leading-5 tracking-[-0.015em] text-[#0a2540]">
+                  {course.title}
+                </h3>
+                <p className="mt-1 text-[12px] text-[#6b7c93]">Source: {course.source}</p>
+                <div className="mt-4 h-1.5 rounded-full bg-[#edf2f7]">
+                  <div
+                    className="h-full rounded-full bg-[linear-gradient(90deg,#00d4ff,#635bff,#ff5a9e)]"
+                    style={{ width: course.progress }}
+                  />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[#425466]">
+                  <span>{course.detail}</span>
+                  <span>Next: {course.next}</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {course.lessons.map((lesson) => (
+                    <span
+                      key={lesson}
+                      className="rounded-full border border-[#dbe6f2] px-2.5 py-1 text-[12px] text-[#425466]"
+                    >
+                      {lesson}
+                    </span>
+                  ))}
                 </div>
               </div>
             </motion.article>

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { BookOpen, Grid2x2 } from "lucide-react"
+import { BookOpen, CreditCard, Grid2x2 } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { CommandPalette } from "@/components/ui/CommandPalette"
 import { cn } from "@/lib/utils"
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { id: "dashboard", href: "/dashboard", label: "Dashboard", icon: Grid2x2 },
   { id: "courses", href: "/courses", label: "Courses", icon: BookOpen },
+  { id: "billing", href: "/account", label: "Billing", icon: CreditCard },
 ]
 
 export function TopNav() {

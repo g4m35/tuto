@@ -167,6 +167,18 @@ function buildLessons(course: StoredCourse): LessonNode[] {
   }));
 }
 
+function formatEstimatedDuration(minutes: number) {
+  if (minutes < 60) {
+    return `${minutes}m estimate`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes
+    ? `${hours}h ${remainingMinutes}m estimate`
+    : `${hours}h estimate`;
+}
+
 function chunkLessons(lessons: LessonNode[], size = 3): LearningLevel[] {
   const levels: LearningLevel[] = [];
 
@@ -218,6 +230,7 @@ export function toCourseCardData(course: StoredCourse): CourseCardData {
   const currentLesson =
     lessons.find((lesson) => lesson.state === "current") ?? lessons[0] ?? null;
   const artifact = getCourseArtifactOption(course.artifactKind);
+  const estimatedMinutes = Math.max(1, lessonCount) * 20;
 
   return {
     id: course.id,
@@ -227,9 +240,13 @@ export function toCourseCardData(course: StoredCourse): CourseCardData {
     progress: getCourseProgress(course, lessonCount),
     lessonsComplete,
     lessonCount,
-    duration: `${Math.max(1, lessonCount)} steps`,
+    duration: formatEstimatedDuration(estimatedMinutes),
     intensity: artifact.title,
     weakness: currentLesson?.title || "Foundational review",
+    sourceLabel:
+      course.sourceMode === "upload"
+        ? course.knowledgeBaseName || "Uploaded source"
+        : "Topic prompt",
   };
 }
 
