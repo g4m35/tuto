@@ -26,7 +26,7 @@ export function TopNav() {
   }, [router])
 
   return (
-    <header className="sticky top-0 z-40 h-16 border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(10,10,10,0.92),rgba(0,0,0,0.74))] backdrop-blur-[18px]">
+    <header className="sticky top-0 z-40 h-16 border-b border-[var(--border)] bg-white/88 backdrop-blur-[18px]">
       <div className="mx-auto flex h-full w-full max-w-[1408px] items-center justify-between gap-4 px-6 sm:px-8 lg:px-10">
         <div className="flex items-center gap-10">
           <Link
@@ -47,16 +47,16 @@ export function TopNav() {
                   prefetch
                   onMouseEnter={() => router.prefetch(item.href)}
                   className={cn(
-                    "relative inline-flex h-10 cursor-pointer items-center gap-2 px-2.5 text-[14px] font-medium text-[var(--text-faint)] transition-colors duration-150 ease-[var(--ease-signature)]",
+                    "relative inline-flex h-10 cursor-pointer items-center gap-2 rounded-full px-3 text-[14px] font-medium text-[var(--text-faint)] transition-colors duration-150 ease-[var(--ease-signature)]",
                     active
-                      ? "text-[var(--text)]"
-                      : "hover:text-[var(--text-dim)]"
+                      ? "bg-[var(--bg-soft)] text-[var(--text)]"
+                      : "hover:bg-[var(--bg-elev-2)] hover:text-[var(--text-dim)]"
                   )}
                 >
                   <Icon className="size-3.5" />
                   {item.label}
                   {active ? (
-                    <span className="absolute inset-x-2.5 bottom-0 h-px bg-[var(--accent)]/85" />
+                    <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[var(--accent-strong)]" />
                   ) : null}
                 </Link>
               )
