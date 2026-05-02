@@ -124,7 +124,7 @@ function CourseGenerationProgress({
               key={item}
               className={cn(
                 "h-1 rounded-full transition-colors duration-300",
-                active ? "bg-[var(--text)]" : "bg-[var(--border-strong)]"
+                active ? "bg-[var(--accent-strong)]" : "bg-[var(--border-strong)]"
               )}
             />
           )

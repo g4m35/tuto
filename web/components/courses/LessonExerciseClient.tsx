@@ -379,7 +379,7 @@ export function LessonExerciseClient({
           </div>
           <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
             <motion.div
-              className="h-full rounded-full bg-[var(--text)]"
+              className="h-full rounded-full bg-[var(--accent-strong)]"
               initial={false}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.22, ease: [0.2, 0.7, 0.2, 1] }}
@@ -468,7 +468,7 @@ export function LessonExerciseClient({
                         onClick={() => setActiveStepIndex(index)}
                         className={cn(
                           "size-2.5 rounded-full border border-[var(--border)] bg-[var(--bg-soft)]",
-                          index <= activeStepIndex && "border-transparent bg-[var(--text)]",
+                          index <= activeStepIndex && "border-transparent bg-[var(--accent-strong)]",
                         )}
                       />
                     ))}
@@ -726,7 +726,7 @@ function InteractiveLessonPanel({
               max="100"
               value={sliderValue}
               onChange={(event) => onSliderChange(Number(event.target.value))}
-              className="mt-4 w-full accent-[var(--text)]"
+              className="mt-4 w-full accent-[var(--accent-strong)]"
             />
           </div>
           <motion.div
