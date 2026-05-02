@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { id: "dashboard", href: "/dashboard", label: "Dashboard", icon: Grid2x2 },
-  { id: "courses", href: "/courses", label: "Courses", icon: BookOpen },
+  { id: "courses", href: "/courses", label: "Library", icon: BookOpen },
   { id: "billing", href: "/account", label: "Billing", icon: CreditCard },
 ]
 
