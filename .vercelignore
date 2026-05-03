@@ -1,0 +1,12 @@
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!.env*.example
+!**/.env.example
+!**/.env*.example
+
+**/.local-data/
+**/.next/
+**/node_modules/
