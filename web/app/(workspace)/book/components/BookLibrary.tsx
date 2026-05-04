@@ -24,8 +24,8 @@ const STATUS_STYLES: Record<
   draft: {
     label: "Draft",
     className:
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-    dot: "bg-amber-500",
+      "bg-lime-50 text-lime-700 dark:bg-lime-500/10 dark:text-lime-300",
+    dot: "bg-lime-500",
   },
   spine_ready: {
     label: "Outline",
@@ -74,8 +74,7 @@ function relativeTime(seconds: number): string {
   return `${Math.floor(months / 12)}y ago`;
 }
 
-// Stable, deterministic palette per book id so each cover feels distinct
-// without resorting to placeholder letters.
+// Stable, deterministic covers using the product palette only.
 const COVER_PALETTES: Array<{
   base: string;
   accent: string;
@@ -83,22 +82,22 @@ const COVER_PALETTES: Array<{
   glow: string;
 }> = [
   {
-    base: "linear-gradient(135deg, #fdf3e7 0%, #f6dcc1 55%, #e9b88a 100%)",
-    accent: "#c97a3f",
-    spine: "rgba(168, 87, 35, 0.55)",
-    glow: "rgba(255, 198, 140, 0.6)",
+    base: "linear-gradient(135deg, #ffffff 0%, #efffea 55%, #d9f99d 100%)",
+    accent: "#3f6212",
+    spine: "rgba(10, 10, 10, 0.45)",
+    glow: "rgba(217, 249, 157, 0.6)",
   },
   {
-    base: "linear-gradient(135deg, #eef5ff 0%, #cfe1f7 55%, #9ec0e8 100%)",
-    accent: "#3b6fb6",
-    spine: "rgba(43, 89, 156, 0.55)",
-    glow: "rgba(150, 196, 255, 0.55)",
+    base: "linear-gradient(135deg, #ffffff 0%, #f4fff0 55%, #d9f99d 100%)",
+    accent: "#0a0a0a",
+    spine: "rgba(10, 10, 10, 0.38)",
+    glow: "rgba(217, 249, 157, 0.5)",
   },
   {
-    base: "linear-gradient(135deg, #f6efff 0%, #e2cff8 55%, #c2a3ec 100%)",
-    accent: "#8254cf",
-    spine: "rgba(96, 56, 159, 0.55)",
-    glow: "rgba(204, 162, 255, 0.55)",
+    base: "linear-gradient(135deg, #f7fff4 0%, #efffea 55%, #c7f36b 100%)",
+    accent: "#3f6212",
+    spine: "rgba(10, 10, 10, 0.42)",
+    glow: "rgba(217, 249, 157, 0.55)",
   },
   {
     base: "linear-gradient(135deg, #ecf8f0 0%, #c8eddc 55%, #93d6b6 100%)",
@@ -107,16 +106,16 @@ const COVER_PALETTES: Array<{
     glow: "rgba(160, 232, 199, 0.55)",
   },
   {
-    base: "linear-gradient(135deg, #fff4e9 0%, #fcd9b7 55%, #f4ad7d 100%)",
-    accent: "#d2683a",
-    spine: "rgba(178, 75, 35, 0.55)",
-    glow: "rgba(255, 195, 145, 0.6)",
+    base: "linear-gradient(135deg, #ffffff 0%, #efffea 55%, #d9f99d 100%)",
+    accent: "#0a0a0a",
+    spine: "rgba(10, 10, 10, 0.45)",
+    glow: "rgba(217, 249, 157, 0.6)",
   },
   {
-    base: "linear-gradient(135deg, #f1efff 0%, #d6d2f6 55%, #a7a1e6 100%)",
-    accent: "#5d54c6",
-    spine: "rgba(64, 56, 158, 0.55)",
-    glow: "rgba(189, 184, 255, 0.55)",
+    base: "linear-gradient(135deg, #f7fff4 0%, #efffea 55%, #c7f36b 100%)",
+    accent: "#3f6212",
+    spine: "rgba(10, 10, 10, 0.4)",
+    glow: "rgba(217, 249, 157, 0.55)",
   },
 ];
 

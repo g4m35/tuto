@@ -1110,13 +1110,13 @@ function KnowledgePageContent() {
                   </select>
 
                   {!hasUploadableKb && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+                    <div className="rounded-lg border border-lime-200 bg-lime-50 px-3 py-2 text-[12px] text-lime-700 dark:border-lime-900 dark:bg-lime-950/30 dark:text-lime-300">
                       {t("No ready knowledge base is available for upload. Create a new KB or reindex legacy KBs first.")}
                     </div>
                   )}
 
                   {uploadBlockedReason && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+                    <div className="rounded-lg border border-lime-200 bg-lime-50 px-3 py-2 text-[12px] text-lime-700 dark:border-lime-900 dark:bg-lime-950/30 dark:text-lime-300">
                       {uploadBlockedReason}
                     </div>
                   )}
@@ -1245,7 +1245,7 @@ function KnowledgePageContent() {
                               <span
                                 className={
                                   needsReindex
-                                    ? "font-medium text-amber-600 dark:text-amber-400"
+                                    ? "font-medium text-lime-600 dark:text-lime-400"
                                     : "capitalize"
                                 }
                               >
@@ -1694,7 +1694,7 @@ function KnowledgePageContent() {
                                 item.difficulty === "hard"
                                   ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
                                   : item.difficulty === "medium"
-                                    ? "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"
+                                    ? "bg-lime-50 text-lime-600 dark:bg-lime-950/30 dark:text-lime-400"
                                     : "bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400"
                               }`}>{item.difficulty}</span>
                             )}

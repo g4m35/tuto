@@ -266,7 +266,7 @@ function ProductOutputGraphic() {
 
         <div className="mt-6 h-px overflow-hidden bg-[#d9e8e4]">
           <motion.div
-            className="h-full w-full origin-left bg-[linear-gradient(90deg,#2f8f83,#56c4a8,#f2c94c)]"
+            className="h-full w-full origin-left bg-[linear-gradient(90deg,#3f6212,#d9f99d,#3f6212)]"
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true, amount: 0.8 }}
@@ -461,7 +461,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
 
       <section id="product" className="relative overflow-hidden bg-[#fbfffd]">
         <div className="absolute right-[-18%] top-[-28%] h-[520px] w-[520px] rounded-full bg-[#56c4a8]/18 blur-3xl" aria-hidden="true" />
-        <div className="absolute right-[12%] top-[12%] h-[300px] w-[300px] rounded-full bg-[#f2c94c]/14 blur-3xl" aria-hidden="true" />
+        <div className="absolute right-[12%] top-[12%] h-[300px] w-[300px] rounded-full bg-[#d9f99d]/18 blur-3xl" aria-hidden="true" />
         <div className="relative mx-auto grid min-h-[calc(100vh-64px)] w-full max-w-7xl gap-10 px-5 py-16 sm:px-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:items-center lg:py-20">
           <div className="max-w-3xl pt-8 lg:pt-0">
             <h1 className="text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-[#102a43] sm:text-[68px] lg:text-[78px]">

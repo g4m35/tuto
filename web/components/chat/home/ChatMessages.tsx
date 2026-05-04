@@ -381,11 +381,11 @@ export const ReferenceChips = memo(function ReferenceChips({
       {questionEntries.map((entry) => (
         <span
           key={entry.id}
-          className="inline-flex max-w-full items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-[12px] text-amber-800 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
+          className="inline-flex max-w-full items-center gap-2 rounded-xl border border-lime-200 bg-lime-50 px-3 py-1.5 text-[12px] text-lime-800 shadow-sm dark:border-lime-900/60 dark:bg-lime-950/30 dark:text-lime-200"
         >
           <ClipboardList size={12} strokeWidth={1.8} className="shrink-0" />
           <span className="shrink-0 font-medium">{t("Question Bank")}</span>
-          <span className="truncate text-amber-700/90 dark:text-amber-200/90">
+          <span className="truncate text-lime-700/90 dark:text-lime-200/90">
             {entry.question.length > 40
               ? `${entry.question.slice(0, 40)}…`
               : entry.question}

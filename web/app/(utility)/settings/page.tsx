@@ -287,7 +287,7 @@ function TestResultsModal({
     if (r === "pass") return "bg-emerald-500";
     if (r === "fail") return "bg-red-400";
     if (r === "skip") return "bg-[var(--border)]";
-    return "bg-amber-400 animate-pulse";
+    return "bg-lime-400 animate-pulse";
   };
 
   const label = (r: TourTestResult) => {
@@ -1062,7 +1062,7 @@ function SettingsPageContent() {
                             isSupportedSearchProvider
                               ? "text-emerald-600 dark:text-emerald-400"
                               : isDeprecatedSearchProvider
-                                ? "text-amber-600 dark:text-amber-400"
+                                ? "text-lime-600 dark:text-lime-400"
                                 : "text-red-500"
                           }`}
                         >

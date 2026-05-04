@@ -9,9 +9,9 @@ const VARIANT_STYLES: Record<
 > = {
   key_idea: {
     icon: Lightbulb,
-    rule: "border-amber-400/70 dark:border-amber-300/60",
-    tint: "bg-amber-50/60 text-amber-950 dark:bg-amber-500/[0.06] dark:text-amber-100",
-    accent: "text-amber-700 dark:text-amber-300",
+    rule: "border-lime-400/70 dark:border-lime-300/60",
+    tint: "bg-lime-50/60 text-lime-950 dark:bg-lime-500/[0.06] dark:text-lime-100",
+    accent: "text-lime-700 dark:text-lime-300",
   },
   common_pitfall: {
     icon: AlertTriangle,

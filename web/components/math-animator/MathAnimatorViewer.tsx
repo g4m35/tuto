@@ -133,7 +133,7 @@ export default function MathAnimatorViewer({
       ) : null}
 
       {result.render.visual_review && result.render.visual_review.passed === false ? (
-        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5 text-[12px] leading-[1.6] text-amber-900 dark:text-amber-200">
+        <div className="rounded-xl border border-lime-500/35 bg-lime-500/10 px-3 py-2.5 text-[12px] leading-[1.6] text-lime-900 dark:text-lime-200">
           <div className="font-medium">
             Visual review warning: {result.render.visual_review.summary || "The generated result still has presentation issues."}
           </div>

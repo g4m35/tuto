@@ -179,19 +179,19 @@ function EnterpriseContactForm() {
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-2">
               <span className="text-[12px] text-[var(--text-dim)]">Name</span>
-              <input name="name" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+              <input name="name" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-white px-3 text-[14px] text-[var(--text)] outline-none placeholder:text-[var(--text-mute)] focus:border-[var(--border-strong)]" />
             </label>
             <label className="space-y-2">
               <span className="text-[12px] text-[var(--text-dim)]">Work email</span>
-              <input name="email" type="email" required className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+              <input name="email" type="email" required className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-white px-3 text-[14px] text-[var(--text)] outline-none placeholder:text-[var(--text-mute)] focus:border-[var(--border-strong)]" />
             </label>
             <label className="space-y-2">
               <span className="text-[12px] text-[var(--text-dim)]">Organization</span>
-              <input name="organization" required className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+              <input name="organization" required className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-white px-3 text-[14px] text-[var(--text)] outline-none placeholder:text-[var(--text-mute)] focus:border-[var(--border-strong)]" />
             </label>
             <label className="space-y-2">
               <span className="text-[12px] text-[var(--text-dim)]">Type</span>
-              <select name="organizationType" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]">
+              <select name="organizationType" className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-white px-3 text-[14px] text-[var(--text)] outline-none focus:border-[var(--border-strong)]">
                 <option>School</option>
                 <option>Company</option>
                 <option>Training team</option>
@@ -201,13 +201,13 @@ function EnterpriseContactForm() {
           </div>
           <label className="space-y-2">
             <span className="text-[12px] text-[var(--text-dim)]">Estimated seats</span>
-            <input name="seats" inputMode="numeric" placeholder="25, 100, 500..." className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 text-[14px] outline-none focus:border-[var(--border-strong)]" />
+            <input name="seats" inputMode="numeric" placeholder="25, 100, 500..." className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-white px-3 text-[14px] text-[var(--text)] outline-none placeholder:text-[var(--text-mute)] focus:border-[var(--border-strong)]" />
           </label>
           <label className="space-y-2">
             <span className="text-[12px] text-[var(--text-dim)]">What would you roll out first?</span>
-            <textarea name="notes" rows={4} className="w-full resize-none rounded-[10px] border border-[var(--border)] bg-[#080808] px-3 py-3 text-[14px] leading-6 outline-none focus:border-[var(--border-strong)]" />
+            <textarea name="notes" rows={4} className="w-full resize-none rounded-[10px] border border-[var(--border)] bg-white px-3 py-3 text-[14px] leading-6 text-[var(--text)] outline-none placeholder:text-[var(--text-mute)] focus:border-[var(--border-strong)]" />
           </label>
-          {error ? <p className="text-[13px] text-red-300">{error}</p> : null}
+          {error ? <p className="text-[13px] text-[var(--text)]">{error}</p> : null}
           <Button type="submit" size="lg" className="w-full" disabled={state === "submitting"}>
             {state === "submitting" ? <LoaderCircle className="size-4 animate-spin" /> : null}
             {state === "submitting" ? "Sending" : "Request enterprise plan"}
@@ -352,7 +352,7 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
         </div>
       ) : null}
       {error ? (
-        <div className="rounded-[var(--radius-md)] border border-red-300/60 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--bg-soft)] px-4 py-3 text-sm text-[var(--text)]">
           {error}
         </div>
       ) : null}

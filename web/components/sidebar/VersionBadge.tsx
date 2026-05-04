@@ -158,7 +158,7 @@ export function VersionBadge({ collapsed = false }: VersionBadgeProps) {
     status === "latest"
       ? "bg-emerald-500/45"
       : status === "outdated"
-        ? "bg-amber-500/55"
+        ? "bg-lime-500/55"
         : status === "dev"
           ? "bg-sky-500/45"
           : "bg-[var(--muted-foreground)]/25";

@@ -256,7 +256,7 @@ export default function QuestionBankPicker({
                                 entry.difficulty === "hard"
                                   ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
                                   : entry.difficulty === "medium"
-                                    ? "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"
+                                    ? "bg-lime-50 text-lime-600 dark:bg-lime-950/30 dark:text-lime-400"
                                     : "bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400"
                               }`}
                             >

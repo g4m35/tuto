@@ -602,7 +602,7 @@ export default function QuizViewer({
                   q.difficulty === "hard"
                     ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
                     : q.difficulty === "medium"
-                      ? "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"
+                      ? "bg-lime-50 text-lime-600 dark:bg-lime-950/30 dark:text-lime-400"
                       : "bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400"
                 }`}
               >
@@ -622,8 +622,8 @@ export default function QuizViewer({
                 title={currentBookmarked ? t("Remove Bookmark") : t("Bookmark")}
                 className={`rounded-lg p-1.5 transition-all disabled:opacity-30 ${
                   currentBookmarked
-                    ? "scale-110 text-amber-500 dark:text-amber-400"
-                    : "text-[var(--muted-foreground)] hover:text-amber-500 dark:hover:text-amber-400"
+                    ? "scale-110 text-lime-500 dark:text-lime-400"
+                    : "text-[var(--muted-foreground)] hover:text-lime-500 dark:hover:text-lime-400"
                 }`}
               >
                 <Bookmark size={18} strokeWidth={currentBookmarked ? 2.5 : 1.8} fill={currentBookmarked ? "currentColor" : "none"} />

@@ -96,7 +96,7 @@ function statusDotClass(status: BlockStatus): string {
     case "ready":
       return "bg-emerald-500";
     case "generating":
-      return "bg-amber-400 animate-pulse";
+      return "bg-lime-400 animate-pulse";
     case "pending":
       return "bg-[var(--muted-foreground)]/40";
     case "error":
