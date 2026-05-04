@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { toLessonId } from "@/lib/course-data";
-import { normalizeCourseArtifactKind } from "@/lib/course-artifacts";
+import { isInteractiveCourseArtifact, normalizeCourseArtifactKind } from "@/lib/course-artifacts";
 import { getCourseForUser, listCoursesForUser, saveCourse } from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
 import {
@@ -191,6 +191,9 @@ export async function POST(request: Request) {
     return attachStubHeader(
       NextResponse.json({
         course: persisted ?? course,
+        redirectUrl: isInteractiveCourseArtifact(course.artifactKind)
+          ? `/courses/${course.id}`
+          : `/courses/${course.id}#artifact-preview`,
       }),
       course.backendMode,
     );

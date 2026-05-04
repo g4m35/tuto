@@ -29,6 +29,7 @@ export async function POST(
     const body = (await request.json().catch(() => ({}))) as {
       lessonId?: string;
       selectedOptionId?: string;
+      stepId?: string;
     };
 
     if (!body.lessonId || !body.selectedOptionId) {
@@ -53,7 +54,13 @@ export async function POST(
       return NextResponse.json({ error: "Exercise not found." }, { status: 404 });
     }
 
-    const selectedOption = exercise.payload.options.find(
+    const targetStep = body.stepId
+      ? exercise.payload.steps?.find((step) => step.id === body.stepId)
+      : null;
+    const answerOptions = targetStep?.options?.length
+      ? targetStep.options
+      : exercise.payload.options;
+    const selectedOption = answerOptions.find(
       (option) => option.id === body.selectedOptionId,
     );
 
@@ -61,15 +68,20 @@ export async function POST(
       return NextResponse.json({ error: "Selected option is not part of this exercise." }, { status: 400 });
     }
 
-    const correctOption = exercise.payload.correctOptionId
-      ? exercise.payload.options.find((option) => option.id === exercise.payload.correctOptionId)
+    const correctOptionId = targetStep?.correctOptionId ?? exercise.payload.correctOptionId;
+    const correctOption = correctOptionId
+      ? answerOptions.find((option) => option.id === correctOptionId)
       : null;
     const isCorrect = correctOption ? selectedOption.id === correctOption.id : true;
     const lessonIndex = getLessonIndexById(course, body.lessonId);
     const nextLessonIndex = lessonIndex >= 0 ? lessonIndex + 1 : course.currentLessonIndex;
     const nextLessonId = getLessonIdByIndex(course, nextLessonIndex);
+    const isCheckpoint =
+      !targetStep ||
+      targetStep.id === exercise.payload.checkpointStepId ||
+      targetStep.kind === "checkpoint";
 
-    if (isCorrect) {
+    if (isCorrect && isCheckpoint) {
       await updateCourseProgress({
         clerkId: userId,
         courseId: course.id,
@@ -89,6 +101,8 @@ export async function POST(
       isCorrect,
       metadata: {
         correctOptionId: correctOption?.id ?? selectedOption.id,
+        stepId: targetStep?.id ?? null,
+        isCheckpoint,
       },
     });
 
@@ -97,13 +111,17 @@ export async function POST(
       selectedOptionId: selectedOption.id,
       correctOptionId: correctOption?.id ?? selectedOption.id,
       correctOptionBody: correctOption?.body ?? selectedOption.body,
+      selectedFeedback: selectedOption.feedback ?? null,
       explanation:
+        (isCorrect ? correctOption?.feedback : selectedOption.feedback) ??
+        targetStep?.explanation ??
+        targetStep?.hint ??
         exercise.payload.explanation ??
         exercise.payload.hint ??
         "Review the explanation, then continue when the answer makes sense.",
       canContinue: isCorrect,
-      nextLessonId,
-      courseComplete: isCorrect && !nextLessonId,
+      nextLessonId: isCheckpoint && isCorrect ? nextLessonId : null,
+      courseComplete: isCheckpoint && isCorrect && !nextLessonId,
     });
   } catch (error) {
     if (error instanceof DatabaseConfigurationError) {

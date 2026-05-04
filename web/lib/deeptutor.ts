@@ -4,11 +4,13 @@ import { randomUUID } from "node:crypto";
 import {
   buildExerciseData,
   type GuideKnowledgePoint,
+  type LessonQuestionDraft,
   type LessonScriptDraft,
   type LessonScriptStepDraft,
 } from "@/lib/course-data";
 import { buildArtifactPromptDirective, getCourseArtifactOption, type CourseArtifactKind } from "@/lib/course-artifacts";
 import { getDeepTutorAuthHeaders, getDeepTutorUrl } from "@/lib/deeptutor-config";
+import { shouldUseLocalDeepTutorFallback } from "@/lib/deeptutor-fallback";
 
 export interface IngestDocumentResult {
   id: string;
@@ -97,6 +99,10 @@ function logStubResponse(operation: string, detail: Record<string, unknown> = {}
   });
 }
 
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -139,6 +145,10 @@ async function waitForKnowledgeBaseReady(
         { method: "GET" },
       );
     } catch (error) {
+      if (shouldUseLocalDeepTutorFallback(error)) {
+        throw error;
+      }
+
       lastError = error;
       await sleep(pollIntervalMs);
       continue;
@@ -272,10 +282,40 @@ function buildStubKnowledgePoints(title: string, artifactKind?: CourseArtifactKi
           ? `Review section for ${title}, focused on what to remember and how to check yourself.`
           : option.kind === "quiz-set"
             ? `Practice prompt area for ${title}, with rationale and remediation focus.`
+            : option.kind === "cheat-sheet"
+              ? `Reference block for ${title}, with compact facts, fast examples, and common traps.`
             : option.kind === "lesson-plan"
               ? `Teachable segment for ${title}, including activity flow and a quick check.`
               : "Establish the vocabulary, intuition, and next action for this part of the course.",
   }));
+}
+
+function buildStubCourseResult(params: GenerateCourseParams): GenerateCourseResult {
+  const sessionId = `stub-session-${randomUUID()}`;
+  const knowledgePoints = buildStubKnowledgePoints(params.title, params.artifactKind);
+
+  return {
+    sessionId,
+    knowledgePoints,
+    progress: 0,
+    currentLessonIndex: 0,
+    backendMode: "stub",
+    raw: {
+      success: true,
+      session_id: sessionId,
+      knowledge_points: knowledgePoints,
+    },
+  };
+}
+
+function buildStubIngestResult(fileName: string, userId: string, note: string): IngestDocumentResult {
+  return {
+    id: `stub-source-${randomUUID()}`,
+    knowledgeBaseName: buildKnowledgeBaseName(fileName, userId),
+    taskId: null,
+    backendMode: "stub",
+    note,
+  };
 }
 
 function buildStubExercise(lessonId: string, context: GenerateExerciseContext) {
@@ -309,13 +349,11 @@ export async function ingestDocument(
       userId,
     });
 
-    return {
-      id: `stub-source-${randomUUID()}`,
-      knowledgeBaseName: buildKnowledgeBaseName(file.name, userId),
-      taskId: null,
-      backendMode: "stub",
-      note: "Stubbed because DEEPTUTOR_URL is not configured.",
-    };
+    return buildStubIngestResult(
+      file.name,
+      userId,
+      "Stubbed because DEEPTUTOR_URL is not configured.",
+    );
   }
 
   const knowledgeBaseName = buildKnowledgeBaseName(file.name, userId);
@@ -323,14 +361,37 @@ export async function ingestDocument(
   formData.set("name", knowledgeBaseName);
   formData.append("files", file);
 
-  const data = await fetchJson<{
+  let data: {
     task_id?: string;
     message?: string;
-  }>("/api/v1/knowledge/create", {
-    method: "POST",
-    body: formData,
-    headers: getDeepTutorHeaders(),
-  });
+  };
+
+  try {
+    data = await fetchJson<{
+      task_id?: string;
+      message?: string;
+    }>("/api/v1/knowledge/create", {
+      method: "POST",
+      body: formData,
+      headers: getDeepTutorHeaders(),
+    });
+  } catch (error) {
+    if (shouldUseLocalDeepTutorFallback(error)) {
+      logStubResponse("ingestDocument.fallback", {
+        fileName: file.name,
+        userId,
+        reason: errorMessage(error),
+      });
+
+      return buildStubIngestResult(
+        file.name,
+        userId,
+        "Stubbed because the configured DeepTutor backend is unreachable in local development.",
+      );
+    }
+
+    throw error;
+  }
 
   return {
     id: knowledgeBaseName,
@@ -371,82 +432,82 @@ export async function generateCourse(
       sourceMode: params.sourceMode,
     });
 
-    const sessionId = `stub-session-${randomUUID()}`;
-    const knowledgePoints = buildStubKnowledgePoints(params.title, params.artifactKind);
-
-    return {
-      sessionId,
-      knowledgePoints,
-      progress: 0,
-      currentLessonIndex: 0,
-      backendMode: "stub",
-      raw: {
-        success: true,
-        session_id: sessionId,
-        knowledge_points: knowledgePoints,
-      },
-    };
+    return buildStubCourseResult(params);
   }
-
-  const knowledgeBaseName =
-    params.sourceMode === "upload"
-      ? params.knowledgeBaseName ?? sourceIds[0] ?? null
-      : null;
-
-  if (params.sourceMode === "upload" && knowledgeBaseName) {
-    await waitForKnowledgeBaseReady(knowledgeBaseName);
-  }
-
-  const created = await fetchJson<{
-    success?: boolean;
-    session_id?: string;
-    knowledge_points?: GuideKnowledgePoint[];
-    total_points?: number;
-    message?: string;
-  }>("/api/v1/guide/create_session", {
-    method: "POST",
-    body: JSON.stringify({
-      user_input: buildGuidePrompt(params),
-      ...(knowledgeBaseName ? { kb_name: knowledgeBaseName } : {}),
-    }),
-  });
-
-  if (!created.session_id || !Array.isArray(created.knowledge_points)) {
-    throw new DeepTutorClientError(
-      "DeepTutor did not return a guided learning session for course generation.",
-      null,
-      created,
-    );
-  }
-
-  let currentLessonIndex = 0;
-  let progress = 0;
 
   try {
-    const started = await fetchJson<{
-      current_index?: number;
-      progress?: number;
-    }>("/api/v1/guide/start", {
+    const knowledgeBaseName =
+      params.sourceMode === "upload"
+        ? params.knowledgeBaseName ?? sourceIds[0] ?? null
+        : null;
+
+    if (params.sourceMode === "upload" && knowledgeBaseName) {
+      await waitForKnowledgeBaseReady(knowledgeBaseName);
+    }
+
+    const created = await fetchJson<{
+      success?: boolean;
+      session_id?: string;
+      knowledge_points?: GuideKnowledgePoint[];
+      total_points?: number;
+      message?: string;
+    }>("/api/v1/guide/create_session", {
       method: "POST",
-      body: JSON.stringify({ session_id: created.session_id }),
+      body: JSON.stringify({
+        user_input: buildGuidePrompt(params),
+        ...(knowledgeBaseName ? { kb_name: knowledgeBaseName } : {}),
+      }),
     });
 
-    currentLessonIndex =
-      typeof started.current_index === "number" ? started.current_index : 0;
-    progress = typeof started.progress === "number" ? started.progress : 0;
-  } catch {
-    currentLessonIndex = 0;
-    progress = 0;
-  }
+    if (!created.session_id || !Array.isArray(created.knowledge_points)) {
+      throw new DeepTutorClientError(
+        "DeepTutor did not return a guided learning session for course generation.",
+        null,
+        created,
+      );
+    }
 
-  return {
-    sessionId: created.session_id,
-    knowledgePoints: created.knowledge_points,
-    progress,
-    currentLessonIndex,
-    backendMode: "live",
-    raw: created as Record<string, unknown>,
-  };
+    let currentLessonIndex = 0;
+    let progress = 0;
+
+    try {
+      const started = await fetchJson<{
+        current_index?: number;
+        progress?: number;
+      }>("/api/v1/guide/start", {
+        method: "POST",
+        body: JSON.stringify({ session_id: created.session_id }),
+      });
+
+      currentLessonIndex =
+        typeof started.current_index === "number" ? started.current_index : 0;
+      progress = typeof started.progress === "number" ? started.progress : 0;
+    } catch {
+      currentLessonIndex = 0;
+      progress = 0;
+    }
+
+    return {
+      sessionId: created.session_id,
+      knowledgePoints: created.knowledge_points,
+      progress,
+      currentLessonIndex,
+      backendMode: "live",
+      raw: created as Record<string, unknown>,
+    };
+  } catch (error) {
+    if (shouldUseLocalDeepTutorFallback(error)) {
+      logStubResponse("generateCourse.fallback", {
+        title: params.title,
+        sourceMode: params.sourceMode,
+        reason: errorMessage(error),
+      });
+
+      return buildStubCourseResult(params);
+    }
+
+    throw error;
+  }
 }
 
 export async function askQuestion(
@@ -469,19 +530,43 @@ export async function askQuestion(
   }
 
   const sessionId = context.sessionId ?? courseId;
-  const data = await fetchJson<{
+  let data: {
     response?: string;
     answer?: string;
     message?: string;
-  }>("/api/v1/guide/chat", {
-    method: "POST",
-    body: JSON.stringify({
-      session_id: sessionId,
-      message: question,
-      knowledge_index:
-        typeof context.knowledgeIndex === "number" ? context.knowledgeIndex : null,
-    }),
-  });
+  };
+
+  try {
+    data = await fetchJson<{
+      response?: string;
+      answer?: string;
+      message?: string;
+    }>("/api/v1/guide/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        session_id: sessionId,
+        message: question,
+        knowledge_index:
+          typeof context.knowledgeIndex === "number" ? context.knowledgeIndex : null,
+      }),
+    });
+  } catch (error) {
+    if (shouldUseLocalDeepTutorFallback(error)) {
+      logStubResponse("askQuestion.fallback", {
+        courseId,
+        questionLength: question.length,
+        reason: errorMessage(error),
+      });
+
+      return {
+        answer:
+          "Stub mode is active because the configured DeepTutor backend is unreachable in local development.",
+        backendMode: "stub" as const,
+      };
+    }
+
+    throw error;
+  }
 
   return {
     answer: data.response ?? data.answer ?? data.message ?? "",
@@ -564,10 +649,6 @@ function normalizeScriptDraft(value: Record<string, unknown> | null): LessonScri
   const rawSteps = Array.isArray(value.steps) ? value.steps : [];
   const steps = rawSteps.map(normalizeScriptStep).filter((step): step is LessonScriptStepDraft => Boolean(step));
 
-  if (steps.length < 4 || !["hook", "concept", "example", "interactive"].every((kind) => steps.some((step) => step.kind === kind))) {
-    return null;
-  }
-
   const rawInteractive =
     value.interactive && typeof value.interactive === "object" && !Array.isArray(value.interactive)
       ? (value.interactive as Record<string, unknown>)
@@ -587,18 +668,25 @@ function normalizeScriptDraft(value: Record<string, unknown> | null): LessonScri
     .filter((item) => isSpecificText(item.body, 40))
     .slice(0, 4);
 
+  const objective = isSpecificText(value.objective, 32) ? text(value.objective) : undefined;
+  const interactive = items.length >= 2
+    ? {
+        kind: "compare" as const,
+        prompt: isSpecificText(rawInteractive?.prompt, 24)
+          ? text(rawInteractive?.prompt)
+          : "Compare the cards and connect each one to the lesson.",
+        items,
+      }
+    : undefined;
+
+  if (!objective && !interactive && steps.length === 0) {
+    return null;
+  }
+
   return {
-    objective: isSpecificText(value.objective, 32) ? text(value.objective) : undefined,
+    objective,
     steps,
-    interactive: items.length >= 2
-      ? {
-          kind: "compare",
-          prompt: isSpecificText(rawInteractive?.prompt, 24)
-            ? text(rawInteractive?.prompt)
-            : "Compare the cards and connect each one to the lesson.",
-          items,
-        }
-      : undefined,
+    interactive,
   };
 }
 
@@ -611,10 +699,11 @@ async function generateLessonScript(
     `Write the actual lesson content for "${context.lessonTitle}" in the course "${context.courseTitle}".`,
     context.lessonSummary ? `Course planner summary: ${context.lessonSummary}` : "",
     "Return ONLY valid JSON. Do not include markdown fences.",
-    "The lesson must be concrete, accurate, and subject-specific. Do not describe how a lesson should work. Teach the topic itself.",
+    "The lesson must be concrete, accurate, and subject-specific. Do not describe how a lesson should work. Build intuition with short cases and visuals.",
     "Do not repeat the lesson title as if it were an explanation. Avoid generic phrases like 'moving parts', 'lesson idea', 'mechanism visible', or 'which answer wins'.",
+    "Keep every body under 70 words. The UI will show one problem per screen, so never write lecture paragraphs.",
     "JSON shape:",
-    `{"objective":"one sentence","steps":[{"kind":"hook","title":"short title","body":"120-180 words that make the topic feel useful"},{"kind":"concept","title":"short title","body":"160-240 words explaining the core facts, vocabulary, and relationships"},{"kind":"example","title":"short title","body":"140-220 words with a worked example or realistic scenario"},{"kind":"interactive","title":"short title","body":"80-140 words introducing a comparison activity"}],"interactive":{"prompt":"one sentence","items":[{"id":"first","label":"short label","body":"specific card text"},{"id":"second","label":"short label","body":"specific card text"},{"id":"third","label":"short label","body":"specific card text"}]}}`,
+    `{"objective":"one sentence","steps":[{"kind":"hook","title":"first problem","body":"one or two short sentences"},{"kind":"concept","title":"pattern","body":"one or two short sentences"},{"kind":"example","title":"case","body":"one or two short sentences"},{"kind":"interactive","title":"compare","body":"one or two short sentences"}],"interactive":{"prompt":"one sentence","items":[{"id":"evidence","label":"Evidence","body":"specific card text"},{"id":"trap","label":"Trap","body":"specific card text"},{"id":"boundary","label":"Boundary","body":"specific card text"}]}}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -636,6 +725,54 @@ async function generateLessonScript(
   return normalizeScriptDraft(parseJsonObject(data.response ?? data.answer ?? data.message ?? ""));
 }
 
+function normalizeGeneratedQuestion(value: unknown, index: number): LessonQuestionDraft | null {
+  const container =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  const qaPair =
+    container?.qa_pair && typeof container.qa_pair === "object" && !Array.isArray(container.qa_pair)
+      ? (container.qa_pair as Record<string, unknown>)
+      : container;
+  const question = text(qaPair?.question);
+  const rawOptions =
+    qaPair?.options && typeof qaPair.options === "object" && !Array.isArray(qaPair.options)
+      ? (qaPair.options as Record<string, unknown>)
+      : null;
+  const options = rawOptions
+    ? Object.fromEntries(
+        Object.entries(rawOptions)
+          .filter(([, option]) => text(option).length > 0)
+          .map(([key, option]) => [key, text(option)]),
+      )
+    : {};
+
+  if (!question || Object.keys(options).length < 2) {
+    return null;
+  }
+
+  return {
+    title: index === 0 ? "Make a first guess" : `Problem ${index + 1}`,
+    body:
+      index === 0
+        ? "Try this before reading a rule. Choose the explanation that fits best."
+        : "Use the pattern you have built so far. Choose the stronger explanation.",
+    question,
+    options,
+    correctAnswer:
+      typeof qaPair?.correct_answer === "string"
+        ? qaPair.correct_answer
+        : typeof qaPair?.answer === "string"
+          ? qaPair.answer
+          : null,
+    explanation:
+      typeof qaPair?.explanation === "string"
+        ? qaPair.explanation
+        : "The strongest answer explains the evidence and the reason it matters.",
+    hint: "Look for the answer that explains why, not just what.",
+  };
+}
+
 export async function generateExercise(
   lessonId: string,
   userHistory: GenerateExerciseContext,
@@ -655,14 +792,15 @@ export async function generateExercise(
   }
 
   const prompt = [
-    `Create one adaptive multiple-choice exercise for the lesson "${userHistory.lessonTitle}" in the course "${userHistory.courseTitle}".`,
+    `Create an adaptive Brilliant-style lesson sequence for "${userHistory.lessonTitle}" in the course "${userHistory.courseTitle}".`,
     userHistory.lessonSummary ? `Lesson summary: ${userHistory.lessonSummary}` : "",
     userHistory.recentPerformance?.length
       ? `Recent learner history: ${userHistory.recentPerformance.join(" ")}`
       : "",
-    "Adapt the lesson to that history: if the learner missed the checkpoint, reteach with a smaller prerequisite example before testing; if they answered correctly, ask a slightly harder transfer question.",
-    "Teach the topic before the checkpoint. The answer options should diagnose reasoning, not trivia or memorization.",
-    "Keep the question focused, concept-checking, and suitable for a single lesson step.",
+    "Return 8 short multiple-choice questions that build the lesson concept-by-concept.",
+    "Start with a pretest question before explanation. Then use tiny cases, prediction checks, boundary checks, and one final transfer checkpoint.",
+    "Each question should fit on one screen, diagnose reasoning, and include a concise explanation for feedback.",
+    "Do not write lecture paragraphs. Do not ask trivia or vocabulary-only questions.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -675,18 +813,38 @@ export async function generateExercise(
     return null;
   });
 
-  const events = await fetchSse("/api/v1/plugins/capabilities/deep_question/execute-stream", {
-    content: prompt,
-    tools: userHistory.knowledgeBaseName ? ["rag"] : [],
-    knowledge_bases: userHistory.knowledgeBaseName ? [userHistory.knowledgeBaseName] : [],
-    language: "en",
-    config: {
-      mode: "custom",
-      topic: prompt,
-      num_questions: 1,
-      question_type: "choice",
-    },
-  });
+  let events: SseEnvelope[];
+
+  try {
+    events = await fetchSse("/api/v1/plugins/capabilities/deep_question/execute-stream", {
+      content: prompt,
+      tools: userHistory.knowledgeBaseName ? ["rag"] : [],
+      knowledge_bases: userHistory.knowledgeBaseName ? [userHistory.knowledgeBaseName] : [],
+      language: "en",
+      config: {
+        mode: "custom",
+        topic: prompt,
+        num_questions: 8,
+        question_type: "choice",
+      },
+    });
+  } catch (error) {
+    if (shouldUseLocalDeepTutorFallback(error)) {
+      logStubResponse("generateExercise.fallback", {
+        courseId: userHistory.courseId,
+        lessonId,
+        reason: errorMessage(error),
+      });
+
+      return {
+        exercise: buildStubExercise(lessonId, userHistory),
+        backendMode: "stub" as const,
+        raw: { stub: true, fallbackReason: errorMessage(error) },
+      };
+    }
+
+    throw error;
+  }
 
   const resultEvent = [...events].reverse().find((event) => event.event === "result");
   const question =
@@ -695,29 +853,20 @@ export async function generateExercise(
       unknown
     > | undefined)?.results;
 
-  const firstResult = Array.isArray(question) ? question[0] : null;
-  const qaPair =
-    firstResult && typeof firstResult === "object"
-      ? (firstResult as { qa_pair?: Record<string, unknown> }).qa_pair
-      : null;
+  const questionSet = Array.isArray(question)
+    ? question
+        .map((item, index) => normalizeGeneratedQuestion(item, index))
+        .filter((item): item is LessonQuestionDraft => Boolean(item))
+    : [];
+  const firstQuestion = questionSet[0] ?? null;
 
-  if (!qaPair || typeof qaPair.question !== "string") {
+  if (!firstQuestion?.question) {
     throw new DeepTutorClientError(
       `DeepTutor did not return a usable exercise for lesson ${lessonId}.`,
       null,
       resultEvent?.data,
     );
   }
-
-  const options =
-    qaPair.options && typeof qaPair.options === "object"
-      ? (qaPair.options as Record<string, string>)
-      : {
-          A: "Review the lesson again.",
-          B: "Practice with a worked example.",
-          C: "Connect the concept to its purpose.",
-          D: "Skip ahead to the next topic.",
-        };
 
   return {
     exercise: buildExerciseData({
@@ -727,16 +876,17 @@ export async function generateExercise(
       courseTitle: userHistory.courseTitle,
       lessonSummary: userHistory.lessonSummary,
       lessonScript,
-      question: qaPair.question,
-      options,
-      correctAnswer:
-        typeof qaPair.correct_answer === "string"
-          ? qaPair.correct_answer
-          : typeof qaPair.answer === "string"
-            ? qaPair.answer
-            : null,
+      questionSet,
+      question: firstQuestion.question,
+      options: firstQuestion.options ?? {
+        A: "Use the evidence to explain the result.",
+        B: "Repeat a familiar label.",
+      },
+      correctAnswer: firstQuestion.correctAnswer,
       explanation:
-        typeof qaPair.explanation === "string" ? qaPair.explanation : "DeepTutor returned no explanation.",
+        typeof firstQuestion.explanation === "string"
+          ? firstQuestion.explanation
+          : "DeepTutor returned no explanation.",
       backendMode: "live",
     }),
     backendMode: "live" as const,

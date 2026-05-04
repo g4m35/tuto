@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Check, Copy, Download, FileText, Link2, Presentation, Share2, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/Button"
+import { getCourseArtifactOption, type CourseArtifactKind } from "@/lib/course-artifacts"
 
 interface CourseArtifactActionsProps {
   courseId: string
   artifactTitle: string
+  artifactKind?: CourseArtifactKind | string | null
   initialShareEnabled?: boolean
   initialShareToken?: string | null
 }
@@ -17,6 +19,7 @@ type ShareStatus = "idle" | "working" | "copied" | "error"
 export function CourseArtifactActions({
   courseId,
   artifactTitle,
+  artifactKind,
   initialShareEnabled = false,
   initialShareToken = null,
 }: CourseArtifactActionsProps) {
@@ -34,6 +37,9 @@ export function CourseArtifactActions({
     if (!shareEnabled || !shareToken || !origin) return null
     return `${origin}/share/${shareToken}`
   }, [origin, shareEnabled, shareToken])
+  const artifact = getCourseArtifactOption(artifactKind)
+  const googleSlidesLabel = artifact.kind === "slides" ? "Google Slides" : "Slides file"
+  const notesLabel = artifact.kind === "slides" ? "Speaker notes" : "Outline notes"
 
   async function enableShare() {
     setStatus("working")
@@ -93,34 +99,34 @@ export function CourseArtifactActions({
   }
 
   return (
-    <div className="editorial-card space-y-4 px-5 py-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
+    <div className="editorial-card space-y-5 px-5 py-5 sm:px-6">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
+        <div className="space-y-2">
           <p className="eyebrow">Share and download</p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
-            Export this {artifactTitle.toLowerCase()}, download a Google Slides-ready file, or create a read-only public link.
+            Export this {artifactTitle.toLowerCase()}, download files for Google Docs or Slides, or create a read-only public link.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link href={`/api/courses/${courseId}/download?format=markdown`} className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+          <Link href={`/api/courses/${courseId}/download?format=markdown`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
             <Download className="size-4" />
             Markdown
           </Link>
-          <Link href={`/api/courses/${courseId}/download?format=html`} className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
+          <Link href={`/api/courses/${courseId}/download?format=html`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
             <FileText className="size-4" />
             HTML
           </Link>
-          <Link href={`/api/courses/${courseId}/download?format=pptx`} className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
+          <Link href={`/api/courses/${courseId}/download?format=pptx`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-soft)] px-4 text-[13px] font-medium text-[var(--text)]">
             <Upload className="size-4" />
-            Google Slides
+            {googleSlidesLabel}
           </Link>
-          <Link href={`/api/courses/${courseId}/download?format=docx`} className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
+          <Link href={`/api/courses/${courseId}/download?format=docx`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-soft)] px-4 text-[13px] font-medium text-[var(--text)]">
             <FileText className="size-4" />
             Google Docs
           </Link>
-          <Link href={`/api/courses/${courseId}/download?format=slides`} className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
+          <Link href={`/api/courses/${courseId}/download?format=slides`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
             <Presentation className="size-4" />
-            Notes
+            {notesLabel}
           </Link>
         </div>
       </div>

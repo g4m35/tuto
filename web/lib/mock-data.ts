@@ -56,6 +56,8 @@ export interface CourseDetailData extends CourseCardData {
   level: CourseLevel
   artifactKind?: string
   artifactTitle?: string
+  artifactAction?: string
+  artifactPreviewTitle?: string
   streak: number
   hoursInvested: number
   masteryPercent?: number
@@ -69,6 +71,7 @@ export interface ExerciseOption {
   id: string
   label: string
   body: string
+  feedback?: string
 }
 
 export type LessonStepKind =

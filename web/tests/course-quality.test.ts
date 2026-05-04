@@ -1,79 +1,76 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { evaluateCourseLessonQuality } from "../lib/course-quality";
-import type { ExerciseData } from "../lib/mock-data";
+import type { ExerciseData, LessonStepData } from "../lib/mock-data";
+
+function buildProblemSteps(count = 8): LessonStepData[] {
+  return Array.from({ length: count }, (_, index) => {
+    const isCheckpoint = index === count - 1;
+    const optionA = `Use the evidence in case ${index + 1} to explain what changed and why.`;
+    const optionB = `Memorize the label from case ${index + 1} without checking the cause.`;
+
+    return {
+      id: `lesson-quality-problem-${index + 1}`,
+      kind: isCheckpoint ? "checkpoint" : index === 2 ? "interactive" : "practice",
+      title: index === 0 ? "Make a first guess" : `Problem ${index + 1}`,
+      body:
+        index === 0
+          ? "Start with the smallest case. Pick the explanation before reading a rule."
+          : "Use the pattern you just tested. One option explains the cause; one only names it.",
+      prompt: `In case ${index + 1}, which explanation best fits the evidence?`,
+      hint: `Look for the option that explains the cause in case ${index + 1}.`,
+      explanation: `The stronger answer for case ${index + 1} connects the evidence to the cause, then states the limit.`,
+      correctOptionId: "a",
+      options: [
+        {
+          id: "a",
+          label: "A",
+          body: optionA,
+          feedback: `Correct: this uses the evidence from case ${index + 1} instead of naming a slogan.`,
+        },
+        {
+          id: "b",
+          label: "B",
+          body: optionB,
+          feedback: `This is the trap: it names the idea in case ${index + 1} without explaining the cause.`,
+        },
+      ],
+      interactive:
+        index === 2
+          ? {
+              kind: "compare",
+              prompt: "Reveal the two explanations, then choose the one that predicts the result.",
+              items: [
+                { id: "cause", label: "Cause", body: "A causal explanation predicts what changes next." },
+                { id: "label", label: "Label", body: "A label can sound right while explaining nothing." },
+              ],
+            }
+          : undefined,
+    };
+  });
+}
 
 function buildQualityExercise(overrides: Partial<ExerciseData> = {}): ExerciseData {
+  const steps = buildProblemSteps();
   const exercise: ExerciseData = {
     courseId: "course-quality",
     lessonId: "lesson-quality",
     title: "Quality lesson",
     subtitle: "Interactive lesson",
-    objective: "Understand the concept through a guided lesson.",
-    prompt: "Which option best explains the concept?",
-    step: 6,
-    stepCount: 6,
+    objective: "Solve short cases that build the concept through prediction and feedback.",
+    prompt: "In case 8, which explanation best fits the evidence?",
+    step: steps.length,
+    stepCount: steps.length,
     xp: 50,
     correctOptionId: "a",
-    hint: "Choose the option that explains the mechanism and the boundary.",
-    explanation: "The correct option connects what happens, why it matters, and where it stops applying.",
-    checkpointStepId: "lesson-quality-checkpoint",
+    hint: "Choose the option that explains cause and boundary.",
+    explanation: "The correct option connects evidence, cause, and boundary.",
+    checkpointStepId: "lesson-quality-problem-8",
     options: [
-      { id: "a", label: "A", body: "It explains the mechanism and boundary." },
-      { id: "b", label: "B", body: "It repeats a memorized phrase." },
+      { id: "a", label: "A", body: "Use the evidence in case 8 to explain what changed and why." },
+      { id: "b", label: "B", body: "Memorize the label from case 8 without checking the cause." },
     ],
-    steps: [
-      {
-        id: "lesson-quality-hook",
-        kind: "hook",
-        title: "Start with the puzzle",
-        body: "A real lesson starts by creating a question the learner wants to resolve.",
-      },
-      {
-        id: "lesson-quality-concept",
-        kind: "concept",
-        title: "Build the model",
-        body: "The concept step gives the learner a durable mental model before asking for recall.",
-      },
-      {
-        id: "lesson-quality-example",
-        kind: "example",
-        title: "Work a small example",
-        body: "The example step shows how the mental model behaves in a concrete case.",
-      },
-      {
-        id: "lesson-quality-interactive",
-        kind: "interactive",
-        title: "Compare the moving parts",
-        body: "The interactive step asks the learner to reveal and compare important distinctions.",
-        interactive: {
-          kind: "compare",
-          prompt: "Tap each card to reveal its role.",
-          items: [
-            { id: "mechanism", label: "Mechanism", body: "How the idea works." },
-            { id: "trap", label: "Trap", body: "A common mistake." },
-          ],
-        },
-      },
-      {
-        id: "lesson-quality-practice",
-        kind: "practice",
-        title: "Try it before the checkpoint",
-        body: "The practice step lets the learner predict before choosing from answer options.",
-      },
-      {
-        id: "lesson-quality-checkpoint",
-        kind: "checkpoint",
-        title: "Checkpoint",
-        body: "The checkpoint verifies that the learner can choose the strongest explanation.",
-        prompt: "Which option best explains the concept?",
-        correctOptionId: "a",
-        options: [
-          { id: "a", label: "A", body: "It explains the mechanism and boundary." },
-          { id: "b", label: "B", body: "It repeats a memorized phrase." },
-        ],
-      },
-    ],
+    steps,
   };
 
   return { ...exercise, ...overrides };
@@ -95,8 +92,39 @@ test("evaluateCourseLessonQuality rejects thin quiz-only lessons", () => {
   );
 
   assert.equal(report.ok, false);
-  assert.equal(report.checks.find((check) => check.id === "lesson-script")?.passed, false);
+  assert.equal(report.checks.find((check) => check.id === "problem-sequence")?.passed, false);
   assert.equal(report.checks.find((check) => check.id === "interactive-component")?.passed, false);
+});
+
+test("evaluateCourseLessonQuality rejects lessons with too few problem screens", () => {
+  const report = evaluateCourseLessonQuality(
+    buildQualityExercise({
+      steps: buildProblemSteps(4),
+      checkpointStepId: "lesson-quality-problem-4",
+    }),
+  );
+
+  assert.equal(report.ok, false);
+  assert.equal(report.checks.find((check) => check.id === "problem-sequence")?.passed, false);
+});
+
+test("evaluateCourseLessonQuality rejects lecture-style long prose blocks", () => {
+  const exercise = buildQualityExercise();
+  const report = evaluateCourseLessonQuality({
+    ...exercise,
+    steps: exercise.steps?.map((step, index) =>
+      index === 1
+        ? {
+            ...step,
+            body:
+              "This is a long lecture block that keeps explaining and explaining before the learner has a chance to do anything. ".repeat(8),
+          }
+        : step,
+    ),
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.checks.find((check) => check.id === "compact-screens")?.passed, false);
 });
 
 test("evaluateCourseLessonQuality rejects generic lesson-template copy", () => {
@@ -104,7 +132,7 @@ test("evaluateCourseLessonQuality rejects generic lesson-template copy", () => {
   const report = evaluateCourseLessonQuality({
     ...exercise,
     steps: exercise.steps?.map((step) =>
-      step.kind === "example"
+      step.id === "lesson-quality-problem-3"
         ? {
             ...step,
             body:

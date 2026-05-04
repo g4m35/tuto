@@ -15,9 +15,9 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,var(--bg)_58%,#eef8f4_100%)] text-[var(--text)]">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,var(--bg)_58%,#eef6ff_100%)] text-[var(--text)]">
       <TopNav />
-      <div className="t-route mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[1408px] flex-col px-6 pb-24 pt-10 sm:px-8 lg:px-10">
+      <div className="t-route mx-auto flex min-h-[calc(100vh-64px)] w-full max-w-[1760px] flex-col px-5 pb-16 pt-7 sm:px-7 lg:px-8">
         {children}
       </div>
     </div>

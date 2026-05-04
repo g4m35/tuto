@@ -4,6 +4,9 @@ import assert from "node:assert/strict";
 import {
   buildArtifactPromptDirective,
   buildCourseArtifactExport,
+  courseArtifactKinds,
+  getPrimaryCourseArtifactExportFormat,
+  isInteractiveCourseArtifact,
   normalizeCourseArtifactExportFormat,
   normalizeCourseArtifactKind,
 } from "../lib/course-artifacts";
@@ -47,9 +50,17 @@ const baseCourse: StoredCourse = {
 
 test("artifact kind normalization falls back to full course", () => {
   assert.equal(normalizeCourseArtifactKind("slides"), "slides");
+  assert.equal(normalizeCourseArtifactKind("quiz"), "quiz-set");
+  assert.equal(normalizeCourseArtifactKind("cheat-sheet"), "cheat-sheet");
   assert.equal(normalizeCourseArtifactKind("not-real"), "course");
   assert.equal(normalizeCourseArtifactExportFormat("google-slides"), "pptx");
   assert.equal(normalizeCourseArtifactExportFormat("google-docs"), "docx");
+  assert.equal(isInteractiveCourseArtifact("course"), true);
+  assert.equal(isInteractiveCourseArtifact("slides"), false);
+  assert.equal(getPrimaryCourseArtifactExportFormat("slides"), "pptx");
+  assert.equal(getPrimaryCourseArtifactExportFormat("study-guide"), "docx");
+  assert.equal(getPrimaryCourseArtifactExportFormat("cheat-sheet"), "docx");
+  assert.equal(getPrimaryCourseArtifactExportFormat("quiz-set"), "markdown");
 });
 
 test("artifact prompt directive carries the selected artifact intent", () => {
@@ -100,4 +111,25 @@ test("artifact exports include generated content in downloadable formats", () =>
   assert.equal(docxBuffer.subarray(0, 2).toString("utf8"), "PK");
   assert.match(docxBuffer.toString("utf8"), /word\/document\.xml/);
   assert.match(docxBuffer.toString("utf8"), /Photosynthesis/);
+});
+
+test("every supported artifact kind exports in every downloadable format", () => {
+  const formats = ["markdown", "html", "slides", "pptx", "docx"] as const;
+
+  for (const artifactKind of courseArtifactKinds) {
+    for (const format of formats) {
+      const artifact = buildCourseArtifactExport({ ...baseCourse, artifactKind }, format);
+
+      assert.ok(artifact.fileName.startsWith("photosynthesis"));
+      assert.ok(artifact.contentType.length > 0);
+
+      if (format === "pptx" || format === "docx") {
+        assert.ok(artifact.body instanceof ArrayBuffer);
+        assert.equal(Buffer.from(artifact.body).subarray(0, 2).toString("utf8"), "PK");
+      } else {
+        assert.equal(typeof artifact.body, "string");
+        assert.match(artifact.body as string, /Photosynthesis/);
+      }
+    }
+  }
 });

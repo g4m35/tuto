@@ -1,6 +1,6 @@
 alter table courses
   add column if not exists artifact_kind text not null default 'course'
-    check (artifact_kind in ('course', 'study-guide', 'slides', 'quiz-set', 'lesson-plan'));
+    check (artifact_kind in ('course', 'study-guide', 'slides', 'quiz-set', 'cheat-sheet', 'lesson-plan'));
 
 alter table courses
   add column if not exists share_token text,

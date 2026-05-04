@@ -9,7 +9,7 @@ import {
   BookOpen,
   Check,
   ChevronLeft,
-  ChevronRight,
+  Flag,
   Layers3,
   Lightbulb,
   ListChecks,
@@ -23,7 +23,7 @@ import {
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
-import type { ExerciseData, LessonInteractiveData, LessonStepData } from "@/lib/mock-data"
+import type { ExerciseData, ExerciseOption, LessonInteractiveData, LessonStepData } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 interface LessonExerciseClientProps {
@@ -34,8 +34,10 @@ interface LessonExerciseClientProps {
 
 interface CheckResult {
   isCorrect: boolean
+  selectedOptionId?: string
   correctOptionId: string
   correctOptionBody: string
+  selectedFeedback?: string | null
   explanation: string
   canContinue: boolean
   nextLessonId: string | null
@@ -135,10 +137,14 @@ function hasTemplateLeak(value: string) {
 
 function isLegacyTemplateExercise(exercise: ExerciseData | null) {
   if (!exercise) return false
+  const steps = exercise.steps ?? []
+  const problemSteps = steps.filter(
+    (step) => step.prompt && (step.options?.length ?? 0) >= 2 && step.correctOptionId,
+  )
   const visibleText = [
     exercise.objective,
     exercise.title,
-    ...(exercise.steps ?? []).flatMap((step) => [
+    ...steps.flatMap((step) => [
       step.title,
       step.body,
       step.takeaway,
@@ -149,7 +155,12 @@ function isLegacyTemplateExercise(exercise: ExerciseData | null) {
     .filter(Boolean)
     .join("\n")
 
-  return hasTemplateLeak(visibleText)
+  return (
+    hasTemplateLeak(visibleText) ||
+    steps.length < 8 ||
+    problemSteps.length < 6 ||
+    steps.some((step) => step.body.trim().length > 520)
+  )
 }
 
 export function LessonExerciseClient({
@@ -162,11 +173,10 @@ export function LessonExerciseClient({
   const [exercise, setExercise] = useState<ExerciseData | null>(
     initialExerciseIsLegacy ? null : initialExercise,
   )
-  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
+  const [stepResults, setStepResults] = useState<Record<string, CheckResult>>({})
   const [showHint, setShowHint] = useState(false)
-  const [checked, setChecked] = useState(false)
   const [checking, setChecking] = useState(false)
-  const [checkResult, setCheckResult] = useState<CheckResult | null>(null)
   const [loading, setLoading] = useState(!initialExercise || initialExerciseIsLegacy)
   const [error, setError] = useState<string | null>(null)
   const [activeStepIndex, setActiveStepIndex] = useState(0)
@@ -220,9 +230,8 @@ export function LessonExerciseClient({
 
   useEffect(() => {
     setActiveStepIndex(0)
-    setSelectedOption(null)
-    setChecked(false)
-    setCheckResult(null)
+    setSelectedOptions({})
+    setStepResults({})
     setShowHint(false)
     setRevealedCards(new Set())
     setSliderValue(50)
@@ -232,61 +241,102 @@ export function LessonExerciseClient({
   const activeStep = steps[activeStepIndex]
   const activeIsCheckpoint = activeStep?.kind === "checkpoint"
   const progress = steps.length ? Math.round(((activeStepIndex + 1) / steps.length) * 100) : 0
+  const activeOptions = activeStep?.options?.length
+    ? activeStep.options
+    : activeIsCheckpoint
+      ? exercise?.options ?? []
+      : []
+  const selectedOption = activeStep ? selectedOptions[activeStep.id] ?? null : null
+  const checkResult = activeStep ? stepResults[activeStep.id] ?? null : null
+  const checked = Boolean(checkResult)
+  const activeHasQuestion = Boolean(activeStep?.prompt && activeOptions.length >= 2)
 
   if (loading) {
     return (
-      <div className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-8">
-        <Link
-          href={`/courses/${courseId}`}
-          className="inline-flex items-center gap-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
-        >
-          <ChevronLeft className="size-4" />
-          Close lesson
-        </Link>
-
-        <section className="editorial-card animate-rise-in px-7 py-8 sm:px-8">
-          <p className="eyebrow">Composing</p>
-          <h1 className="mt-4 text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)]">
-            Preparing your interactive lesson.
-          </h1>
-          <div className="mt-6 flex items-center gap-3 text-sm text-[var(--text-dim)]">
+      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,#ffffff_0%,#fbfff8_56%,#edf8f2_100%)] text-[var(--text)]">
+        <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-white/92 px-4 sm:px-6">
+          <Link
+            href={`/courses/${courseId}`}
+            className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-[var(--text-dim)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--text)]"
+          >
+            <ChevronLeft className="size-4" />
+            Exit
+          </Link>
+        </header>
+        <main className="grid min-h-0 flex-1 place-items-center px-4 py-10">
+          <section className="w-full max-w-[720px] rounded-[var(--radius)] border border-[var(--border)] bg-white px-7 py-8 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8">
+            <p className="eyebrow">Building levels</p>
+            <h1 className="mt-4 text-[34px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[44px]">
+              Preparing a problem-first lesson.
+            </h1>
+            <div className="mt-6 flex items-center gap-3 text-sm text-[var(--text-dim)]">
             <LoaderCircle className="size-5 animate-spin text-[var(--text)]" />
-            Building a guided path with practice and a checkpoint.
-          </div>
-        </section>
+              Creating short checks, feedback, and one final checkpoint.
+            </div>
+          </section>
+        </main>
       </div>
     )
   }
 
   if (!exercise || !activeStep) {
     return (
-      <div className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-8">
-        <Link
-          href={`/courses/${courseId}`}
-          className="inline-flex items-center gap-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
-        >
-          <ChevronLeft className="size-4" />
-          Close lesson
-        </Link>
-
-        <section className="editorial-card animate-rise-in px-7 py-8 sm:px-8">
-          <p className="eyebrow">Lesson unavailable</p>
-          <h1 className="mt-4 text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)]">
-            We could not generate this lesson yet.
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
-            {error || "The lesson service returned no content."}
-          </p>
-          <div className="mt-6">
-            <Button onClick={() => window.location.reload()}>Try again</Button>
-          </div>
-        </section>
+      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,#ffffff_0%,#fbfff8_56%,#edf8f2_100%)] text-[var(--text)]">
+        <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-white/92 px-4 sm:px-6">
+          <Link
+            href={`/courses/${courseId}`}
+            className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-[var(--text-dim)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--text)]"
+          >
+            <ChevronLeft className="size-4" />
+            Exit
+          </Link>
+        </header>
+        <main className="grid min-h-0 flex-1 place-items-center px-4 py-10">
+          <section className="w-full max-w-[720px] rounded-[var(--radius)] border border-[var(--border)] bg-white px-7 py-8 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8">
+            <p className="eyebrow">Lesson unavailable</p>
+            <h1 className="mt-4 text-[34px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[44px]">
+              We could not generate this lesson yet.
+            </h1>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
+              {error || "The lesson service returned no content."}
+            </p>
+            <div className="mt-6">
+              <Button onClick={() => window.location.reload()}>Try again</Button>
+            </div>
+          </section>
+        </main>
       </div>
     )
   }
 
   async function checkAnswer() {
-    if (!selectedOption) return
+    if (!activeStep || !selectedOption) return
+
+    if (!activeIsCheckpoint) {
+      const selected = activeOptions.find((option) => option.id === selectedOption)
+      const correct = activeOptions.find((option) => option.id === activeStep.correctOptionId)
+
+      if (!selected || !correct) return
+
+      const result: CheckResult = {
+        isCorrect: selected.id === correct.id,
+        selectedOptionId: selected.id,
+        correctOptionId: correct.id,
+        correctOptionBody: correct.body,
+        selectedFeedback: selected.feedback ?? null,
+        explanation:
+          (selected.id === correct.id ? correct.feedback : selected.feedback) ??
+          activeStep.explanation ??
+          activeStep.hint ??
+          "Use the feedback, then continue to the next case.",
+        canContinue: true,
+        nextLessonId: null,
+        courseComplete: false,
+      }
+
+      setStepResults((current) => ({ ...current, [activeStep.id]: result }))
+      return
+    }
 
     setChecking(true)
     setError(null)
@@ -300,6 +350,7 @@ export function LessonExerciseClient({
         body: JSON.stringify({
           lessonId,
           selectedOptionId: selectedOption,
+          stepId: activeStep.id,
         }),
       })
       const data = (await response.json().catch(() => null)) as CheckResult & { error?: string } | null
@@ -308,8 +359,7 @@ export function LessonExerciseClient({
         throw new Error(data?.error || "Unable to check this answer.")
       }
 
-      setChecked(true)
-      setCheckResult(data)
+      setStepResults((current) => ({ ...current, [activeStep.id]: data }))
       router.refresh()
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Unable to check this answer.")
@@ -330,8 +380,14 @@ export function LessonExerciseClient({
   }
 
   function goNext() {
+    if (activeHasQuestion && !checkResult) {
+      void checkAnswer()
+      return
+    }
+
     if (activeStepIndex < steps.length - 1) {
       setActiveStepIndex((value) => value + 1)
+      setShowHint(false)
       return
     }
 
@@ -341,6 +397,17 @@ export function LessonExerciseClient({
     }
 
     void checkAnswer()
+  }
+
+  function selectOption(optionId: string) {
+    if (!activeStep) return
+
+    setSelectedOptions((current) => ({ ...current, [activeStep.id]: optionId }))
+    setStepResults((current) => {
+      const next = { ...current }
+      delete next[activeStep.id]
+      return next
+    })
   }
 
   function toggleCard(cardId: string) {
@@ -355,349 +422,293 @@ export function LessonExerciseClient({
     })
   }
 
+  const isLastStep = activeStepIndex === steps.length - 1
+  const primaryDisabled = (activeHasQuestion && !checkResult && !selectedOption) || checking
+  const primaryLabel = checking
+    ? "Checking"
+    : activeHasQuestion && !checkResult
+      ? "Check"
+      : isLastStep
+        ? checkResult?.canContinue
+          ? checkResult.courseComplete
+            ? "Finish course"
+            : "Next lesson"
+          : "Try again"
+        : "Continue"
+
   return (
-    <div className="mx-auto flex w-full max-w-[1160px] flex-1 flex-col gap-7">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,#ffffff_0%,#fbfff8_56%,#edf8f2_100%)] text-[var(--text)]">
+      <header className="flex h-16 shrink-0 items-center gap-4 border-b border-[var(--border)] bg-white/92 px-4 backdrop-blur sm:px-6">
         <Link
           href={`/courses/${exercise.courseId}`}
-          className="inline-flex items-center gap-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
+          className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-[var(--text-dim)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--text)]"
         >
           <ChevronLeft className="size-4" />
-          Close lesson
+          Exit
         </Link>
-        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-4 py-2 text-sm text-[var(--text-dim)]">
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto flex max-w-3xl items-center gap-3">
+            <span className="hidden truncate text-sm text-[var(--text-dim)] sm:block">
+              {exercise.title}
+            </span>
+            <div className="h-2 min-w-[120px] flex-1 overflow-hidden rounded-full bg-[var(--bg-soft)]">
+              <motion.div
+                className="h-full rounded-full bg-[var(--accent-strong)]"
+                initial={false}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.2, ease: [0.2, 0.7, 0.2, 1] }}
+              />
+            </div>
+            <span className="whitespace-nowrap text-sm tabular-nums text-[var(--text-dim)]">
+              {activeStepIndex + 1}/{steps.length}
+            </span>
+          </div>
+        </div>
+        <div className="hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-3 py-2 text-sm text-[var(--text-dim)] sm:inline-flex">
           <Sparkles className="size-4 text-[var(--text)]" />
           {exercise.xp} XP
         </div>
-      </div>
+        <button
+          type="button"
+          aria-label="Report problem"
+          className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)] text-[var(--text-dim)] hover:text-[var(--text)]"
+        >
+          <Flag className="size-4" />
+        </button>
+      </header>
 
-      <section className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="editorial-card h-fit overflow-hidden px-4 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="eyebrow">Steps</p>
-            <span className="text-xs text-[var(--text-dim)]">{progress}%</span>
+      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 pb-28 sm:px-6 sm:py-8">
+        <motion.section
+          key={activeStep.id}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18, ease: [0.2, 0.7, 0.2, 1] }}
+          className="mx-auto grid w-full max-w-[860px] gap-5"
+        >
+          <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
+            <span>Level {activeStepIndex + 1}</span>
+            <span>{stepLabel(activeStep.kind)}</span>
           </div>
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
-            <motion.div
-              className="h-full rounded-full bg-[var(--accent-strong)]"
-              initial={false}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.22, ease: [0.2, 0.7, 0.2, 1] }}
+
+          <LessonSketch step={activeStep} index={activeStepIndex} total={steps.length} checked={checked} />
+
+          <div className="space-y-3">
+            <h1 className="text-[34px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[44px]">
+              {displayStepTitle(activeStep)}
+            </h1>
+            <p className="text-[18px] leading-8 text-[var(--text-dim)]">
+              {displayStepBody(activeStep, exercise.title)}
+            </p>
+          </div>
+
+          {activeStep.interactive ? (
+            <InteractiveLessonPanel
+              interactive={activeStep.interactive}
+              revealedCards={revealedCards}
+              sliderValue={sliderValue}
+              onToggleCard={toggleCard}
+              onSliderChange={setSliderValue}
             />
-          </div>
-          <div className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0">
-            {steps.map((step, index) => {
-              const Icon = stepIconByKind[step.kind]
-              const active = index === activeStepIndex
-              const complete = index < activeStepIndex || (index === activeStepIndex && checked)
-              const title = displayStepTitle(step)
-              const ariaLabel = `${stepLabel(step.kind)}: ${title}`
+          ) : null}
 
-              return (
-                <button
-                  key={step.id}
-                  type="button"
-                  aria-label={ariaLabel}
-                  onClick={() => setActiveStepIndex(index)}
-                  className={cn(
-                    "group flex w-[174px] shrink-0 items-center gap-3 rounded-[var(--radius-sm)] border px-3 py-3 text-left transition lg:w-full",
-                    active
-                      ? "border-[var(--accent-line)] bg-[var(--accent-soft)] text-[var(--text)]"
-                      : "border-transparent text-[var(--text-dim)] hover:border-[var(--border)] hover:bg-[var(--bg-elev-2)]",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)]",
-                      active && "border-[var(--accent-strong)] bg-[var(--accent)] text-[var(--accent-ink)]",
-                      complete && !active && "border-[var(--border-strong)] text-[var(--text)]",
-                    )}
-                  >
-                    {complete && !active ? <Check className="size-4" /> : <Icon className="size-4" />}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm">{title}</span>
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </aside>
+          {activeStep.prompt ? (
+            <section className="rounded-[var(--radius)] border border-[var(--border)] bg-white px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:px-6">
+              <p className="text-[22px] font-semibold leading-8 tracking-normal text-[var(--text)]">
+                {activeStep.prompt}
+              </p>
+            </section>
+          ) : null}
 
-        <div className="min-w-0 space-y-5">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-              <span>Step {activeStepIndex + 1} of {steps.length}</span>
+          {activeHasQuestion ? (
+            <ProblemOptions
+              options={activeOptions}
+              selectedOption={selectedOption}
+              checkResult={checkResult}
+              onSelect={selectOption}
+            />
+          ) : null}
+
+          {showHint ? (
+            <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
+              {activeStep.hint || exercise.hint}
             </div>
-            <div className="space-y-3">
-              <h1 className="max-w-4xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
-                {exercise.title}
-              </h1>
-              {exercise.objective ? (
-                <p className="max-w-3xl text-lg leading-8 text-[var(--text-dim)]">
-                  {exercise.objective}
-                </p>
-              ) : null}
+          ) : null}
+
+          {checkResult ? <FeedbackPanel result={checkResult} /> : null}
+
+          {error ? (
+            <div className="rounded-[var(--radius-sm)] border border-red-300/60 bg-red-50 px-5 py-4 text-sm leading-7 text-red-700">
+              {error}
             </div>
-          </div>
+          ) : null}
+        </motion.section>
+      </main>
 
-          <motion.article
-            key={activeStep.id}
-            initial={{ opacity: 0, y: 14, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.18, ease: [0.2, 0.7, 0.2, 1] }}
-            className="editorial-card overflow-hidden"
-          >
-              <div className="border-b border-[var(--border)] px-5 py-4 sm:px-7">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-                    {(() => {
-                      const Icon = stepIconByKind[activeStep.kind]
-                      return <Icon className="size-4 text-[var(--text)]" />
-                    })()}
-                    Step {activeStepIndex + 1}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {steps.map((step, index) => (
-                      <button
-                        key={step.id}
-                        type="button"
-                        aria-label={`Go to step ${index + 1}`}
-                        onClick={() => setActiveStepIndex(index)}
-                        className={cn(
-                          "size-2.5 rounded-full border border-[var(--border)] bg-[var(--bg-soft)]",
-                          index <= activeStepIndex && "border-transparent bg-[var(--accent-strong)]",
-                        )}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-5 py-6 sm:px-7 sm:py-8">
-                <div className="grid gap-7">
-                  <div className="min-w-0 space-y-6">
-                    <div className="space-y-4">
-                      <h2 className="text-[32px] font-semibold leading-[1.08] tracking-normal text-[var(--text)] sm:text-[42px]">
-                        {displayStepTitle(activeStep)}
-                      </h2>
-                      <p className="max-w-3xl text-lg leading-8 text-[var(--text-dim)]">
-                        {displayStepBody(activeStep, exercise.title)}
-                      </p>
-                    </div>
-
-                    {activeStep.interactive ? (
-                      <InteractiveLessonPanel
-                        interactive={activeStep.interactive}
-                        revealedCards={revealedCards}
-                        sliderValue={sliderValue}
-                        onToggleCard={toggleCard}
-                        onSliderChange={setSliderValue}
-                      />
-                    ) : null}
-
-                    {activeStep.prompt && !activeIsCheckpoint ? (
-                      <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev-2)] px-5 py-4">
-                        <p className="text-sm uppercase tracking-[0.16em] text-[var(--text-faint)]">Try this</p>
-                        <p className="mt-3 text-base leading-7 text-[var(--text)]">{activeStep.prompt}</p>
-                      </div>
-                    ) : null}
-
-                    {activeIsCheckpoint ? (
-                      <CheckpointPanel
-                        step={activeStep}
-                        exercise={exercise}
-                        selectedOption={selectedOption}
-                        checked={checked}
-                        checkResult={checkResult}
-                        onSelect={(optionId) => {
-                          setSelectedOption(optionId)
-                          setChecked(false)
-                          setCheckResult(null)
-                        }}
-                        onRetryLesson={() => {
-                          setExercise(null)
-                          setLoading(true)
-                          setSelectedOption(null)
-                          setChecked(false)
-                          setCheckResult(null)
-                          setShowHint(false)
-                        }}
-                      />
-                    ) : null}
-
-                    {showHint ? (
-                      <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
-                        {activeStep.hint || exercise.hint}
-                      </div>
-                    ) : null}
-
-                    {error ? (
-                      <div className="rounded-[var(--radius-sm)] border border-red-300/60 bg-red-50 px-5 py-4 text-sm leading-7 text-red-700">
-                        {error}
-                      </div>
-                    ) : null}
-                  </div>
-
-                </div>
-              </div>
-          </motion.article>
-
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => setActiveStepIndex((value) => Math.max(0, value - 1))}
-                disabled={activeStepIndex === 0}
-              >
-                <ChevronLeft data-icon="inline-start" />
-                Back
-              </Button>
-              <Button variant="ghost" onClick={() => setShowHint((value) => !value)}>
-                <Lightbulb data-icon="inline-start" />
-                {showHint ? "Hide hint" : "Hint"}
-              </Button>
-            </div>
-
+      <footer className="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--border)] bg-white/94 px-4 py-3 backdrop-blur sm:px-6">
+        <div className="mx-auto flex max-w-[860px] items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
             <Button
-              onClick={goNext}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault()
-                  goNext()
-                }
+              variant="ghost"
+              onClick={() => {
+                setActiveStepIndex((value) => Math.max(0, value - 1))
+                setShowHint(false)
               }}
-              disabled={(activeIsCheckpoint && !checkResult?.canContinue && !selectedOption) || checking}
+              disabled={activeStepIndex === 0}
             >
-              {checking ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              {activeStepIndex < steps.length - 1
-                ? "Next step"
-                : checkResult?.canContinue
-                  ? checkResult.courseComplete
-                    ? "Finish course"
-                    : "Next lesson"
-                  : checking
-                    ? "Checking"
-                    : "Check answer"}
-              {!checking ? <ArrowRight data-icon="inline-end" /> : null}
+              <ChevronLeft data-icon="inline-start" />
+              Back
+            </Button>
+            <Button variant="ghost" onClick={() => setShowHint((value) => !value)}>
+              <Lightbulb data-icon="inline-start" />
+              {showHint ? "Hide hint" : "Hint"}
             </Button>
           </div>
+
+          <Button
+            onClick={goNext}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault()
+                goNext()
+              }
+            }}
+            disabled={primaryDisabled}
+          >
+            {checking ? <LoaderCircle className="size-4 animate-spin" /> : null}
+            {primaryLabel}
+            {!checking ? <ArrowRight data-icon="inline-end" /> : null}
+          </Button>
         </div>
-      </section>
+      </footer>
     </div>
   )
 }
 
-function CheckpointPanel({
+function LessonSketch({
   step,
-  exercise,
-  selectedOption,
+  index,
+  total,
   checked,
-  checkResult,
-  onSelect,
-  onRetryLesson,
 }: {
   step: LessonStepData
-  exercise: ExerciseData
-  selectedOption: string | null
+  index: number
+  total: number
   checked: boolean
-  checkResult: CheckResult | null
-  onSelect: (optionId: string) => void
-  onRetryLesson: () => void
 }) {
-  const options = step.options?.length ? step.options : exercise.options
-  const prompt = step.prompt || exercise.prompt
+  const Icon = stepIconByKind[step.kind]
+  const left = Math.max(0, Math.min(100, total > 1 ? (index / (total - 1)) * 100 : 0))
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev-2)] px-5 py-5">
-        <p className="text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">Question</p>
-        <p className="mt-3 text-lg leading-8 text-[var(--text)]">{prompt}</p>
-      </div>
-
-      <div className="space-y-3">
-        {options.map((option, index) => {
-          const selected = selectedOption === option.id
-          const correct = checked && checkResult?.correctOptionId === option.id
-          const incorrectSelection = checked && selected && checkResult?.isCorrect === false
+    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="relative h-[150px] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border)] bg-[linear-gradient(180deg,#ffffff_0%,#f4faef_100%)]">
+        <div className="absolute inset-x-8 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--bg-soft)]" />
+        <motion.div
+          className="absolute left-8 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--accent-strong)]"
+          initial={false}
+          animate={{ width: `${left * 0.76}%` }}
+          transition={{ duration: 0.2 }}
+        />
+        {[0, 0.5, 1].map((position, nodeIndex) => {
+          const complete = index / Math.max(total - 1, 1) >= position
 
           return (
-            <button
-              key={option.id}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onSelect(option.id)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault()
-                  onSelect(option.id)
-                }
-              }}
+            <div
+              key={position}
               className={cn(
-                "editorial-card interactive-card t-lift w-full px-5 py-5 text-left",
-                selected && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]",
-                correct && "border-emerald-300/70 bg-emerald-300/10",
-                incorrectSelection && "border-red-300/70 bg-red-50",
-                !selected && !correct && "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]",
+                "absolute top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-white shadow-[0_10px_28px_rgba(15,23,42,0.08)]",
+                complete ? "border-[var(--accent-strong)] text-[var(--text)]" : "border-[var(--border)] text-[var(--text-faint)]",
               )}
+              style={{ left: `${12 + position * 76}%` }}
             >
-              <div className="flex items-start gap-4">
-                <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)] text-[11px] font-medium text-[var(--text-dim)]">
-                  {String.fromCharCode(65 + index)}
-                </span>
-                <div className="space-y-2">
-                  <p className="text-base leading-7 text-[var(--text)]">{option.body}</p>
-                </div>
-              </div>
-            </button>
+              {nodeIndex === 1 ? <Icon className="size-5" /> : complete ? <Check className="size-5" /> : <Target className="size-5" />}
+            </div>
           )
         })}
-      </div>
-
-      {checked && checkResult ? (
-        <div className="rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-elev-2)] px-5 py-4 text-sm leading-7 text-[var(--text-dim)]">
-          <div className="flex items-start gap-3">
-            {checkResult.isCorrect ? (
-              <Check className="mt-1 size-4 text-emerald-700" />
-            ) : (
-              <X className="mt-1 size-4 text-red-700" />
-            )}
-            <div>
-              <p className="text-sm font-medium text-[var(--text)]">
-                {checkResult.isCorrect ? "Correct" : "Not quite"}
-              </p>
-              <p className="mt-1">
-                {checkResult.isCorrect ? (
-                  "Nice. This lesson is complete."
-                ) : (
-                  <>
-                    The answer is <span className="text-[var(--text)]">{checkResult.correctOptionBody}</span>.
-                  </>
-                )}
-              </p>
-              <p className="mt-3">{checkResult.explanation}</p>
-              {!checkResult.isCorrect ? (
-                <div className="mt-4">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={onRetryLesson}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault()
-                        onRetryLesson()
-                      }
-                    }}
-                  >
-                    Build another example
-                    <RotateCcw data-icon="inline-end" />
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          </div>
+        <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
+          <span>Guess</span>
+          <span>{checked ? "Feedback" : "Choose"}</span>
+          <span>Transfer</span>
         </div>
-      ) : null}
+      </div>
+    </div>
+  )
+}
+
+function ProblemOptions({
+  options,
+  selectedOption,
+  checkResult,
+  onSelect,
+}: {
+  options: ExerciseOption[]
+  selectedOption: string | null
+  checkResult: CheckResult | null
+  onSelect: (optionId: string) => void
+}) {
+  return (
+    <div className="grid gap-3">
+      {options.map((option, index) => {
+        const selected = selectedOption === option.id
+        const correct = checkResult?.correctOptionId === option.id
+        const incorrectSelection = selected && checkResult && !checkResult.isCorrect
+
+        return (
+          <button
+            key={option.id}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onSelect(option.id)}
+            className={cn(
+              "group w-full rounded-[var(--radius-sm)] border bg-white px-4 py-4 text-left shadow-[0_12px_34px_rgba(15,23,42,0.05)] transition sm:px-5",
+              selected && !checkResult && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]",
+              correct && "border-emerald-300 bg-emerald-50",
+              incorrectSelection && "border-red-300 bg-red-50",
+              !selected && !correct && "border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]",
+            )}
+          >
+            <div className="flex items-start gap-4">
+              <span
+                className={cn(
+                  "inline-flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold",
+                  selected || correct
+                    ? "border-[var(--accent-strong)] bg-[var(--accent)] text-[var(--accent-ink)]"
+                    : "border-[var(--border)] bg-[var(--bg-soft)] text-[var(--text-dim)]",
+                )}
+              >
+                {option.label || String.fromCharCode(65 + index)}
+              </span>
+              <span className="text-base leading-7 text-[var(--text)]">{option.body}</span>
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function FeedbackPanel({ result }: { result: CheckResult }) {
+  return (
+    <div
+      role="status"
+      className={cn(
+        "rounded-[var(--radius)] border px-5 py-4 text-sm leading-7 shadow-[0_16px_42px_rgba(15,23,42,0.06)]",
+        result.isCorrect
+          ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+          : "border-red-300 bg-red-50 text-red-900",
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {result.isCorrect ? <Check className="mt-1 size-5" /> : <X className="mt-1 size-5" />}
+        <div>
+          <p className="font-semibold">{result.isCorrect ? "Correct" : "Not quite"}</p>
+          {!result.isCorrect ? (
+            <p className="mt-1">
+              Correct answer: <span className="font-medium">{result.correctOptionBody}</span>
+            </p>
+          ) : null}
+          <p className="mt-2">{result.explanation}</p>
+        </div>
+      </div>
     </div>
   )
 }

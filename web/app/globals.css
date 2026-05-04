@@ -6,11 +6,11 @@
   :root {
     color-scheme: light;
 
-    --bg: #fbfffb;
+    --bg: #fbfcf8;
     --ink-warm: #ffffff;
     --bg-elev: #ffffff;
-    --bg-elev-2: #f4fff0;
-    --bg-soft: #efffea;
+    --bg-elev-2: #f5faf2;
+    --bg-soft: #f2f7ee;
     --border: rgba(10, 10, 10, 0.12);
     --border-strong: rgba(10, 10, 10, 0.26);
     --text: #0a0a0a;
@@ -24,8 +24,12 @@
     --accent-ink: #0a0a0a;
     --success: #3f6212;
     --danger: #c2413a;
-    --shadow: 0 12px 34px -28px rgba(10, 10, 10, 0.5);
-    --shadow-card-hover: 0 22px 52px -34px rgba(10, 10, 10, 0.42), 0 0 0 1px rgba(63, 98, 18, 0.1);
+    --info-soft: #eef6ff;
+    --info-strong: #2563eb;
+    --warm-soft: #fff7ed;
+    --warm-strong: #b45309;
+    --shadow: 0 18px 42px -34px rgba(10, 10, 10, 0.52);
+    --shadow-card-hover: 0 24px 56px -36px rgba(10, 10, 10, 0.44), 0 0 0 1px rgba(63, 98, 18, 0.1);
     --ease-signature: cubic-bezier(0.2, 0.7, 0.2, 1);
     --radius: 8px;
     --radius-md: 10px;
@@ -71,7 +75,7 @@
   body {
     min-height: 100vh;
     background:
-      linear-gradient(180deg, #ffffff 0%, var(--bg) 54%, #f4fff0 100%),
+      linear-gradient(180deg, #ffffff 0%, var(--bg) 54%, #eef6ff 100%),
       var(--bg);
     color: var(--text);
     font-family: var(--font-sans), sans-serif;
@@ -174,7 +178,7 @@
   }
 
   .editorial-card {
-    background: var(--bg-elev);
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), var(--bg-elev));
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);

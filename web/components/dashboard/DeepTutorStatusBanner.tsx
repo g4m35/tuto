@@ -6,8 +6,13 @@ interface DeepTutorHealth {
   connected: boolean;
   latency_ms: number;
   version: string | null;
+  guide_configured: boolean;
   llm_configured: boolean;
   embeddings_configured: boolean;
+  deeptutor_url_configured: boolean;
+  local_stub_fallback_enabled: boolean;
+  generation_mode: "live" | "stub" | "fallback_possible";
+  reason: string;
 }
 
 interface DeepTutorStatusBannerProps {
@@ -15,7 +20,7 @@ interface DeepTutorStatusBannerProps {
 }
 
 export function DeepTutorStatusBanner({
-  hasStubCourses: _hasStubCourses,
+  hasStubCourses,
 }: DeepTutorStatusBannerProps) {
   const [health, setHealth] = useState<DeepTutorHealth | null>(null);
   const [hasCheckedHealth, setHasCheckedHealth] = useState(false);
@@ -80,19 +85,29 @@ export function DeepTutorStatusBanner({
   }
 
   const isBackendWarning = hasCheckedHealth && health?.connected !== true;
+  const isGuideWarning =
+    hasCheckedHealth && health?.connected === true && !health.guide_configured;
   const isEmbeddingWarning =
     hasCheckedHealth && health?.connected === true && !health.embeddings_configured;
 
-  if (!isBackendWarning && !isEmbeddingWarning) {
+  if (!isBackendWarning && !isGuideWarning && !isEmbeddingWarning && !hasStubCourses) {
     return null;
   }
 
-  const title = isBackendWarning
-    ? "DeepTutor backend offline"
-    : "Document uploads limited: embeddings not configured";
-  const body = isBackendWarning
-    ? "The dashboard cannot reach DeepTutor right now, so live course generation and health checks are unavailable."
-    : `DeepTutor is reachable${health?.version ? ` (v${health.version})` : ""} in ${health?.latency_ms ?? 0} ms, but embeddings are still disabled. Chat can keep working, while document upload and retrieval flows remain limited.`;
+  const title = hasStubCourses
+    ? "Local stub courses in this workspace"
+    : isBackendWarning
+      ? "DeepTutor backend offline"
+      : isGuideWarning
+        ? "DeepTutor course generation incomplete"
+        : "Document uploads limited: embeddings not configured";
+  const body = hasStubCourses
+    ? "At least one saved artifact was generated with localhost stub mode. Start the DeepTutor backend and set DEEPTUTOR_DISABLE_LOCAL_STUB_FALLBACK=true if you want local failures to match production."
+    : isBackendWarning
+      ? health?.reason || "The dashboard cannot reach DeepTutor right now, so live generation is unavailable."
+      : isGuideWarning
+        ? "DeepTutor is reachable, but guided course generation is not configured yet."
+        : `DeepTutor is reachable${health?.version ? ` (v${health.version})` : ""} in ${health?.latency_ms ?? 0} ms, but embeddings are still disabled. Chat can keep working, while document upload and retrieval flows remain limited.`;
   const bodyClasses = "text-[var(--text-dim)]";
 
   return (

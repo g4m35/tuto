@@ -16,8 +16,17 @@ function hasMeaningfulText(value: unknown) {
   return typeof value === "string" && value.trim().length >= 24;
 }
 
-function hasStepKind(steps: LessonStepData[], kind: LessonStepData["kind"]) {
-  return steps.some((step) => step.kind === kind);
+function hasCompactText(value: unknown, maxLength = 420) {
+  return typeof value === "string" && value.trim().length > 0 && value.trim().length <= maxLength;
+}
+
+function isProblemStep(step: LessonStepData) {
+  return (
+    hasMeaningfulText(step.prompt) &&
+    (step.options?.length ?? 0) >= 2 &&
+    typeof step.correctOptionId === "string" &&
+    step.correctOptionId.trim().length > 0
+  );
 }
 
 function hasTemplateLeak(value: string) {
@@ -38,6 +47,8 @@ export function evaluateCourseLessonQuality(exercise: ExerciseData): CourseLesso
   const checkpointStep = steps.find(
     (step) => step.id === exercise.checkpointStepId || step.kind === "checkpoint",
   );
+  const problemSteps = steps.filter(isProblemStep);
+  const firstProblemIndex = steps.findIndex(isProblemStep);
   const interactionStep = steps.find((step) => step.kind === "interactive" && step.interactive);
   const visibleLessonText = [
     exercise.objective,
@@ -48,18 +59,25 @@ export function evaluateCourseLessonQuality(exercise: ExerciseData): CourseLesso
     .join("\n");
   const checks: CourseLessonQualityCheck[] = [
     {
-      id: "lesson-script",
-      label: "Includes a multi-step teaching script",
-      passed: steps.length >= 5 && steps.every((step) => hasMeaningfulText(step.body)),
+      id: "problem-sequence",
+      label: "Includes a multi-screen problem sequence",
+      passed: steps.length >= 8 && problemSteps.length >= 6,
     },
     {
-      id: "teaching-sequence",
-      label: "Teaches before testing",
+      id: "pretest-first",
+      label: "Starts with a problem before lecture",
+      passed: firstProblemIndex >= 0 && firstProblemIndex <= 1,
+    },
+    {
+      id: "compact-screens",
+      label: "Uses compact screen-sized text",
       passed:
-        hasStepKind(steps, "hook") &&
-        hasStepKind(steps, "concept") &&
-        hasStepKind(steps, "example") &&
-        hasStepKind(steps, "practice"),
+        steps.length > 0 &&
+        steps.every((step) =>
+          hasCompactText(step.title, 72) &&
+          hasCompactText(step.body, 420) &&
+          (!step.prompt || hasCompactText(step.prompt, 260)),
+        ),
     },
     {
       id: "specificity",
@@ -78,16 +96,15 @@ export function evaluateCourseLessonQuality(exercise: ExerciseData): CourseLesso
       label: "Includes a checkpoint with answer options",
       passed:
         !!checkpointStep &&
-        (checkpointStep.options?.length ?? exercise.options.length) >= 2 &&
-        !!(checkpointStep.correctOptionId ?? exercise.correctOptionId),
+        isProblemStep(checkpointStep) &&
+        (checkpointStep.options?.some((option) => option.id === checkpointStep.correctOptionId) ?? false),
     },
     {
       id: "feedback",
-      label: "Includes feedback, hint, or explanation",
+      label: "Includes feedback for problem attempts",
       passed:
-        hasMeaningfulText(exercise.hint) ||
-        hasMeaningfulText(exercise.explanation) ||
-        steps.some((step) => hasMeaningfulText(step.explanation) || hasMeaningfulText(step.hint)),
+        problemSteps.length > 0 &&
+        problemSteps.every((step) => hasMeaningfulText(step.explanation) || hasMeaningfulText(step.hint)),
     },
   ];
   const passedCount = checks.filter((check) => check.passed).length;

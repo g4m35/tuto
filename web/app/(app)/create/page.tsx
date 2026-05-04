@@ -27,6 +27,7 @@ const artifactIconMap = {
   "study-guide": FileText,
   slides: Presentation,
   "quiz-set": FileQuestion,
+  "cheat-sheet": FileText,
   "lesson-plan": ClipboardList,
 } satisfies Record<CourseArtifactKind, typeof BookOpen>
 
@@ -50,7 +51,7 @@ const generationStages = [
   "Building outline",
   "Writing sections",
   "Adding practice",
-  "Saving course card",
+  "Saving artifact",
 ] as const
 
 function buildPreviewItems(
@@ -254,7 +255,7 @@ export default function CreateCoursePage() {
         course_id: courseId,
         backend_mode: data?.course?.backendMode,
       })
-      router.push(`/courses/${courseId}`)
+      router.push(data?.redirectUrl || `/courses/${courseId}`)
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Course generation failed.")
       trackMarketingEvent("course_create_failed", {
@@ -268,18 +269,18 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_420px]">
+    <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_430px]">
       <section className="space-y-7">
-        <div className="space-y-5">
+        <div className="editorial-card animate-rise-in px-6 py-7 sm:px-8 sm:py-8">
           <p className="t-eyebrow">
             <span className="t-eyebrow__rule" aria-hidden="true" />
             <span>Create</span>
           </p>
-          <h1 className="max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[48px]">
-            Create something new
+          <h1 className="mt-5 max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[52px]">
+            Create the exact thing you need.
           </h1>
-          <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
-            Choose what you need, then turn a source or prompt into a downloadable artifact.
+          <p className="mt-4 max-w-2xl text-[18px] leading-8 text-[var(--text-dim)]">
+            Pick the output first, then give Tuto a source or topic. Courses stay interactive; everything else becomes a previewable, downloadable artifact.
           </p>
         </div>
 
@@ -287,7 +288,7 @@ export default function CreateCoursePage() {
           <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">
             What do you want to make?
           </p>
-          <div className="grid gap-3 lg:grid-cols-5">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {courseArtifactOptions.map((item, index) => {
               const active = artifactKind === item.kind
               const Icon = artifactIconMap[item.kind]
@@ -303,14 +304,19 @@ export default function CreateCoursePage() {
                     trackMarketingEvent("course_create_artifact_selected", { artifact_kind: item.kind })
                   }}
                   className={cn(
-                    "editorial-card interactive-card t-lift min-h-[150px] text-left px-4 py-4 disabled:pointer-events-none disabled:opacity-60",
+                    "editorial-card interactive-card t-lift min-h-[148px] text-left px-4 py-4 disabled:pointer-events-none disabled:opacity-60",
                     index % 2 === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
                     active
                       ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
                       : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
                   )}
                 >
-                  <Icon className="size-4 text-[var(--text-faint)]" />
+                  <div className="flex items-center justify-between gap-3">
+                    <Icon className="size-4 text-[var(--text-faint)]" />
+                    {active ? (
+                      <span className="h-2 w-8 rounded-full bg-[var(--accent-strong)]" aria-hidden="true" />
+                    ) : null}
+                  </div>
                   <p className="mt-4 text-sm font-medium text-[var(--text)]">{item.title}</p>
                   <p className="mt-1 text-[13px] leading-5 text-[var(--text-dim)]">{item.description}</p>
                 </button>
@@ -357,14 +363,19 @@ export default function CreateCoursePage() {
 
         <div className="editorial-card animate-rise-in p-5 sm:p-6">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">What is it about?</p>
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">What is it about?</p>
+                <span className="rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-3 py-1 text-xs text-[var(--text-dim)]">
+                  {selectedArtifact.title}
+                </span>
+              </div>
               <input
                 id="course-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={artifactKind === "slides" ? "Photosynthesis presentation" : "How photosynthesis works"}
-                className="w-full border-0 bg-transparent p-0 text-[28px] font-medium leading-tight tracking-normal text-[var(--text)] outline-none placeholder:text-[var(--text-faint)]"
+                className="w-full border-0 bg-transparent p-0 text-[30px] font-medium leading-tight tracking-normal text-[var(--text)] outline-none placeholder:text-[var(--text-faint)]"
               />
             </div>
 
@@ -452,7 +463,7 @@ export default function CreateCoursePage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3 text-sm text-[var(--text-faint)]">
                 <BookOpen className="size-4" />
-                Private by default. You can share or download it after generation.
+                Private by default. Share or export after generation.
               </div>
               <Button size="lg" onClick={() => void handleSubmit()} disabled={submitting}>
                 {submitting ? `Generating ${selectedArtifact.noun}` : `Generate ${selectedArtifact.noun}`}
@@ -462,22 +473,22 @@ export default function CreateCoursePage() {
         </div>
       </section>
 
-      <aside className="space-y-4">
+      <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
         <div className="space-y-2">
           <p className="t-eyebrow">
             <span className="t-eyebrow__rule" aria-hidden="true" />
             <span>Preview</span>
           </p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
-            This is how the saved card will read once Tuto finishes.
+            A live outline of the saved artifact.
           </p>
         </div>
 
-        <div className="editorial-card animate-rise-in-delay-2 min-h-[28rem] p-6">
+        <div className="editorial-card animate-rise-in-delay-2 min-h-[28rem] overflow-hidden p-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
               <span>{mode === "upload" ? "From material" : "From topic"}</span>
-              <span>{selectedArtifact.title}</span>
+              <span>{selectedArtifact.estimate}</span>
             </div>
 
             <div className="space-y-3">
@@ -509,19 +520,17 @@ export default function CreateCoursePage() {
             </div>
 
             <div className="space-y-2 border-t border-[var(--border)] pt-4">
-              {previewItems.map((lesson) => (
+              {previewItems.map((lesson, index) => (
                 <div
                   key={lesson}
-                  className="flex items-center gap-3 border-b border-[var(--border)] py-3 text-sm text-[var(--text)] last:border-b-0"
+                  className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] py-3 text-sm text-[var(--text)] last:border-b-0"
                 >
-                  <FileText className="size-4 text-[var(--text-faint)]" />
+                  <span className="inline-flex size-7 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)] text-[11px] text-[var(--text-faint)]">
+                    {index + 1}
+                  </span>
                   <span>{lesson}</span>
                 </div>
               ))}
-            </div>
-
-            <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4 text-sm text-[var(--text-dim)]">
-              Estimate <span className="text-[var(--text)]">{selectedArtifact.estimate}</span>
             </div>
 
             {submitting ? (

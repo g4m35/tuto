@@ -3,6 +3,7 @@ export const courseArtifactKinds = [
   "study-guide",
   "slides",
   "quiz-set",
+  "cheat-sheet",
   "lesson-plan",
 ] as const;
 
@@ -15,6 +16,8 @@ export interface CourseArtifactOption {
   title: string;
   noun: string;
   description: string;
+  dashboardAction: string;
+  previewTitle: string;
   promptDirective: string;
   previewItems: string[];
   estimate: string;
@@ -55,6 +58,8 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     title: "Full course",
     noun: "course",
     description: "A guided lesson path with practice, review, and projects.",
+    dashboardAction: "Continue course",
+    previewTitle: "Learning path",
     promptDirective:
       "Create a full guided course outline with sequential lessons, practice checkpoints, and applied project ideas.",
     previewItems: [
@@ -71,6 +76,8 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     title: "Study guide",
     noun: "study guide",
     description: "A concise review document for exams, homework, or quick catch-up.",
+    dashboardAction: "Open guide",
+    previewTitle: "Guide sections",
     promptDirective:
       "Create a student-friendly study guide with key ideas, definitions, examples, memory cues, and a review checklist.",
     previewItems: [
@@ -87,6 +94,8 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     title: "Slide deck",
     noun: "slide deck",
     description: "Presentation-ready slides for teaching, studying, or explaining a topic.",
+    dashboardAction: "Open deck",
+    previewTitle: "Slide outline",
     promptDirective:
       "Create a slide deck plan with one clear message per slide, speaker-note style summaries, examples, and closing review prompts.",
     previewItems: [
@@ -103,6 +112,8 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     title: "Quiz set",
     noun: "quiz set",
     description: "Practice questions with answer focus areas for self-checking.",
+    dashboardAction: "Open quiz",
+    previewTitle: "Question set",
     promptDirective:
       "Create a quiz set outline with concept checks, answer rationales, escalating difficulty, and topics for remediation.",
     previewItems: [
@@ -115,10 +126,30 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     estimate: "5 prompts - answer guide",
   },
   {
+    kind: "cheat-sheet",
+    title: "Cheat sheet",
+    noun: "cheat sheet",
+    description: "A dense one-page reference with formulas, cues, and pitfalls.",
+    dashboardAction: "Open sheet",
+    previewTitle: "Reference blocks",
+    promptDirective:
+      "Create a compact cheat sheet with must-know facts, formulas or rules, quick examples, warning signs, and a last-minute review checklist.",
+    previewItems: [
+      "Core facts",
+      "Key formulas",
+      "Fast examples",
+      "Common traps",
+      "Final checklist",
+    ],
+    estimate: "5 blocks - one-page reference",
+  },
+  {
     kind: "lesson-plan",
     title: "Lesson plan",
     noun: "lesson plan",
     description: "A teachable plan with objectives, flow, activities, and checks.",
+    dashboardAction: "Open plan",
+    previewTitle: "Teaching flow",
     promptDirective:
       "Create a lesson plan with objectives, warm-up, direct instruction, guided practice, independent practice, and assessment checks.",
     previewItems: [
@@ -135,6 +166,10 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
 const optionByKind = new Map(courseArtifactOptions.map((option) => [option.kind, option]));
 
 export function normalizeCourseArtifactKind(value: unknown): CourseArtifactKind {
+  if (value === "quiz") {
+    return "quiz-set";
+  }
+
   return courseArtifactKinds.includes(value as CourseArtifactKind)
     ? (value as CourseArtifactKind)
     : "course";
@@ -142,6 +177,34 @@ export function normalizeCourseArtifactKind(value: unknown): CourseArtifactKind 
 
 export function getCourseArtifactOption(value: unknown): CourseArtifactOption {
   return optionByKind.get(normalizeCourseArtifactKind(value)) ?? courseArtifactOptions[0];
+}
+
+export function isInteractiveCourseArtifact(value: unknown) {
+  return normalizeCourseArtifactKind(value) === "course";
+}
+
+export function getPrimaryCourseArtifactExportFormat(value: unknown): CourseArtifactExportFormat {
+  const kind = normalizeCourseArtifactKind(value);
+
+  if (kind === "slides") {
+    return "pptx";
+  }
+
+  if (kind === "study-guide" || kind === "lesson-plan" || kind === "cheat-sheet") {
+    return "docx";
+  }
+
+  return "markdown";
+}
+
+export function getPrimaryCourseArtifactActionLabel(value: unknown) {
+  const option = getCourseArtifactOption(value);
+
+  if (option.kind === "course") {
+    return "Download course notes";
+  }
+
+  return `Download ${option.noun}`;
 }
 
 export function normalizeCourseArtifactExportFormat(value: unknown): CourseArtifactExportFormat {
@@ -246,6 +309,11 @@ export function buildCourseArtifactMarkdown(course: CourseArtifactExportInput) {
         parts.push("- Practice prompt: answer a question that tests this idea.");
         parts.push("- Answer focus: include the mechanism, not only the final result.");
         parts.push("- Review note: revisit this if the explanation feels memorized.");
+        parts.push("");
+      } else if (option.kind === "cheat-sheet") {
+        parts.push("- Remember: capture the shortest useful version of the rule.");
+        parts.push("- Fast check: apply it to a tiny example before using it in a larger problem.");
+        parts.push("- Trap: note the condition where this shortcut stops working.");
         parts.push("");
       } else if (option.kind === "lesson-plan") {
         parts.push("- Teach: introduce the idea with a simple example.");
@@ -569,6 +637,12 @@ function wordDocumentXml(course: CourseArtifactExportInput) {
               wordParagraph("Practice prompt: answer a question that tests this idea."),
               wordParagraph("Answer focus: include the mechanism, not only the final result."),
               wordParagraph("Review note: revisit this if the explanation feels memorized."),
+            );
+          } else if (option.kind === "cheat-sheet") {
+            details.push(
+              wordParagraph("Remember: capture the shortest useful version of the rule."),
+              wordParagraph("Fast check: apply it to a tiny example before using it in a larger problem."),
+              wordParagraph("Trap: note the condition where this shortcut stops working."),
             );
           } else if (option.kind === "lesson-plan") {
             details.push(

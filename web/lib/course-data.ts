@@ -40,6 +40,16 @@ export interface LessonScriptDraft {
   interactive?: Partial<LessonInteractiveData>;
 }
 
+export interface LessonQuestionDraft {
+  title?: string;
+  body?: string;
+  question?: string;
+  options?: Record<string, string>;
+  correctAnswer?: string | null;
+  explanation?: string;
+  hint?: string;
+}
+
 export interface StoredCourse {
   id: string;
   clerkId: string;
@@ -269,6 +279,8 @@ export function toCourseDetailData(course: StoredCourse): CourseDetailData {
     learningPath,
     artifactKind: normalizeCourseArtifactKind(course.artifactKind),
     artifactTitle: getCourseArtifactOption(course.artifactKind).title,
+    artifactAction: getCourseArtifactOption(course.artifactKind).dashboardAction,
+    artifactPreviewTitle: getCourseArtifactOption(course.artifactKind).previewTitle,
   };
 }
 
@@ -298,6 +310,20 @@ function cleanText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function compactText(value: unknown, fallback: string, maxLength = 220) {
+  const cleaned = cleanText(value).replace(/\s+/g, " ");
+  const source = cleaned || fallback;
+
+  if (source.length <= maxLength) {
+    return source;
+  }
+
+  const clipped = source.slice(0, maxLength - 1);
+  const lastSpace = clipped.lastIndexOf(" ");
+
+  return `${clipped.slice(0, lastSpace > 80 ? lastSpace : clipped.length).trim()}.`;
+}
+
 function normalizeLessonTopic(title: string, courseTitle?: string) {
   const cleaned = cleanText(title)
     .replace(/\s+/g, " ")
@@ -309,103 +335,6 @@ function normalizeLessonTopic(title: string, courseTitle?: string) {
   }
 
   return cleaned || cleanText(courseTitle) || "this topic";
-}
-
-function buildFallbackLessonSteps(input: {
-  lessonTitle: string;
-  courseTitle?: string;
-  lessonSummary: string;
-  explanation: string;
-  interaction: LessonInteractiveData;
-}): LessonStepData[] {
-  const topic = normalizeLessonTopic(input.lessonTitle, input.courseTitle);
-  const lowerContext = `${input.lessonTitle} ${input.courseTitle ?? ""} ${input.lessonSummary}`.toLowerCase();
-
-  if (lowerContext.includes("hockey")) {
-    return [
-      {
-        id: "hook",
-        kind: "hook",
-        title: "What hockey is trying to do",
-        body:
-          "Hockey is a fast invasion game: one team tries to move the puck into the opponent's net while the other team protects space, wins the puck back, and starts its own attack. The foundations are the rules and habits that keep that speed organized.",
-      },
-      {
-        id: "concept",
-        kind: "concept",
-        title: "The core loop",
-        body:
-          "A hockey shift is built around four repeating jobs: gain possession, create skating or passing space, turn that space into a shot chance, then recover defensively if the puck changes hands. For beginners, most plays make sense when you ask who has the puck, where the open ice is, and whether the defending team is protecting the middle of the ice.",
-      },
-      {
-        id: "example",
-        kind: "example",
-        title: "A simple rush",
-        body:
-          "Imagine a winger carrying the puck through the neutral zone. A teammate must wait until the puck crosses the attacking blue line before entering the offensive zone, or the play is offside. Once the puck is in legally, the puck carrier can shoot, pass to the slot, or send the puck deep so teammates can chase and pressure the defense.",
-      },
-      {
-        id: "interactive",
-        kind: "interactive",
-        title: "Compare the parts",
-        body:
-          "Use the cards to separate the three foundations that beginners mix together: the objective of the game, the roles players use to create structure, and the boundary rules that stop unfair attacking advantages.",
-        interactive: {
-          ...input.interaction,
-          prompt: "Reveal each card and connect it to what you would watch for during a real shift.",
-          items: [
-            {
-              id: "objective",
-              label: "Objective",
-              body: "Create a better scoring chance than the other team by moving the puck into dangerous ice and shooting on net.",
-              matchId: "objective",
-            },
-            {
-              id: "roles",
-              label: "Roles",
-              body: "Forwards pressure and create chances, defensemen protect space and move the puck, and the goalie protects the net.",
-              matchId: "roles",
-            },
-            {
-              id: "rules",
-              label: "Boundaries",
-              body: "Offside, icing, penalties, and faceoffs keep the game fair and reset play when a team gains an illegal advantage.",
-              matchId: "rules",
-            },
-          ],
-        },
-      },
-    ];
-  }
-
-  return [
-    {
-      id: "hook",
-      kind: "hook",
-      title: "What this lesson answers",
-      body: `This lesson turns ${topic} into something you can use. By the end, you should be able to explain the idea, recognize it in a simple situation, and avoid the most tempting wrong interpretation.`,
-    },
-    {
-      id: "concept",
-      kind: "concept",
-      title: "Core idea",
-      body: input.lessonSummary,
-    },
-    {
-      id: "example",
-      kind: "example",
-      title: "A worked example",
-      body: `Use this concrete pattern for ${topic}: identify the situation, decide which rule or relationship applies, predict the result, then compare that result with the explanation. ${input.explanation}`,
-    },
-    {
-      id: "interactive",
-      kind: "interactive",
-      title: "Check the boundaries",
-      body:
-        "Use the cards to compare the main idea, a tempting mistake, and the limit where the idea stops applying cleanly.",
-      interactive: input.interaction,
-    },
-  ];
 }
 
 function normalizeInteractiveDraft(
@@ -437,37 +366,228 @@ function normalizeInteractiveDraft(
     : fallback;
 }
 
-function applyLessonScriptDraft(
-  fallbackSteps: LessonStepData[],
-  draft: LessonScriptDraft | null | undefined,
-  fallbackInteractive: LessonInteractiveData,
-): LessonStepData[] {
-  if (!draft || !Array.isArray(draft.steps)) {
-    return fallbackSteps;
-  }
+function normalizeExerciseOptions(options: Record<string, string>): ExerciseOption[] {
+  const entries = Object.entries(options)
+    .filter(([, value]) => isMeaningfulText(value, 8))
+    .slice(0, 6);
 
-  return fallbackSteps.map((fallbackStep) => {
-    const drafted = draft.steps?.find((step) => step.kind === fallbackStep.kind);
-    const body = cleanText(drafted?.body);
+  const normalizedEntries = entries.length >= 2
+    ? entries
+    : [
+        ["A", "The answer that explains the evidence and its cause."],
+        ["B", "The answer that only repeats a familiar label."],
+      ];
 
-    if (!isMeaningfulText(body, fallbackStep.kind === "hook" ? 60 : 80)) {
-      return fallbackStep;
-    }
-
-    const interactive =
-      fallbackStep.kind === "interactive"
-        ? normalizeInteractiveDraft(draft.interactive ?? drafted?.interactive, fallbackInteractive)
-        : fallbackStep.interactive;
+  return normalizedEntries.map(([key, value], index) => {
+    const label = cleanText(key) || String.fromCharCode(65 + index);
 
     return {
-      ...fallbackStep,
-      title: cleanText(drafted?.title) || fallbackStep.title,
-      body,
-      prompt: isMeaningfulText(drafted?.prompt, 16) ? cleanText(drafted?.prompt) : fallbackStep.prompt,
-      hint: isMeaningfulText(drafted?.hint, 16) ? cleanText(drafted?.hint) : fallbackStep.hint,
-      interactive,
+      id: label,
+      label,
+      body: compactText(value, "Choose the answer that explains the evidence.", 240),
     };
   });
+}
+
+function findCorrectOption(options: ExerciseOption[], correctAnswer?: string | null) {
+  const normalizedAnswer = correctAnswer?.trim().toLowerCase() ?? "";
+
+  if (!normalizedAnswer) {
+    return options[0] ?? null;
+  }
+
+  return (
+    options.find(
+      (option) =>
+        option.id.toLowerCase() === normalizedAnswer ||
+        option.label.toLowerCase() === normalizedAnswer ||
+        option.body.trim().toLowerCase() === normalizedAnswer ||
+        `option ${option.id.toLowerCase()}` === normalizedAnswer ||
+        normalizedAnswer.startsWith(`${option.id.toLowerCase()}.`) ||
+        normalizedAnswer.startsWith(`${option.id.toLowerCase()})`),
+    ) ?? options[0] ?? null
+  );
+}
+
+function withOptionFeedback(
+  options: ExerciseOption[],
+  correctOptionId: string,
+  explanation: string,
+  hint: string,
+) {
+  return options.map((option) => ({
+    ...option,
+    feedback:
+      option.id === correctOptionId
+        ? compactText(explanation, "Yes. This choice explains why the result follows.", 260)
+        : compactText(
+            hint,
+            "Not quite. This choice sounds plausible, but it does not explain the cause well enough.",
+            240,
+          ),
+  }));
+}
+
+function buildFallbackQuestionDrafts(input: {
+  lessonTitle: string;
+  courseTitle?: string;
+  lessonSummary: string;
+  explanation: string;
+}): LessonQuestionDraft[] {
+  const topic = normalizeLessonTopic(input.lessonTitle, input.courseTitle);
+  const summary = compactText(input.lessonSummary, `Use ${topic} by checking the evidence first.`, 180);
+  const explanation = compactText(input.explanation, summary, 200);
+  const optionSet = (correct: string, trap: string): Record<string, string> => ({
+    A: correct,
+    B: trap,
+    C: `Pick the answer with the most familiar words from ${topic}.`,
+    D: "Skip the evidence and trust the first impression.",
+  });
+
+  return [
+    {
+      title: "Make a first guess",
+      body: "Try the smallest version before reading a rule.",
+      question: `What is the best first move when you meet ${topic}?`,
+      options: optionSet(
+        `Look for the evidence that shows what changed and why.`,
+        `Start by memorizing the name of ${topic}.`,
+      ),
+      correctAnswer: "A",
+      explanation: summary,
+      hint: "The first move is to inspect the evidence, not to memorize the label.",
+    },
+    {
+      title: "Find the evidence",
+      body: "Now choose the answer that uses evidence instead of a slogan.",
+      question: `Which answer would make ${topic} useful in a new case?`,
+      options: optionSet(summary, "It repeats the title without explaining the case."),
+      correctAnswer: "A",
+      explanation: summary,
+      hint: "A useful answer would still help if the wording changed.",
+    },
+    {
+      title: "Compare explanations",
+      body: "Reveal the cards, then choose the explanation that predicts the result.",
+      question: `Which explanation best predicts what happens in ${topic}?`,
+      options: optionSet(explanation, "It treats the lesson as a vocabulary check."),
+      correctAnswer: "A",
+      explanation,
+      hint: "Prediction beats vocabulary here.",
+    },
+    {
+      title: "Spot the trap",
+      body: "One answer sounds fluent but does not explain the cause.",
+      question: `What is the tempting mistake when reasoning about ${topic}?`,
+      options: optionSet(
+        "Treating a label as an explanation.",
+        "Checking whether the evidence supports the conclusion.",
+      ),
+      correctAnswer: "A",
+      explanation: "The trap is choosing language that sounds right while skipping the causal link.",
+      hint: "The trap usually sounds polished, but it cannot predict anything.",
+    },
+    {
+      title: "Name the rule",
+      body: "Only name the idea after the case already makes sense.",
+      question: `Which statement turns ${topic} into a rule you can reuse?`,
+      options: optionSet(
+        `${summary} Use that pattern when a new case has the same structure.`,
+        "The right rule is whatever phrase appeared most often in the lesson title.",
+      ),
+      correctAnswer: "A",
+      explanation: "A reusable rule names the condition, the action, and the limit.",
+      hint: "A reusable rule works outside this exact wording.",
+    },
+    {
+      title: "Check the boundary",
+      body: "Strong ideas also tell you where they stop applying.",
+      question: `When should you be careful applying ${topic}?`,
+      options: optionSet(
+        "When the evidence no longer has the same cause-and-effect structure.",
+        "Never; once a rule is named, it applies everywhere.",
+      ),
+      correctAnswer: "A",
+      explanation: "A boundary keeps the idea from becoming an overgeneralized slogan.",
+      hint: "Look for the answer that limits the rule.",
+    },
+    {
+      title: "Transfer it",
+      body: "Try moving the idea to a neighboring case.",
+      question: `What would count as successful transfer for ${topic}?`,
+      options: optionSet(
+        "You can explain a new case using the same evidence-to-cause pattern.",
+        "You can recite the same sentence without changing it.",
+      ),
+      correctAnswer: "A",
+      explanation: "Transfer means the pattern survives a change in surface details.",
+      hint: "Transfer is about use, not recital.",
+    },
+    {
+      title: "Final check",
+      body: "Lock it in with one clean answer.",
+      question: `Which answer best shows you understand ${topic}?`,
+      options: optionSet(explanation, "It gives a confident label but no evidence."),
+      correctAnswer: "A",
+      explanation,
+      hint: "Choose the answer that explains why, not just what.",
+    },
+  ];
+}
+
+function normalizeQuestionDraft(
+  draft: LessonQuestionDraft,
+  index: number,
+  topic: string,
+): {
+  title: string;
+  body: string;
+  prompt: string;
+  options: ExerciseOption[];
+  correctOptionId: string;
+  explanation: string;
+  hint: string;
+} | null {
+  const prompt = compactText(draft.question, "", 260);
+
+  if (!isMeaningfulText(prompt, 16)) {
+    return null;
+  }
+
+  const rawOptions = draft.options ?? {};
+  const options = normalizeExerciseOptions(rawOptions);
+  const correctOption = findCorrectOption(options, draft.correctAnswer);
+
+  if (!correctOption) {
+    return null;
+  }
+
+  const explanation = compactText(
+    draft.explanation,
+    "The strongest answer explains the evidence, the cause, and the boundary.",
+    260,
+  );
+  const hint = compactText(
+    draft.hint,
+    `Look for the choice that makes ${topic} usable in a new case.`,
+    220,
+  );
+
+  return {
+    title: compactText(draft.title, `Problem ${index + 1}`, 72),
+    body: compactText(
+      draft.body,
+      index === 0
+        ? "Try this before the rule. Pick the answer that best explains the case."
+        : "Use the pattern from the previous screen, then choose the stronger explanation.",
+      220,
+    ),
+    prompt,
+    options: withOptionFeedback(options, correctOption.id, explanation, hint),
+    correctOptionId: correctOption.id,
+    explanation,
+    hint,
+  };
 }
 
 export function toDashboardViewData(courses: StoredCourse[]): DashboardViewData {
@@ -495,122 +615,132 @@ export function buildExerciseData(input: {
   courseTitle?: string;
   lessonSummary?: string;
   lessonScript?: LessonScriptDraft | null;
+  questionSet?: LessonQuestionDraft[];
   question: string;
   options: Record<string, string>;
   explanation: string;
   correctAnswer?: string | null;
   backendMode: "live" | "stub";
 }): ExerciseData {
-  const options: ExerciseOption[] = Object.entries(input.options).map(([key, value]) => ({
-    id: key,
-    label: key,
-    body: value,
-  }));
-  const normalizedAnswer = input.correctAnswer?.trim().toLowerCase() ?? "";
-  const correctOption = normalizedAnswer
-    ? options.find(
-        (option) =>
-          option.id.toLowerCase() === normalizedAnswer ||
-          option.label.toLowerCase() === normalizedAnswer ||
-          option.body.trim().toLowerCase() === normalizedAnswer ||
-          `option ${option.id.toLowerCase()}` === normalizedAnswer ||
-          normalizedAnswer.startsWith(`${option.id.toLowerCase()}.`) ||
-          normalizedAnswer.startsWith(`${option.id.toLowerCase()})`),
-      )
-    : null;
   const lessonSummary =
     input.lessonSummary?.trim() ||
     `Build a working mental model for ${input.lessonTitle} before answering the checkpoint.`;
-  const correctOptionId = correctOption?.id ?? options[0]?.id;
-  const checkpointOptions = options.map((option) => ({ ...option }));
-  const misconception = options.find((option) => option.id !== correctOptionId);
+  const topic = normalizeLessonTopic(input.lessonTitle, input.courseTitle);
+  const baseQuestion: LessonQuestionDraft = {
+    title: "Make a first guess",
+    body: "Try this before reading more. Pick the answer that best explains the case.",
+    question: input.question,
+    options: input.options,
+    correctAnswer: input.correctAnswer,
+    explanation: input.explanation,
+    hint: input.explanation,
+  };
+  const fallbackQuestions = buildFallbackQuestionDrafts({
+    lessonTitle: input.lessonTitle,
+    courseTitle: input.courseTitle,
+    lessonSummary,
+    explanation: input.explanation,
+  });
+  const candidateQuestions = [
+    ...(input.questionSet?.length ? input.questionSet : [baseQuestion]),
+    ...fallbackQuestions,
+  ];
+  const seenPrompts = new Set<string>();
+  const lessonQuestions = candidateQuestions
+    .map((question, index) => normalizeQuestionDraft(question, index, topic))
+    .filter((question): question is NonNullable<typeof question> => {
+      if (!question) return false;
+      const key = question.prompt.toLowerCase();
+      if (seenPrompts.has(key)) return false;
+      seenPrompts.add(key);
+      return true;
+    })
+    .slice(0, 8);
+  const completedQuestions = lessonQuestions.length >= 8
+    ? lessonQuestions
+    : [
+        ...lessonQuestions,
+        ...fallbackQuestions
+          .map((question, index) => normalizeQuestionDraft(question, lessonQuestions.length + index, topic))
+          .filter((question): question is NonNullable<typeof question> => Boolean(question))
+          .slice(0, 8 - lessonQuestions.length),
+      ];
+  const finalQuestion = completedQuestions[completedQuestions.length - 1] ??
+    normalizeQuestionDraft(baseQuestion, 0, topic);
   const interactionKind = getInteractionKind(`${input.lessonId}:${input.lessonTitle}`);
-  const interaction: LessonInteractiveData = {
+  const fallbackInteraction: LessonInteractiveData = {
     kind: interactionKind,
     prompt:
       interactionKind === "slider"
-        ? "Move the control to see how confidence changes as the idea becomes more precise."
+        ? "Move the control to see when the explanation becomes precise enough to trust."
         : interactionKind === "sort"
-          ? "Read the cards in order, then reveal how the reasoning should flow."
-          : "Tap each card to separate the durable idea from a tempting shortcut.",
+          ? "Read the cards in order, then choose the answer that follows from them."
+          : "Tap each card, then choose the answer that explains the case.",
     items: [
       {
         id: interactionKind === "sort" ? "step-1" : "mechanism",
-        label: interactionKind === "sort" ? "1. Mechanism" : "Mechanism",
-        body: lessonSummary,
+        label: interactionKind === "sort" ? "1. Evidence" : "Evidence",
+        body: compactText(lessonSummary, `The key evidence for ${topic}.`, 180),
         matchId: "mechanism",
       },
       {
         id: interactionKind === "sort" ? "step-2" : "misconception",
         label: interactionKind === "sort" ? "2. Trap" : "Trap",
-        body:
-          misconception?.body ||
-          "Treating the lesson as a phrase to memorize instead of a tool to use.",
+        body: "A fluent label can still fail if it does not explain the evidence.",
         matchId: "trap",
       },
       {
         id: interactionKind === "sort" ? "step-3" : "boundary",
         label: interactionKind === "sort" ? "3. Boundary" : "Boundary",
-        body: input.explanation,
+        body: compactText(input.explanation, "The idea only applies when the same causal pattern is present.", 180),
         matchId: "boundary",
       },
     ],
     minLabel: "Vague",
     maxLabel: "Precise",
   };
-  const lessonSteps = applyLessonScriptDraft(
-    buildFallbackLessonSteps({
-      lessonTitle: input.lessonTitle,
-      courseTitle: input.courseTitle,
-      lessonSummary,
-      explanation: input.explanation,
-      interaction,
-    }).map((step) => ({
-      ...step,
-      id: `${input.lessonId}-${step.id}`,
-    })),
-    input.lessonScript,
-    interaction,
-  );
-  const steps: LessonStepData[] = [
-    ...lessonSteps,
-    {
-      id: `${input.lessonId}-practice`,
-      kind: "practice",
-      title: "Try the question",
-      body: "Say the answer in your own words first. Then choose the option that best explains the concept's behavior, purpose, and limits.",
-      prompt: input.question,
-      hint: input.explanation,
-    },
-    {
-      id: `${input.lessonId}-checkpoint`,
-      kind: "checkpoint",
-      title: "Check your understanding",
-      body: "Lock in the lesson by choosing the strongest explanation.",
-      prompt: input.question,
-      options: checkpointOptions,
-      correctOptionId,
-      explanation: input.explanation,
-    },
+  const interaction = normalizeInteractiveDraft(input.lessonScript?.interactive, fallbackInteraction);
+  const kindByIndex: LessonStepKind[] = [
+    "hook",
+    "practice",
+    "interactive",
+    "practice",
+    "concept",
+    "practice",
+    "reflection",
+    "checkpoint",
   ];
+  const steps: LessonStepData[] = completedQuestions.map((question, index) => ({
+    id: `${input.lessonId}-level-${index + 1}`,
+    kind: kindByIndex[index] ?? (index === completedQuestions.length - 1 ? "checkpoint" : "practice"),
+    title: question.title,
+    body: question.body,
+    prompt: question.prompt,
+    options: question.options,
+    correctOptionId: question.correctOptionId,
+    hint: question.hint,
+    explanation: question.explanation,
+    interactive: index === 2 ? interaction : undefined,
+  }));
+  const checkpointStep = steps[steps.length - 1];
 
   return {
     courseId: input.courseId,
     lessonId: input.lessonId,
     title: input.lessonTitle,
-    subtitle: "Guided lesson",
+    subtitle: "Interactive lesson",
     objective: isMeaningfulText(input.lessonScript?.objective, 24)
       ? cleanText(input.lessonScript?.objective)
-      : `Understand and apply ${normalizeLessonTopic(input.lessonTitle, input.courseTitle)}.`,
-    prompt: input.question,
+      : `Solve short cases that build ${topic} through prediction and feedback.`,
+    prompt: checkpointStep?.prompt ?? finalQuestion?.prompt ?? input.question,
     step: steps.length,
     stepCount: steps.length,
     xp: input.backendMode === "stub" ? 30 : 50,
-    options,
-    correctOptionId,
-    explanation: input.explanation,
-    hint: input.explanation || "Review the lesson summary, then eliminate the most obviously wrong option first.",
+    options: checkpointStep?.options ?? finalQuestion?.options ?? normalizeExerciseOptions(input.options),
+    correctOptionId: checkpointStep?.correctOptionId ?? finalQuestion?.correctOptionId,
+    explanation: checkpointStep?.explanation ?? input.explanation,
+    hint: checkpointStep?.hint ?? input.explanation,
     steps,
-    checkpointStepId: `${input.lessonId}-checkpoint`,
+    checkpointStepId: checkpointStep?.id ?? `${input.lessonId}-level-${steps.length}`,
   };
 }
