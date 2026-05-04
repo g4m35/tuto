@@ -228,6 +228,12 @@
     cursor: pointer;
   }
 
+  .course-metric-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+
   .interactive-card:hover,
   .t-lift:hover {
     background: var(--bg-elev-2);
@@ -341,6 +347,7 @@
   }
 
   .interactive-card:hover,
+  .course-metric-card:hover,
   .t-lift:hover,
   .t-btn:hover {
     transform: none;

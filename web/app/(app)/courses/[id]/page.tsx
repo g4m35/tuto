@@ -116,7 +116,7 @@ export default async function CourseDetailPage({
         />
 
         <section className="grid gap-3 md:grid-cols-3">
-          <div className="editorial-card animate-rise-in-delay-1 px-5 py-5">
+          <div className="course-metric-card editorial-card animate-rise-in-delay-1 px-5 py-5">
             <div className="flex items-center justify-between gap-3">
               <p className="eyebrow">Mastery</p>
               <Target className="size-4 text-[var(--text-dim)]" />
@@ -131,7 +131,7 @@ export default async function CourseDetailPage({
 
           <Link
             href={`/courses/${course.id}/review`}
-            className="editorial-card interactive-card t-lift animate-rise-in-delay-2 px-5 py-5"
+            className="course-metric-card editorial-card animate-rise-in-delay-2 px-5 py-5"
           >
             <div className="flex items-center justify-between gap-3">
               <p className="eyebrow">Review due</p>
@@ -145,7 +145,7 @@ export default async function CourseDetailPage({
             </p>
           </Link>
 
-          <div className="editorial-card animate-rise-in-delay-3 px-5 py-5">
+          <div className="course-metric-card editorial-card animate-rise-in-delay-3 px-5 py-5">
             <div className="flex items-center justify-between gap-3">
               <p className="eyebrow">Projects</p>
               <Hammer className="size-4 text-[var(--text-dim)]" />
