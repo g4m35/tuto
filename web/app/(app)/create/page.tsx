@@ -75,7 +75,7 @@ function CourseGenerationProgress({
       </div>
       <div className="mt-3 h-3 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
         <div
-          className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),#2cb7a4,#4a8cff)] transition-[width] duration-500 ease-[var(--ease-signature)]"
+          className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),#486581,#2563eb)] transition-[width] duration-500 ease-[var(--ease-signature)]"
           style={{ width: `${progress}%` }}
         />
       </div>

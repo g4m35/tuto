@@ -6,30 +6,30 @@
   :root {
     color-scheme: light;
 
-    --bg: #fbfcf8;
+    --bg: #fbfffd;
     --ink-warm: #ffffff;
     --bg-elev: #ffffff;
-    --bg-elev-2: #f5faf2;
-    --bg-soft: #f2f7ee;
-    --border: rgba(10, 10, 10, 0.12);
-    --border-strong: rgba(10, 10, 10, 0.26);
-    --text: #0a0a0a;
-    --text-dim: rgba(10, 10, 10, 0.66);
-    --text-faint: rgba(10, 10, 10, 0.48);
-    --text-mute: rgba(10, 10, 10, 0.32);
-    --accent: #d9f99d;
-    --accent-soft: rgba(217, 249, 157, 0.36);
-    --accent-line: rgba(10, 10, 10, 0.3);
-    --accent-strong: #3f6212;
-    --accent-ink: #0a0a0a;
-    --success: #3f6212;
+    --bg-elev-2: #f5fbf8;
+    --bg-soft: #f8fcfa;
+    --border: rgba(16, 42, 67, 0.14);
+    --border-strong: rgba(16, 42, 67, 0.28);
+    --text: #102a43;
+    --text-dim: #486581;
+    --text-faint: #829ab1;
+    --text-mute: rgba(16, 42, 67, 0.34);
+    --accent: #102a43;
+    --accent-soft: rgba(16, 42, 67, 0.08);
+    --accent-line: rgba(16, 42, 67, 0.34);
+    --accent-strong: #243b53;
+    --accent-ink: #ffffff;
+    --success: #2563eb;
     --danger: #c2413a;
     --info-soft: #eef6ff;
     --info-strong: #2563eb;
     --warm-soft: #fff7ed;
     --warm-strong: #b45309;
-    --shadow: 0 18px 42px -34px rgba(10, 10, 10, 0.52);
-    --shadow-card-hover: 0 24px 56px -36px rgba(10, 10, 10, 0.44), 0 0 0 1px rgba(63, 98, 18, 0.1);
+    --shadow: 0 18px 42px -34px rgba(16, 42, 67, 0.52);
+    --shadow-card-hover: 0 24px 56px -36px rgba(16, 42, 67, 0.38), 0 0 0 1px rgba(16, 42, 67, 0.1);
     --ease-signature: cubic-bezier(0.2, 0.7, 0.2, 1);
     --radius: 8px;
     --radius-md: 10px;
@@ -52,7 +52,7 @@
     --destructive: var(--danger);
     --destructive-foreground: var(--text);
     --input: var(--bg-soft);
-    --ring: rgba(255, 255, 255, 0.24);
+    --ring: rgba(16, 42, 67, 0.18);
   }
 
   .theme-snow,
@@ -164,8 +164,8 @@
 
   .accent-ring {
     box-shadow:
-      inset 0 0 0 1px rgba(10, 10, 10, 0.14),
-      0 0 0 1px rgba(217, 249, 157, 0.5);
+      inset 0 0 0 1px rgba(16, 42, 67, 0.14),
+      0 0 0 1px rgba(16, 42, 67, 0.18);
   }
 
   .eyebrow {

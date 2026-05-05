@@ -146,9 +146,9 @@ export function CommandPalette() {
           backdropFilter: "blur(42px) saturate(1.1) brightness(1.03)",
         }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.24),rgba(217,249,157,0.58))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),rgba(238,246,255,0.66))]" />
       <div
-        className="surface-panel relative w-full max-w-[760px] animate-[t-scale-in_180ms_var(--ease-signature)_both] overflow-hidden border-[var(--border-strong)] shadow-[0_32px_90px_-36px_rgba(10,10,10,0.34),0_0_0_1px_rgba(217,249,157,0.55)]"
+        className="surface-panel relative w-full max-w-[760px] animate-[t-scale-in_180ms_var(--ease-signature)_both] overflow-hidden border-[var(--border-strong)] shadow-[0_32px_90px_-36px_rgba(16,42,67,0.34),0_0_0_1px_rgba(16,42,67,0.12)]"
         onClick={(event) => event.stopPropagation()}
         onKeyDown={handlePaletteKeyDown}
       >
