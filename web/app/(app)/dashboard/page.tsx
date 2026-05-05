@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { ArrowRight, BookOpen, FileText, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { ActivityBars } from "@/components/dashboard/ActivityBars";
-import { DeepTutorStatusBanner } from "@/components/dashboard/DeepTutorStatusBanner";
 import { buttonVariants } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/progress";
 import { toCourseDetailData, toDashboardViewData } from "@/lib/course-data";
@@ -71,7 +70,7 @@ export default async function DashboardPage() {
     const displayCourses = courses.slice(0, 4).map(toCourseDetailData);
     const continueCourse = displayCourses[0] ?? null;
     const hasCourses = displayCourses.length > 0;
-    const hasStubCourses = courses.some((course) => course.backendMode === "stub");
+    const artifactCount = courses.filter((course) => course.artifactKind && course.artifactKind !== "course").length;
     const displayName = getDisplayName(user);
     const totalLessons = dashboard.courses.reduce((sum, course) => sum + course.lessonCount, 0);
     const completedLessons = dashboard.courses.reduce(
@@ -126,24 +125,6 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             </div>
-
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
-                <Sparkles className="size-4 text-[var(--text-faint)]" />
-                <p className="mt-3 text-sm font-medium text-[var(--text)]">Generate</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">Topic or source to artifact.</p>
-              </div>
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
-                <BookOpen className="size-4 text-[var(--text-faint)]" />
-                <p className="mt-3 text-sm font-medium text-[var(--text)]">Learn</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">One focused step at a time.</p>
-              </div>
-              <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3">
-                <FileText className="size-4 text-[var(--text-faint)]" />
-                <p className="mt-3 text-sm font-medium text-[var(--text)]">Export</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--text-dim)]">Docs, slides, HTML, notes.</p>
-              </div>
-            </div>
           </div>
 
           <aside className="editorial-card animate-rise-in-delay-1 flex min-h-[360px] flex-col justify-between p-5 sm:p-6">
@@ -166,13 +147,11 @@ export default async function DashboardPage() {
           </aside>
         </section>
 
-        <DeepTutorStatusBanner hasStubCourses={hasStubCourses} />
-
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <DashboardMetric
-            label="Courses"
+            label="Library"
             value={String(dashboard.courses.length)}
-            detail={dashboard.courses.length ? "Active courses" : "No courses yet"}
+            detail={dashboard.courses.length ? "Saved items" : "No items yet"}
           />
           <DashboardMetric
             label="Completed"
@@ -180,7 +159,7 @@ export default async function DashboardPage() {
             detail={totalLessons ? `${completionPercent}% complete` : "No lessons yet"}
           />
           <DashboardMetric label="Streak" value={`${dashboard.streakDays} days`} detail="No activity yet" />
-          <DashboardMetric label="Mode" value={hasStubCourses ? "Local" : "Live"} detail={hasStubCourses ? "Stub visible" : "Ready"} />
+          <DashboardMetric label="Artifacts" value={String(artifactCount)} detail={artifactCount ? "Downloadable" : "None yet"} />
         </section>
 
         <section id="courses" className="scroll-mt-28 space-y-5">

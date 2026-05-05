@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   BookOpen,
@@ -53,44 +53,6 @@ const generationStages = [
   "Adding practice",
   "Saving artifact",
 ] as const
-
-function buildPreviewItems(
-  title: string,
-  topicPrompt: string,
-  mode: CreateMode,
-  artifactKind: CourseArtifactKind,
-) {
-  const subject = (topicPrompt || title || "your topic").trim()
-  const artifact = getCourseArtifactOption(artifactKind)
-
-  if (mode === "upload") {
-    return artifact.previewItems.map((label, index) => `${String(index + 1).padStart(2, "0")} - ${label}`)
-  }
-
-  const token = subject
-    .split(/[\s,:-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .join(" ")
-
-  return artifact.previewItems.map((label, index) =>
-    index === 0 && token ? `${String(index + 1).padStart(2, "0")} - ${token}` : `${String(index + 1).padStart(2, "0")} - ${label}`,
-  )
-}
-
-function getReadableSource(mode: CreateMode, selectedFile: File | null, topicPrompt: string) {
-  if (mode === "upload") {
-    return selectedFile?.name || "Source document";
-  }
-
-  const prompt = topicPrompt.trim().replace(/\s+/g, " ")
-  return prompt ? prompt.slice(0, 96) : "Topic prompt"
-}
-
-function getPreviewTitle(title: string, artifactKind: CourseArtifactKind) {
-  const artifact = getCourseArtifactOption(artifactKind)
-  return title.trim() || `Untitled ${artifact.noun}`
-}
 
 function CourseGenerationProgress({
   artifactTitle,
@@ -152,10 +114,6 @@ export default function CreateCoursePage() {
   const [error, setError] = useState<string | null>(null)
 
   const selectedArtifact = getCourseArtifactOption(artifactKind)
-  const previewItems = useMemo(
-    () => buildPreviewItems(title, topicPrompt, mode, artifactKind),
-    [artifactKind, mode, title, topicPrompt]
-  )
 
   useEffect(() => {
     trackMarketingEvent("course_create_page_viewed")
@@ -269,19 +227,26 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_430px]">
+    <div className="mx-auto w-full max-w-[1320px]">
       <section className="space-y-7">
-        <div className="editorial-card animate-rise-in px-6 py-7 sm:px-8 sm:py-8">
+        <div className="animate-rise-in grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.55fr)] lg:items-end">
+          <div>
           <p className="t-eyebrow">
             <span className="t-eyebrow__rule" aria-hidden="true" />
             <span>Create</span>
           </p>
-          <h1 className="mt-5 max-w-3xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[52px]">
-            Create the exact thing you need.
+          <h1 className="mt-5 max-w-3xl text-[42px] font-semibold leading-[1.02] tracking-normal text-[var(--text)] sm:text-[58px]">
+            Start with the output.
           </h1>
           <p className="mt-4 max-w-2xl text-[18px] leading-8 text-[var(--text-dim)]">
-            Pick the output first, then give Tuto a source or topic. Courses stay interactive; everything else becomes a previewable, downloadable artifact.
+            Choose the format you need, add source material or a topic, then generate the saved item.
           </p>
+          </div>
+          <div className="editorial-card px-5 py-5">
+            <p className="text-sm font-medium text-[var(--text)]">{selectedArtifact.title}</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{selectedArtifact.description}</p>
+            <p className="mt-4 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">{selectedArtifact.estimate}</p>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -298,6 +263,7 @@ export default function CreateCoursePage() {
                   key={item.kind}
                   type="button"
                   disabled={submitting}
+                  aria-pressed={active}
                   onClick={() => {
                     setArtifactKind(item.kind)
                     setError(null)
@@ -307,15 +273,20 @@ export default function CreateCoursePage() {
                     "editorial-card interactive-card t-lift min-h-[148px] text-left px-4 py-4 disabled:pointer-events-none disabled:opacity-60",
                     index % 2 === 0 ? "animate-rise-in-delay-1" : "animate-rise-in-delay-2",
                     active
-                      ? "border-[var(--border-strong)] bg-[var(--bg-elev-2)]"
+                      ? "border-[var(--text)] bg-[var(--bg-elev)] shadow-[0_18px_48px_-36px_rgba(10,10,10,0.72)]"
                       : "hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]"
                   )}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <Icon className="size-4 text-[var(--text-faint)]" />
-                    {active ? (
-                      <span className="h-2 w-8 rounded-full bg-[var(--accent-strong)]" aria-hidden="true" />
-                    ) : null}
+                    <span className={cn(
+                      "inline-flex size-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-soft)]",
+                      active && "border-[var(--text)] bg-[var(--text)] text-white"
+                    )}>
+                      <Icon className="size-4" />
+                    </span>
+                    <span className="text-[11px] uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                      {item.estimate.split(" - ")[0]}
+                    </span>
                   </div>
                   <p className="mt-4 text-sm font-medium text-[var(--text)]">{item.title}</p>
                   <p className="mt-1 text-[13px] leading-5 text-[var(--text-dim)]">{item.description}</p>
@@ -460,6 +431,14 @@ export default function CreateCoursePage() {
               </div>
             ) : null}
 
+            {submitting ? (
+              <CourseGenerationProgress
+                artifactTitle={selectedArtifact.title}
+                progress={Math.min(94, 18 + generationStep * 19)}
+                stage={generationStages[generationStep] ?? generationStages[0]}
+              />
+            ) : null}
+
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3 text-sm text-[var(--text-faint)]">
                 <BookOpen className="size-4" />
@@ -472,77 +451,6 @@ export default function CreateCoursePage() {
           </div>
         </div>
       </section>
-
-      <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-        <div className="space-y-2">
-          <p className="t-eyebrow">
-            <span className="t-eyebrow__rule" aria-hidden="true" />
-            <span>Preview</span>
-          </p>
-          <p className="text-sm leading-6 text-[var(--text-dim)]">
-            A live outline of the saved artifact.
-          </p>
-        </div>
-
-        <div className="editorial-card animate-rise-in-delay-2 min-h-[28rem] overflow-hidden p-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">
-              <span>{mode === "upload" ? "From material" : "From topic"}</span>
-              <span>{selectedArtifact.estimate}</span>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-2xl font-medium tracking-normal text-[var(--text)]">
-                {getPreviewTitle(title, artifactKind)}
-              </h2>
-              <p className="text-sm leading-6 text-[var(--text-dim)]">
-                {selectedArtifact.description}
-              </p>
-            </div>
-
-            <div className="grid gap-2 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[var(--text-faint)]">Source</span>
-                <span className="max-w-[230px] truncate text-right text-[var(--text)]">
-                  {getReadableSource(mode, selectedFile, topicPrompt)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[var(--text-faint)]">Topic</span>
-                <span className="max-w-[230px] truncate text-right text-[var(--text)]">
-                  {subject.trim() || title.trim() || "Not set yet"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[var(--text-faint)]">Depth</span>
-                <span className="text-[var(--text)]">{difficulty}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2 border-t border-[var(--border)] pt-4">
-              {previewItems.map((lesson, index) => (
-                <div
-                  key={lesson}
-                  className="grid grid-cols-[32px_minmax(0,1fr)] items-center gap-3 border-b border-[var(--border)] py-3 text-sm text-[var(--text)] last:border-b-0"
-                >
-                  <span className="inline-flex size-7 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)] text-[11px] text-[var(--text-faint)]">
-                    {index + 1}
-                  </span>
-                  <span>{lesson}</span>
-                </div>
-              ))}
-            </div>
-
-            {submitting ? (
-              <CourseGenerationProgress
-                artifactTitle={selectedArtifact.title}
-                progress={Math.min(94, 18 + generationStep * 19)}
-                stage={generationStages[generationStep] ?? generationStages[0]}
-              />
-            ) : null}
-          </div>
-        </div>
-      </aside>
     </div>
   )
 }
