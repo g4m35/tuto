@@ -253,7 +253,7 @@ export function LessonExerciseClient({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,#ffffff_0%,#fbfff8_56%,#edf8f2_100%)] text-[var(--text)]">
+      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
         <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-white/92 px-4 sm:px-6">
           <Link
             href={`/courses/${courseId}`}
@@ -281,7 +281,7 @@ export function LessonExerciseClient({
 
   if (!exercise || !activeStep) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,#ffffff_0%,#fbfff8_56%,#edf8f2_100%)] text-[var(--text)]">
+      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
         <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-white/92 px-4 sm:px-6">
           <Link
             href={`/courses/${courseId}`}
@@ -437,7 +437,7 @@ export function LessonExerciseClient({
         : "Continue"
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,#ffffff_0%,#fbfff8_56%,#edf8f2_100%)] text-[var(--text)]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
       <header className="flex h-16 shrink-0 items-center gap-4 border-b border-[var(--border)] bg-white/92 px-4 backdrop-blur sm:px-6">
         <Link
           href={`/courses/${exercise.courseId}`}
@@ -544,7 +544,7 @@ export function LessonExerciseClient({
         </motion.section>
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--border)] bg-white/94 px-4 py-3 backdrop-blur sm:px-6">
+      <footer className="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--border)] bg-[var(--bg-elev)]/94 px-4 py-3 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-[860px] items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Button
@@ -600,7 +600,7 @@ function LessonSketch({
 
   return (
     <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
-      <div className="relative h-[150px] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border)] bg-[linear-gradient(180deg,#ffffff_0%,#f4faef_100%)]">
+      <div className="relative h-[150px] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border)] bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg-soft)_100%)]">
         <div className="absolute inset-x-8 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--bg-soft)]" />
         <motion.div
           className="absolute left-8 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--accent-strong)]"

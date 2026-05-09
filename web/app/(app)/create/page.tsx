@@ -84,11 +84,9 @@ function fileFromDraggedSource(dataTransfer: DataTransfer) {
 
 function CourseGenerationProgress({
   artifactTitle,
-  progress,
   stage,
 }: {
   artifactTitle: string
-  progress: number
   stage: string
 }) {
   return (
@@ -97,31 +95,36 @@ function CourseGenerationProgress({
       aria-live="polite"
       className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-4"
     >
-      <div className="flex items-center justify-between gap-4 text-sm">
-        <span className="font-medium text-[var(--text)]">Building {artifactTitle.toLowerCase()}</span>
-        <span className="text-[var(--text-faint)]">{progress}%</span>
+      <div className="flex items-center gap-4">
+        <div className="t-working-cue shrink-0" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-[var(--text)]">Building {artifactTitle.toLowerCase()}</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">
+            {stage}. This can take a moment when Tuto is researching, writing, and saving the result.
+          </p>
+        </div>
       </div>
-      <div className="mt-3 h-3 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
-        <div
-          className="h-full rounded-full bg-[linear-gradient(90deg,var(--accent),#486581,#2563eb)] transition-[width] duration-500 ease-[var(--ease-signature)]"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <div className="mt-3 grid grid-cols-5 gap-1" aria-hidden="true">
+      <div className="mt-4 grid grid-cols-5 gap-2" aria-hidden="true">
         {generationStages.map((item) => {
           const active = item === stage
           return (
             <span
               key={item}
               className={cn(
-                "h-1 rounded-full transition-colors duration-300",
-                active ? "bg-[var(--accent-strong)]" : "bg-[var(--border-strong)]"
+                "h-1.5 rounded-full transition-colors duration-300",
+                active ? "bg-[var(--accent-strong)]" : "bg-[var(--border)]"
               )}
             />
           )
         })}
       </div>
-      <p className="mt-3 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">{stage}</p>
     </div>
   )
 }
@@ -271,23 +274,21 @@ export default function CreateCoursePage() {
   return (
     <div className="mx-auto w-full max-w-[1320px]">
       <section className="space-y-7">
-        <div className="animate-rise-in grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.55fr)] lg:items-end">
-          <div>
-          <p className="t-eyebrow">
-            <span className="t-eyebrow__rule" aria-hidden="true" />
-            <span>Create</span>
-          </p>
-          <h1 className="mt-5 max-w-3xl text-[42px] font-semibold leading-[1.02] tracking-normal text-[var(--text)] sm:text-[58px]">
-            Start with the output.
-          </h1>
-          <p className="mt-4 max-w-2xl text-[18px] leading-8 text-[var(--text-dim)]">
-            Choose the format you need, add source material or a topic, then generate the saved item.
-          </p>
+        <div className="animate-rise-in flex flex-wrap items-end justify-between gap-5 border-b border-[var(--border)] pb-5">
+          <div className="space-y-2">
+            <p className="text-[13px] font-medium text-[var(--text-dim)]">Create</p>
+            <h1 className="text-[30px] font-semibold leading-tight tracking-normal text-[var(--text)] sm:text-[38px]">
+              Make a course artifact
+            </h1>
+            <p className="max-w-2xl text-[15px] leading-7 text-[var(--text-dim)]">
+              Pick the format, add a trusted source or topic, and Tuto will save it to your library.
+            </p>
           </div>
-          <div className="editorial-card px-5 py-5">
-            <p className="text-sm font-medium text-[var(--text)]">{selectedArtifact.title}</p>
-            <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">{selectedArtifact.description}</p>
-            <p className="mt-4 text-xs uppercase tracking-[0.16em] text-[var(--text-faint)]">{selectedArtifact.estimate}</p>
+          <div className="flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-2 text-sm text-[var(--text-dim)]">
+            <span className="inline-flex size-2 rounded-full bg-[var(--accent)]" aria-hidden="true" />
+            <span>{selectedArtifact.title}</span>
+            <span className="text-[var(--text-faint)]">/</span>
+            <span>{selectedArtifact.estimate}</span>
           </div>
         </div>
 
@@ -502,7 +503,6 @@ export default function CreateCoursePage() {
             {submitting ? (
               <CourseGenerationProgress
                 artifactTitle={selectedArtifact.title}
-                progress={Math.min(94, 18 + generationStep * 19)}
                 stage={generationStages[generationStep] ?? generationStages[0]}
               />
             ) : null}

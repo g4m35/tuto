@@ -10,7 +10,7 @@ export function AuthPageShell({ mode }: { mode: "sign-in" | "sign-up" }) {
       : "Start generating courses, decks, and study materials from the sources you trust.";
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,var(--bg)_58%,#eef6ff_100%)] px-4 py-8 text-[var(--text)] sm:px-8">
+    <main className="min-h-screen bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_58%,var(--info-soft)_100%)] px-4 py-8 text-[var(--text)] sm:px-8">
       <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[1040px] items-center justify-center">
         <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(360px,0.55fr)] lg:items-center">
           <div className="hidden space-y-6 lg:block">

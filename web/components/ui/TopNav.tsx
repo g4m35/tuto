@@ -3,9 +3,10 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { BookOpen, CreditCard, Grid2x2 } from "lucide-react"
+import { BookOpen, CreditCard, Grid2x2, Moon, Sun } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { CommandPalette } from "@/components/ui/CommandPalette"
+import { useAppShell } from "@/context/AppShellContext"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -17,6 +18,8 @@ const navItems = [
 export function TopNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const { theme, setTheme } = useAppShell()
+  const darkMode = theme === "dark" || theme === "glass"
 
   useEffect(() => {
     for (const item of navItems) {
@@ -26,7 +29,7 @@ export function TopNav() {
   }, [router])
 
   return (
-    <header className="sticky top-0 z-40 h-16 border-b border-[var(--border)] bg-white/88 backdrop-blur-[18px]">
+    <header className="sticky top-0 z-40 h-16 border-b border-[var(--border)] bg-[var(--bg-elev)]/88 backdrop-blur-[18px]">
       <div className="mx-auto flex h-full w-full max-w-[1760px] items-center justify-between gap-4 px-5 sm:px-7 lg:px-8">
         <div className="flex items-center gap-10">
           <Link
@@ -66,6 +69,14 @@ export function TopNav() {
 
         <div className="flex items-center gap-3">
           <CommandPalette />
+          <button
+            type="button"
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            onClick={() => setTheme(darkMode ? "light" : "dark")}
+            className="inline-flex size-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)] text-[var(--text-dim)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--text)]"
+          >
+            {darkMode ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </button>
           <div className="rounded-full border border-[var(--border)] bg-[var(--bg-elev)] p-1">
             <UserButton
               userProfileMode="navigation"

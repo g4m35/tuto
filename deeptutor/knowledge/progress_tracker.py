@@ -142,6 +142,16 @@ class ProgressTracker:
         except Exception as e:
             _get_logger().warning("Failed to save progress to kb_config.json: %s", e)
 
+        try:
+            self.kb_dir.mkdir(parents=True, exist_ok=True)
+            tmp_file = self.progress_file.with_suffix(".progress.json.tmp")
+            with open(tmp_file, "w", encoding="utf-8") as f:
+                json.dump(progress, f, indent=2, ensure_ascii=False)
+                f.flush()
+            tmp_file.replace(self.progress_file)
+        except Exception as e:
+            _get_logger().warning("Failed to save progress file for '%s': %s", self.kb_name, e)
+
     def update(
         self,
         stage: ProgressStage,
@@ -206,16 +216,28 @@ class ProgressTracker:
 
     def get_progress(self) -> dict | None:
         """Get current progress"""
-        if not self.progress_file.exists():
-            return None
+        if self.progress_file.exists():
+            try:
+                # codeql[py/path-injection] progress_file is derived from resolve_kb_dir(), which validates the KB slug and root containment.
+                with open(self.progress_file, encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                _get_logger().debug(f"Failed to read progress file for '{self.kb_name}': {e}")
 
         try:
-            # codeql[py/path-injection] progress_file is derived from resolve_kb_dir(), which validates the KB slug and root containment.
-            with open(self.progress_file, encoding="utf-8") as f:
-                return json.load(f)
+            from deeptutor.knowledge.manager import KnowledgeBaseManager
+
+            status = KnowledgeBaseManager(base_dir=str(self.base_dir)).get_kb_status(self.kb_name)
+            progress = status.get("progress") if status else None
+            if isinstance(progress, dict):
+                return {
+                    "status": status.get("status"),
+                    **progress,
+                }
         except Exception as e:
-            _get_logger().debug(f"Failed to read progress file for '{self.kb_name}': {e}")
-            return None
+            _get_logger().debug(f"Failed to read config progress for '{self.kb_name}': {e}")
+
+        return None
 
     def clear(self):
         """Clear progress file"""
