@@ -17,6 +17,30 @@ export default async function SharedArtifactPage({
   }
 
   const artifact = getCourseArtifactOption(course.artifactKind)
+  const actions =
+    artifact.kind === "slides"
+      ? [
+          { format: "pptx", label: "Google Slides deck", icon: Upload, primary: true },
+          { format: "slides", label: "Speaker notes", icon: Presentation },
+        ]
+      : artifact.kind === "study-guide" || artifact.kind === "cheat-sheet" || artifact.kind === "lesson-plan"
+        ? [
+            { format: "docx", label: "Google Docs file", icon: FileText, primary: true },
+            { format: "markdown", label: "Markdown", icon: Download },
+            { format: "html", label: "HTML", icon: FileText },
+          ]
+        : artifact.kind === "quiz-set"
+          ? [
+              { format: "markdown", label: "Answer guide", icon: Download, primary: true },
+              { format: "html", label: "Web view", icon: FileText },
+            ]
+          : [
+              { format: "markdown", label: "Course notes", icon: Download, primary: true },
+              { format: "html", label: "HTML", icon: FileText },
+              { format: "pptx", label: "Slides file", icon: Upload },
+              { format: "docx", label: "Google Docs file", icon: FileText },
+              { format: "slides", label: "Outline notes", icon: Presentation },
+            ]
   const points = Array.isArray(course.guidePayload.knowledge_points)
     ? course.guidePayload.knowledge_points
     : []
@@ -41,41 +65,24 @@ export default async function SharedArtifactPage({
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Link
-              href={`/api/share/${token}/download?format=markdown`}
-              className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-transparent bg-[var(--accent)] px-4 text-[13px] font-medium text-[var(--accent-ink)]"
-            >
-              <Download className="size-4" />
-              Download markdown
-            </Link>
-            <Link
-              href={`/api/share/${token}/download?format=html`}
-              className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]"
-            >
-              <FileText className="size-4" />
-              Download HTML
-            </Link>
-            <Link
-              href={`/api/share/${token}/download?format=pptx`}
-              className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]"
-            >
-              <Upload className="size-4" />
-              Google Slides file
-            </Link>
-            <Link
-              href={`/api/share/${token}/download?format=docx`}
-              className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]"
-            >
-              <FileText className="size-4" />
-              Google Docs file
-            </Link>
-            <Link
-              href={`/api/share/${token}/download?format=slides`}
-              className="t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]"
-            >
-              <Presentation className="size-4" />
-              Slides notes
-            </Link>
+            {actions.map((action) => {
+              const Icon = action.icon
+
+              return (
+                <Link
+                  key={action.format}
+                  href={`/api/share/${token}/download?format=${action.format}`}
+                  className={`t-btn inline-flex h-[38px] items-center justify-center gap-2 rounded-full border px-4 text-[13px] font-medium ${
+                    action.primary
+                      ? "border-transparent bg-[var(--accent)] text-[var(--accent-ink)]"
+                      : "border-[var(--border-strong)] text-[var(--text)]"
+                  }`}
+                >
+                  <Icon className="size-4" />
+                  {action.label}
+                </Link>
+              )
+            })}
           </div>
         </section>
 

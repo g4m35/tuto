@@ -97,7 +97,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     dashboardAction: "Open deck",
     previewTitle: "Slide outline",
     promptDirective:
-      "Create a slide deck plan with one clear message per slide, speaker-note style summaries, examples, and closing review prompts.",
+      "Create an 8 to 12 slide presentation plan with one clear message per slide, specific evidence, speaker notes, visual direction for each slide, and closing discussion prompts.",
     previewItems: [
       "Slide 01 - Title and goal",
       "Slide 02 - Why it matters",
@@ -105,7 +105,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
       "Slide 04 - Example",
       "Slide 05 - Recap",
     ],
-    estimate: "5 slides - presenter notes included",
+    estimate: "8-12 slides - presenter notes",
   },
   {
     kind: "quiz-set",
@@ -256,13 +256,24 @@ function escapeHtml(value: string) {
 
 export function buildArtifactPromptDirective(kind: unknown) {
   const option = getCourseArtifactOption(kind);
-  return [
+  const sharedGuidance = [
     `Artifact to make: ${option.title}.`,
     option.promptDirective,
     "Teach in a step-by-step sequence: start with the useful question, define the core idea, show a concrete example, add a learner action, then close with a checkpoint or review prompt.",
     "Prefer source-grounded, accurate, subject-specific explanations over generic study advice. Call out prerequisites, common misconceptions, and what mastery should look like.",
-    "Keep the output practical, structured, and useful as a downloadable document.",
-  ].join("\n");
+  ];
+
+  if (option.kind === "slides") {
+    sharedGuidance.push(
+      "Make the deck presentation-ready, not a course outline: write slide headlines, substantial presenter notes, 2 to 4 concise bullets per slide, and a visual brief for each slide.",
+      "Use current public web knowledge when no uploaded source is available, and mention concrete people, dates, examples, diagrams, maps, charts, screenshots, or image-search terms that would make the slide visually specific.",
+      "Avoid generic slide titles like Core idea or Worked example unless they are paired with a topic-specific claim.",
+    );
+  } else {
+    sharedGuidance.push("Keep the output practical, structured, and useful as a downloadable document.");
+  }
+
+  return sharedGuidance.join("\n");
 }
 
 export function buildCourseArtifactMarkdown(course: CourseArtifactExportInput) {
@@ -328,29 +339,19 @@ export function buildCourseArtifactMarkdown(course: CourseArtifactExportInput) {
 }
 
 export function buildCourseArtifactSlidesMarkdown(course: CourseArtifactExportInput) {
-  const points = getKnowledgePoints(course);
-  const slides = [
-    [`# ${course.title}`, "", course.description, "", `_${course.subject} - ${course.difficulty}_`].join("\n"),
-  ];
-
-  if (!points.length) {
-    slides.push(["# Outline", "", "- No generated slides yet."].join("\n"));
-  } else {
-    points.forEach((point, index) => {
-      const title = line(point.knowledge_title) || `Slide ${index + 1}`;
-      slides.push(
-        [
-          `# ${title}`,
-          "",
-          sectionSummary(point),
-          "",
-          "Speaker note: explain the idea with one example, then ask the learner to restate it.",
-        ].join("\n"),
-      );
-    });
-  }
-
-  slides.push(["# Review", "", "- What changed in your understanding?", "- Where would this idea be useful?", "- What should you practice next?"].join("\n"));
+  const slides = buildPresentationSlides(course).map((slide) =>
+    [
+      `# ${slide.title}`,
+      "",
+      `_${slide.kicker}_`,
+      "",
+      ...slide.body.map((item) => `- ${item}`),
+      "",
+      `Visual: ${[slide.visualTitle, ...slide.visualLines].join(" - ")}`,
+      "",
+      `Speaker note: ${slide.footer}`,
+    ].join("\n"),
+  );
 
   return slides.join("\n\n---\n\n");
 }
@@ -359,14 +360,151 @@ function truncateText(value: string, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...` : value;
 }
 
+function splitSentences(value: string) {
+  return value
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function bulletLines(value: string, fallback: string, maxLines = 4) {
+  const sentences = splitSentences(value || fallback);
+  const lines = sentences.length ? sentences : [fallback];
+
+  return lines
+    .map((item) => truncateText(item.replace(/^[-•]\s*/, ""), 118))
+    .filter(Boolean)
+    .slice(0, maxLines);
+}
+
+function visualBrief(course: CourseArtifactExportInput, title: string, summary: string) {
+  const subject = line(course.subject) || course.title;
+  const compactSummary = truncateText(summary, 96);
+
+  return [
+    `Image or diagram: ${subject}`,
+    title,
+    compactSummary,
+  ].filter(Boolean);
+}
+
+type PresentationSlide = {
+  title: string;
+  kicker: string;
+  body: string[];
+  visualTitle: string;
+  visualLines: string[];
+  footer: string;
+  tone?: "cover" | "content" | "review";
+};
+
+function buildPresentationSlides(course: CourseArtifactExportInput) {
+  const option = getCourseArtifactOption(course.artifactKind);
+  const points = getKnowledgePoints(course);
+  const subject = line(course.subject) || course.title;
+  const slides: PresentationSlide[] = [
+    {
+      title: course.title,
+      kicker: `${option.title} · ${course.difficulty}`,
+      body: [
+        truncateText(course.description || `A presentation about ${subject}.`, 136),
+        "Built for teaching, discussion, and fast review.",
+      ],
+      visualTitle: "Opening visual",
+      visualLines: [`Hero image/search: ${subject}`, "Use a map, timeline, object photo, diagram, or primary-source image."],
+      footer: "Generated by Tuto",
+      tone: "cover",
+    },
+  ];
+
+  const outlineItems = points.length
+    ? points.slice(0, 6).map((point) => line(point.knowledge_title) || "Key section")
+    : ["Why it matters", "Core idea", "Example", "Checkpoint"];
+
+  slides.push({
+    title: "What this deck will make clear",
+    kicker: "Agenda",
+    body: outlineItems.map((item, index) => `${index + 1}. ${truncateText(item, 84)}`),
+    visualTitle: "Learning path",
+    visualLines: ["Timeline, flowchart, or roadmap showing how the ideas build."],
+    footer: `${subject} · overview`,
+  });
+
+  if (points.length) {
+    points.slice(0, 8).forEach((point, index) => {
+      const title = line(point.knowledge_title) || `Key idea ${index + 1}`;
+      const summary = sectionSummary(point);
+      const body = bulletLines(summary, `Explain how ${title} changes the learner's understanding of ${subject}.`, 4);
+
+      slides.push({
+        title,
+        kicker: `Slide ${index + 3}`,
+        body,
+        visualTitle: "Visual brief",
+        visualLines: visualBrief(course, title, summary),
+        footer: "Add an image, chart, map, diagram, or source excerpt that makes this claim inspectable.",
+      });
+    });
+  } else {
+    slides.push({
+      title: `Start with the concrete question`,
+      kicker: "Inquiry",
+      body: [
+        `What problem, pattern, or mystery makes ${subject} worth understanding?`,
+        "Begin with a specific example before naming the general rule.",
+        "Ask the audience to make a prediction before the explanation.",
+      ],
+      visualTitle: "Prompt visual",
+      visualLines: [`Search terms: ${subject} example diagram`, "Use one strong image instead of a wall of text."],
+      footer: "Question before instruction",
+    });
+  }
+
+  slides.push(
+    {
+      title: "What to remember",
+      kicker: "Synthesis",
+      body: [
+        `The strongest takeaway from ${subject} should be specific enough to use later.`,
+        "Connect the evidence to the main claim, not just the topic label.",
+        "Name the misconception a learner is most likely to carry away.",
+      ],
+      visualTitle: "Summary visual",
+      visualLines: ["Before/after chart, cause-and-effect chain, or concept map."],
+      footer: `${subject} · synthesis`,
+      tone: "review",
+    },
+    {
+      title: "Discussion checkpoint",
+      kicker: "Review",
+      body: [
+        "What evidence would change your mind?",
+        "Which example best proves the main claim?",
+        "Where does the explanation stop working?",
+      ],
+      visualTitle: "Audience action",
+      visualLines: ["Use a poll, quick-write prompt, or comparison table."],
+      footer: "End with a question the audience can answer out loud.",
+      tone: "review",
+    },
+  );
+
+  return slides.slice(0, 12);
+}
+
 function slideTextRun(text: string, options: { size: number; color?: string; bold?: boolean }) {
   const color = options.color ?? "1F2937";
   const bold = options.bold ? ' b="1"' : "";
   return `<a:r><a:rPr lang="en-US" sz="${options.size * 100}"${bold}><a:solidFill><a:srgbClr val="${color}"/></a:solidFill></a:rPr><a:t>${escapeHtml(text)}</a:t></a:r>`;
 }
 
-function slideParagraph(text: string, options: { size: number; color?: string; bold?: boolean }) {
-  return `<a:p>${slideTextRun(text, options)}<a:endParaRPr lang="en-US" sz="${options.size * 100}"/></a:p>`;
+function slideParagraph(text: string, options: { size: number; color?: string; bold?: boolean; bullet?: boolean }) {
+  const paragraphProperties = options.bullet
+    ? `<a:pPr marL="274320" indent="-182880"><a:buChar char="•"/></a:pPr>`
+    : "";
+
+  return `<a:p>${paragraphProperties}${slideTextRun(text, options)}<a:endParaRPr lang="en-US" sz="${options.size * 100}"/></a:p>`;
 }
 
 function slideTextBox(input: {
@@ -380,19 +518,45 @@ function slideTextBox(input: {
   size: number;
   color?: string;
   bold?: boolean;
+  bullet?: boolean;
+  anchor?: "t" | "mid" | "b";
 }) {
   const paragraphs = input.paragraphs.length ? input.paragraphs : [""];
-  return `<p:sp><p:nvSpPr><p:cNvPr id="${input.id}" name="${escapeHtml(input.name)}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${input.x}" y="${input.y}"/><a:ext cx="${input.cx}" cy="${input.cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr wrap="square" anchor="t"><a:spAutoFit/></a:bodyPr><a:lstStyle/>${paragraphs.map((paragraph) => slideParagraph(paragraph, { size: input.size, color: input.color, bold: input.bold })).join("")}</p:txBody></p:sp>`;
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${input.id}" name="${escapeHtml(input.name)}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${input.x}" y="${input.y}"/><a:ext cx="${input.cx}" cy="${input.cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr wrap="square" anchor="${input.anchor ?? "t"}"><a:spAutoFit/></a:bodyPr><a:lstStyle/>${paragraphs.map((paragraph) => slideParagraph(paragraph, { size: input.size, color: input.color, bold: input.bold, bullet: input.bullet })).join("")}</p:txBody></p:sp>`;
 }
 
-function slideBackground() {
-  return `<p:bg><p:bgPr><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>`;
+function slideShape(input: {
+  id: number;
+  name: string;
+  x: number;
+  y: number;
+  cx: number;
+  cy: number;
+  fill: string;
+  line?: string;
+  radius?: "rect" | "roundRect";
+}) {
+  const line = input.line
+    ? `<a:ln w="9525"><a:solidFill><a:srgbClr val="${input.line}"/></a:solidFill></a:ln>`
+    : `<a:ln><a:noFill/></a:ln>`;
+
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${input.id}" name="${escapeHtml(input.name)}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${input.x}" y="${input.y}"/><a:ext cx="${input.cx}" cy="${input.cy}"/></a:xfrm><a:prstGeom prst="${input.radius ?? "rect"}"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="${input.fill}"/></a:solidFill>${line}</p:spPr></p:sp>`;
 }
 
-function slideXml(title: string, body: string[], footer?: string) {
-  const bodyLines = body.map((line) => truncateText(line, 160)).slice(0, 5);
+function slideBackground(color = "F7FBFF") {
+  return `<p:bg><p:bgPr><a:solidFill><a:srgbClr val="${color}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg>`;
+}
+
+function slideXml(slide: PresentationSlide, index: number, total: number) {
+  const isCover = slide.tone === "cover";
+  const isReview = slide.tone === "review";
+  const bodyLines = slide.body.map((item) => truncateText(item, 132)).slice(0, 5);
+  const visualLines = slide.visualLines.map((item) => truncateText(item, 90)).slice(0, 4);
+  const background = isCover ? "EAF4FF" : isReview ? "F8FBFF" : "FFFFFF";
+  const panelFill = isReview ? "EEF6FF" : "F4F8FC";
+
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld>${slideBackground()}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${slideTextBox({ id: 2, name: "Title", x: 640000, y: 520000, cx: 10900000, cy: 950000, paragraphs: [truncateText(title, 72)], size: 40, color: "0A0A0A", bold: true })}${slideTextBox({ id: 3, name: "Body", x: 720000, y: 1750000, cx: 10400000, cy: 3500000, paragraphs: bodyLines, size: 22, color: "0A0A0A" })}${footer ? slideTextBox({ id: 4, name: "Footer", x: 720000, y: 5950000, cx: 10400000, cy: 360000, paragraphs: [truncateText(footer, 100)], size: 13, color: "6B7280" }) : ""}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld>${slideBackground(background)}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${slideShape({ id: 2, name: "Accent rail", x: 0, y: 0, cx: 190000, cy: 6858000, fill: "2563EB" })}${slideShape({ id: 3, name: "Visual panel", x: 7600000, y: 540000, cx: 3800000, cy: 5200000, fill: panelFill, line: "C9D8E8", radius: "roundRect" })}${slideShape({ id: 4, name: "Visual accent", x: 7960000, y: 1040000, cx: 1200000, cy: 1200000, fill: isCover ? "102A43" : "2563EB", radius: "roundRect" })}${slideTextBox({ id: 5, name: "Kicker", x: 700000, y: 520000, cx: 6200000, cy: 320000, paragraphs: [truncateText(slide.kicker.toUpperCase(), 54)], size: 11, color: "486581", bold: true })}${slideTextBox({ id: 6, name: "Title", x: 680000, y: 920000, cx: 6400000, cy: 1550000, paragraphs: [truncateText(slide.title, isCover ? 64 : 76)], size: isCover ? 42 : 34, color: "102A43", bold: true })}${slideTextBox({ id: 7, name: "Body", x: 760000, y: isCover ? 2850000 : 2650000, cx: 6100000, cy: 2850000, paragraphs: bodyLines, size: isCover ? 21 : 18, color: "243B53", bullet: !isCover })}${slideTextBox({ id: 8, name: "Visual title", x: 8040000, y: 2550000, cx: 3000000, cy: 420000, paragraphs: [truncateText(slide.visualTitle, 48)], size: 17, color: "102A43", bold: true })}${slideTextBox({ id: 9, name: "Visual lines", x: 8040000, y: 3120000, cx: 3000000, cy: 1700000, paragraphs: visualLines, size: 13, color: "486581" })}${slideTextBox({ id: 10, name: "Footer", x: 700000, y: 6200000, cx: 6800000, cy: 280000, paragraphs: [truncateText(slide.footer, 110)], size: 10, color: "829AB1" })}${slideTextBox({ id: 11, name: "Slide number", x: 10400000, y: 6200000, cx: 720000, cy: 280000, paragraphs: [`${index + 1}/${total}`], size: 10, color: "829AB1", anchor: "mid" })}</p:spTree></p:cSld><p:transition spd="med"><p:fade/></p:transition><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
 }
 
 function presentationXml(slideCount: number) {
@@ -556,19 +720,8 @@ function buildZip(files: Array<{ path: string; data: string }>) {
 }
 
 export function buildCourseArtifactPptx(course: CourseArtifactExportInput) {
-  const option = getCourseArtifactOption(course.artifactKind);
-  const points = getKnowledgePoints(course);
-  const slides = [
-    slideXml(course.title, [course.description, `${option.title} - ${course.subject} - ${course.difficulty}`], "Generated by Tuto"),
-    ...points.map((point, index) =>
-      slideXml(
-        line(point.knowledge_title) || `Section ${index + 1}`,
-        [sectionSummary(point), "Speaker note: explain the idea, then ask the learner to restate it in their own words."],
-        `Slide ${index + 2}`,
-      ),
-    ),
-    slideXml("Review", ["What changed in your understanding?", "Where would this idea be useful?", "What should you practice next?"], "Generated by Tuto"),
-  ];
+  const slideModels = buildPresentationSlides(course);
+  const slides = slideModels.map((slide, index) => slideXml(slide, index, slideModels.length));
   const files: Array<{ path: string; data: string }> = [
     { path: "[Content_Types].xml", data: contentTypesXml(slides.length) },
     { path: "_rels/.rels", data: rootRelsXml },

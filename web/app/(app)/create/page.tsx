@@ -54,6 +54,34 @@ const generationStages = [
   "Saving artifact",
 ] as const
 
+function fileFromDraggedSource(dataTransfer: DataTransfer) {
+  const file = dataTransfer.files?.[0] ?? null
+
+  if (file) {
+    return file
+  }
+
+  const uri = dataTransfer.getData("text/uri-list").trim()
+  const plainText = dataTransfer.getData("text/plain").trim()
+  const html = dataTransfer.getData("text/html").trim()
+  const sourceText = uri || plainText || html
+
+  if (!sourceText) {
+    return null
+  }
+
+  const sourceUrl = uri || (plainText.startsWith("http") ? plainText : "")
+  const body = [
+    sourceUrl ? `Source URL: ${sourceUrl}` : "Dragged browser source:",
+    "",
+    sourceText,
+    "",
+    "Use this as source context for the generated artifact. When a URL is present, expand the artifact with accurate, web-grounded background and examples.",
+  ].join("\n")
+
+  return new File([body], "dragged-browser-source.txt", { type: "text/plain" })
+}
+
 function CourseGenerationProgress({
   artifactTitle,
   progress,
@@ -109,6 +137,7 @@ export default function CreateCoursePage() {
   const [topicPrompt, setTopicPrompt] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [status, setStatus] = useState("Drop a PDF, notes bundle, or reading packet here.")
+  const [dragActive, setDragActive] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [generationStep, setGenerationStep] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -131,6 +160,19 @@ export default function CreateCoursePage() {
 
     return () => window.clearInterval(timer)
   }, [submitting])
+
+  function selectSourceFile(file: File | null) {
+    setSelectedFile(file)
+    setStatus(file ? `${file.name} is ready to use.` : "Drop a PDF, notes bundle, Chrome link, or reading packet here.")
+    setError(null)
+
+    if (file) {
+      trackMarketingEvent("course_create_file_selected", {
+        file_type: file.name.split(".").pop()?.toLowerCase() ?? null,
+        file_size: file.size,
+      })
+    }
+  }
 
   async function handleSubmit() {
     setError(null)
@@ -358,21 +400,42 @@ export default function CreateCoursePage() {
                   accept=".pdf,.txt,.md,.doc,.docx,.ppt,.pptx"
                   className="hidden"
                   onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null
-                    setSelectedFile(file)
-                    setStatus(file ? `${file.name} is ready to use.` : "Drop a PDF, notes bundle, or reading packet here.")
-                    if (file) {
-                      trackMarketingEvent("course_create_file_selected", {
-                        file_type: file.name.split(".").pop()?.toLowerCase() ?? null,
-                        file_size: file.size,
-                      })
-                    }
+                    selectSourceFile(event.target.files?.[0] ?? null)
                   }}
                 />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex min-h-48 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius-md)] border border-dashed border-[var(--border-strong)] bg-[var(--bg-soft)] px-6 text-center"
+                  onDragEnter={(event) => {
+                    event.preventDefault()
+                    setDragActive(true)
+                  }}
+                  onDragOver={(event) => {
+                    event.preventDefault()
+                    event.dataTransfer.dropEffect = "copy"
+                    setDragActive(true)
+                  }}
+                  onDragLeave={(event) => {
+                    event.preventDefault()
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                      setDragActive(false)
+                    }
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault()
+                    setDragActive(false)
+                    const file = fileFromDraggedSource(event.dataTransfer)
+                    selectSourceFile(file)
+                    if (!file) {
+                      setStatus("That drop did not include a readable file or browser link.")
+                    }
+                  }}
+                  className={cn(
+                    "flex min-h-48 w-full flex-col items-center justify-center gap-4 rounded-[var(--radius-md)] border border-dashed px-6 text-center",
+                    dragActive
+                      ? "border-[var(--info-strong)] bg-[var(--info-soft)] shadow-[0_18px_44px_-30px_rgba(37,99,235,0.55)]"
+                      : "border-[var(--border-strong)] bg-[var(--bg-soft)]"
+                  )}
                 >
                   <div className="inline-flex size-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elev)]">
                     <Upload className="size-5 text-[var(--text)]" />
@@ -381,7 +444,12 @@ export default function CreateCoursePage() {
                     <p className="text-lg font-medium text-[var(--text)]">
                       {selectedFile ? "Source ready" : "Choose your material"}
                     </p>
-                    <p className="max-w-md text-sm leading-6 text-[var(--text-dim)]">{status}</p>
+                    <p className="max-w-md text-sm leading-6 text-[var(--text-dim)]">
+                      {dragActive ? "Drop it here to attach it." : status}
+                    </p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
+                      Files, notes, PDFs, decks, or Chrome links
+                    </p>
                   </div>
                 </button>
               </>

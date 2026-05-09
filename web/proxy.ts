@@ -32,8 +32,13 @@ const isPublicRoute = createRouteMatcher([
 
 function getSignInUrl(req: NextRequest) {
   const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const origin = publicAppUrl || req.nextUrl.origin;
-  const redirectTarget = publicAppUrl
+  const isLocalRequest =
+    req.nextUrl.hostname === "localhost" ||
+    req.nextUrl.hostname === "127.0.0.1" ||
+    req.nextUrl.hostname === "::1" ||
+    req.nextUrl.hostname === "[::1]";
+  const origin = !isLocalRequest && publicAppUrl ? publicAppUrl : req.nextUrl.origin;
+  const redirectTarget = !isLocalRequest && publicAppUrl
     ? new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, publicAppUrl).toString()
     : req.nextUrl.href;
   const url = new URL("/sign-in", origin);

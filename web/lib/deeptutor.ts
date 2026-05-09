@@ -273,11 +273,26 @@ async function fetchSse(path: string, body: Record<string, unknown>) {
 
 function buildStubKnowledgePoints(title: string, artifactKind?: CourseArtifactKind): GuideKnowledgePoint[] {
   const option = getCourseArtifactOption(artifactKind);
-  return option.previewItems.map((item, index) => ({
+  const previewItems =
+    option.kind === "slides"
+      ? [
+          "Opening claim and stakes",
+          "Historical context",
+          "Key turning point",
+          "Evidence to examine",
+          "Visual timeline",
+          "Cause and effect",
+          "Common misconception",
+          "Discussion checkpoint",
+          "Closing synthesis",
+        ]
+      : option.previewItems;
+
+  return previewItems.map((item, index) => ({
     knowledge_title: item.replace(/^L\d+\s*[-·]\s*/i, "") || `${title}: part ${index + 1}`,
     knowledge_summary:
       option.kind === "slides"
-        ? `Slide-ready section for ${title}, with a single message and speaker-note summary.`
+        ? `A presentation-ready section for ${title} with a topic-specific headline, concrete evidence, a visual brief, and presenter notes that explain the idea in enough detail to teach from.`
         : option.kind === "study-guide"
           ? `Review section for ${title}, focused on what to remember and how to check yourself.`
           : option.kind === "quiz-set"

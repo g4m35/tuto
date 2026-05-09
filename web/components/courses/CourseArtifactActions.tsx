@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Check, Copy, Download, FileText, Link2, Presentation, Share2, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { getCourseArtifactOption, type CourseArtifactKind } from "@/lib/course-artifacts"
+import { cn } from "@/lib/utils"
 
 interface CourseArtifactActionsProps {
   courseId: string
@@ -15,6 +16,60 @@ interface CourseArtifactActionsProps {
 }
 
 type ShareStatus = "idle" | "working" | "copied" | "error"
+type ExportAction = {
+  format: "markdown" | "html" | "pptx" | "docx" | "slides"
+  label: string
+  icon: typeof Download
+  primary?: boolean
+}
+
+function getExportActions(kind: CourseArtifactKind): ExportAction[] {
+  if (kind === "slides") {
+    return [
+      { format: "pptx", label: "Google Slides deck", icon: Upload, primary: true },
+      { format: "slides", label: "Speaker notes", icon: Presentation },
+    ]
+  }
+
+  if (kind === "study-guide" || kind === "cheat-sheet" || kind === "lesson-plan") {
+    return [
+      { format: "docx", label: "Google Docs file", icon: FileText, primary: true },
+      { format: "markdown", label: "Markdown", icon: Download },
+      { format: "html", label: "HTML", icon: FileText },
+    ]
+  }
+
+  if (kind === "quiz-set") {
+    return [
+      { format: "markdown", label: "Answer guide", icon: Download, primary: true },
+      { format: "html", label: "Web view", icon: FileText },
+    ]
+  }
+
+  return [
+    { format: "markdown", label: "Course notes", icon: Download, primary: true },
+    { format: "html", label: "HTML", icon: FileText },
+    { format: "pptx", label: "Slides file", icon: Upload },
+    { format: "docx", label: "Google Docs", icon: FileText },
+    { format: "slides", label: "Outline notes", icon: Presentation },
+  ]
+}
+
+function getActionDescription(kind: CourseArtifactKind, title: string) {
+  if (kind === "slides") {
+    return `Export this ${title.toLowerCase()} as a Google Slides-ready deck or presenter notes.`
+  }
+
+  if (kind === "quiz-set") {
+    return `Export this ${title.toLowerCase()} as an answer guide or share a read-only link.`
+  }
+
+  if (kind === "study-guide" || kind === "cheat-sheet" || kind === "lesson-plan") {
+    return `Export this ${title.toLowerCase()} as a Google Docs-ready file, Markdown, HTML, or share link.`
+  }
+
+  return `Export this ${title.toLowerCase()}, download teaching files, or create a read-only public link.`
+}
 
 export function CourseArtifactActions({
   courseId,
@@ -38,8 +93,7 @@ export function CourseArtifactActions({
     return `${origin}/share/${shareToken}`
   }, [origin, shareEnabled, shareToken])
   const artifact = getCourseArtifactOption(artifactKind)
-  const googleSlidesLabel = artifact.kind === "slides" ? "Google Slides" : "Slides file"
-  const notesLabel = artifact.kind === "slides" ? "Speaker notes" : "Outline notes"
+  const exportActions = getExportActions(artifact.kind)
 
   async function enableShare() {
     setStatus("working")
@@ -104,30 +158,27 @@ export function CourseArtifactActions({
         <div className="space-y-2">
           <p className="eyebrow">Share and download</p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
-            Export this {artifactTitle.toLowerCase()}, download files for Google Docs or Slides, or create a read-only public link.
+            {getActionDescription(artifact.kind, artifactTitle)}
           </p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-          <Link href={`/api/courses/${courseId}/download?format=markdown`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
-            <Download className="size-4" />
-            Markdown
-          </Link>
-          <Link href={`/api/courses/${courseId}/download?format=html`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
-            <FileText className="size-4" />
-            HTML
-          </Link>
-          <Link href={`/api/courses/${courseId}/download?format=pptx`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-soft)] px-4 text-[13px] font-medium text-[var(--text)]">
-            <Upload className="size-4" />
-            {googleSlidesLabel}
-          </Link>
-          <Link href={`/api/courses/${courseId}/download?format=docx`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-soft)] px-4 text-[13px] font-medium text-[var(--text)]">
-            <FileText className="size-4" />
-            Google Docs
-          </Link>
-          <Link href={`/api/courses/${courseId}/download?format=slides`} className="t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]">
-            <Presentation className="size-4" />
-            {notesLabel}
-          </Link>
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {exportActions.map((action) => {
+            const Icon = action.icon
+
+            return (
+              <Link
+                key={action.format}
+                href={`/api/courses/${courseId}/download?format=${action.format}`}
+                className={cn(
+                  "t-btn inline-flex h-[42px] items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--border-strong)] px-4 text-[13px] font-medium text-[var(--text)]",
+                  action.primary && "bg-[var(--bg-soft)]"
+                )}
+              >
+                <Icon className="size-4" />
+                {action.label}
+              </Link>
+            )
+          })}
         </div>
       </div>
 

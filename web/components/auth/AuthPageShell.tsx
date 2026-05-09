@@ -1,82 +1,41 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
 import { AuthFormFrame } from "@/components/auth/AuthFormFrame";
-import { cn } from "@/lib/utils";
 
 export function AuthPageShell({ mode }: { mode: "sign-in" | "sign-up" }) {
-  const { isLoaded } = useAuth();
-  const [minimumIntroElapsed, setMinimumIntroElapsed] = useState(false);
-  const [forceReveal, setForceReveal] = useState(false);
-  const [introLeaving, setIntroLeaving] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
-  const label = mode === "sign-in" ? "Welcome back" : "Begin learning";
-
-  useEffect(() => {
-    const minimumTimer = window.setTimeout(() => setMinimumIntroElapsed(true), 650);
-    const forceTimer = window.setTimeout(() => setForceReveal(true), 2_500);
-
-    return () => {
-      window.clearTimeout(minimumTimer);
-      window.clearTimeout(forceTimer);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!minimumIntroElapsed || (!isLoaded && !forceReveal)) {
-      return;
-    }
-
-    setIntroLeaving(true);
-    const hideTimer = window.setTimeout(() => setShowIntro(false), 360);
-
-    return () => window.clearTimeout(hideTimer);
-  }, [forceReveal, isLoaded, minimumIntroElapsed]);
-
-  const revealForm = !showIntro;
+  const title = mode === "sign-in" ? "Sign in to Tuto" : "Create your Tuto account";
+  const subtitle =
+    mode === "sign-in"
+      ? "Pick up where you left off with your courses, decks, and study materials."
+      : "Start generating courses, decks, and study materials from the sources you trust.";
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,#0a0a0a_0%,#000000_72%)] px-4 py-10 text-[#fafafa] sm:px-8">
-      {showIntro ? (
-        <div
-          className={cn(
-            "fixed inset-0 z-20 flex items-center justify-center bg-[radial-gradient(circle_at_top,#0a0a0a_0%,#000000_72%)] px-6 transition-all duration-[350ms] ease-[var(--ease-signature)]",
-            introLeaving ? "opacity-0 blur-sm" : "opacity-100 blur-0"
-          )}
-          aria-hidden={introLeaving}
-        >
-          <div className="text-center">
-            <p className="mb-6 inline-flex items-center gap-4 text-[11px] font-normal uppercase leading-none tracking-[0.22em] text-[#6b6b6b]">
-              <span className="h-px w-8 bg-white/[0.16]" aria-hidden="true" />
-              <span>{label}</span>
-              <span className="h-px w-8 bg-white/[0.16]" aria-hidden="true" />
+    <main className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,var(--bg)_58%,#eef6ff_100%)] px-4 py-8 text-[var(--text)] sm:px-8">
+      <section className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-[1040px] items-center justify-center">
+        <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(360px,0.55fr)] lg:items-center">
+          <div className="hidden space-y-6 lg:block">
+            <p className="t-eyebrow">
+              <span className="t-eyebrow__rule" aria-hidden="true" />
+              <span>Secure access</span>
             </p>
-            <h1 className="font-serif text-6xl italic leading-none text-[#fafafa] sm:text-7xl">
-              tuto.
-            </h1>
+            <div className="space-y-5">
+              <h1 className="max-w-2xl text-[58px] font-semibold leading-[1.02] tracking-normal">
+                {title}
+              </h1>
+              <p className="max-w-xl text-lg leading-8 text-[var(--text-dim)]">{subtitle}</p>
+            </div>
+          </div>
+
+          <div className="mx-auto w-full max-w-[420px] space-y-6 lg:mx-0">
+            <div className="text-center lg:hidden">
+              <h1 className="[font-family:var(--font-serif)] text-5xl font-normal italic leading-none text-[var(--text)]">
+                tuto.
+              </h1>
+              <p className="mt-4 text-sm leading-6 text-[var(--text-dim)]">{subtitle}</p>
+            </div>
+            <AuthFormFrame mode={mode} />
           </div>
         </div>
-      ) : null}
-
-      <section
-        className={cn(
-          "mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[440px] flex-col items-center justify-center gap-8 transition-all duration-500 ease-[var(--ease-signature)]",
-          revealForm ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-        )}
-      >
-        <div className="w-full text-center">
-          <p className="mb-5 inline-flex items-center gap-3 text-[11px] font-normal uppercase leading-none tracking-[0.18em] text-[#6b6b6b]">
-            <span className="h-px w-5 bg-white/[0.16]" aria-hidden="true" />
-            <span>{label}</span>
-            <span className="h-px w-5 bg-white/[0.16]" aria-hidden="true" />
-          </p>
-          <h1 className="font-serif text-5xl italic leading-none text-[#fafafa] sm:text-6xl">
-            tuto.
-          </h1>
-        </div>
-
-        <AuthFormFrame mode={mode} />
       </section>
     </main>
   );
