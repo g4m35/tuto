@@ -1,3 +1,8 @@
+import nextEnv from "@next/env";
+
+const { loadEnvConfig } = nextEnv;
+loadEnvConfig(process.cwd(), false);
+
 const REQUIRED_KEYS = [
   "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
