@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Instrument_Serif, Inter } from "next/font/google";
+import { Geist, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import ThemeScript from "@/components/ThemeScript";
 import { cn } from "@/lib/utils";
 
-const fontSans = Inter({
+const fontSans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
 });
 
 const fontSerif = Instrument_Serif({

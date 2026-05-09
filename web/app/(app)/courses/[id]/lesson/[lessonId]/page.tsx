@@ -27,6 +27,7 @@ export default async function LessonExercisePage({
     <LessonExerciseClient
       courseId={id}
       lessonId={lessonId}
+      courseTitle={course?.title}
       initialExercise={existingExercise?.payload ?? null}
     />
   )

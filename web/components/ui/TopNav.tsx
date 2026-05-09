@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { BookOpen, CreditCard, Grid2x2, Moon, Sun } from "lucide-react"
+import { BookOpen, BookOpenCheck, CreditCard, Grid2x2, Moon, Sun } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
 import { CommandPalette } from "@/components/ui/CommandPalette"
 import { useAppShell } from "@/context/AppShellContext"
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { id: "dashboard", href: "/dashboard", label: "Dashboard", icon: Grid2x2 },
   { id: "courses", href: "/courses", label: "Library", icon: BookOpen },
+  { id: "samples", href: "/sample-courses", label: "Samples", icon: BookOpenCheck },
   { id: "billing", href: "/account", label: "Billing", icon: CreditCard },
 ]
 

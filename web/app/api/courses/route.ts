@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { toLessonId } from "@/lib/course-data";
+import { toLessonId, type GuideKnowledgePoint } from "@/lib/course-data";
 import { isInteractiveCourseArtifact, normalizeCourseArtifactKind } from "@/lib/course-artifacts";
-import { getCourseForUser, listCoursesForUser, saveCourse } from "@/lib/course-store";
+import { evaluateCourseLessonQuality } from "@/lib/course-quality";
+import { getCourseForUser, listCoursesForUser, saveCourse, saveExercise } from "@/lib/course-store";
 import { DatabaseConfigurationError } from "@/lib/db";
 import {
   commitUsageReservation,
@@ -12,7 +13,8 @@ import {
   reserveUsage,
   type UsageReservation,
 } from "@/lib/usage";
-import { DeepTutorClientError, generateCourse, ingestDocument } from "@/lib/deeptutor";
+import { DeepTutorClientError, generateCourse, generateExercise, ingestDocument } from "@/lib/deeptutor";
+import type { ExerciseData } from "@/lib/mock-data";
 
 export const runtime = "nodejs";
 
@@ -25,6 +27,58 @@ function attachStubHeader(
   }
 
   return response;
+}
+
+interface PreparedExercise {
+  lessonId: string;
+  payload: ExerciseData;
+  backendMode: "live" | "stub";
+}
+
+async function prepareInitialLessonExercise(input: {
+  courseId: string;
+  title: string;
+  knowledgePoints: GuideKnowledgePoint[];
+  currentLessonIndex: number;
+  sessionId: string;
+  knowledgeBaseName: string | null;
+}): Promise<PreparedExercise | null> {
+  const lesson = input.knowledgePoints[input.currentLessonIndex];
+
+  if (!lesson) {
+    return null;
+  }
+
+  const lessonId = toLessonId(
+    input.courseId,
+    input.currentLessonIndex,
+    lesson.knowledge_title || "lesson",
+  );
+  const generated = await generateExercise(lessonId, {
+    courseId: input.courseId,
+    courseTitle: input.title,
+    lessonTitle: lesson.knowledge_title || `Lesson ${input.currentLessonIndex + 1}`,
+    lessonSummary: [lesson.knowledge_summary, lesson.user_difficulty].filter(Boolean).join(" "),
+    sessionId: input.sessionId,
+    knowledgeIndex: input.currentLessonIndex,
+    knowledgeBaseName: input.knowledgeBaseName,
+    recentPerformance: [],
+  });
+  const quality = evaluateCourseLessonQuality(generated.exercise);
+
+  if (!quality.ok) {
+    throw new DeepTutorClientError(
+      "Generated lesson did not meet the interactive course quality bar.",
+      422,
+      quality,
+    );
+  }
+
+  return {
+    lessonId,
+    payload: generated.exercise,
+    backendMode: generated.backendMode,
+  };
 }
 
 export async function GET() {
@@ -147,6 +201,22 @@ export async function POST(request: Request) {
     const currentLessonId = knowledgePoints.length
       ? toLessonId(courseId, currentLessonIndex, knowledgePoints[currentLessonIndex]?.knowledge_title || "lesson")
       : null;
+    const preparedInitialExercise = isInteractiveCourseArtifact(artifactKind)
+      ? await prepareInitialLessonExercise({
+          courseId,
+          title,
+          knowledgePoints,
+          currentLessonIndex,
+          sessionId: generated.sessionId,
+          knowledgeBaseName,
+        })
+      : null;
+    const effectiveBackendMode =
+      generated.backendMode === "stub" ||
+      backendMode === "stub" ||
+      preparedInitialExercise?.backendMode === "stub"
+        ? "stub"
+        : "live";
 
     const course = await saveCourse({
       id: courseId,
@@ -168,8 +238,18 @@ export async function POST(request: Request) {
         knowledge_points: knowledgePoints,
         progress: generated.progress,
       },
-      backendMode: generated.backendMode === "stub" ? "stub" : backendMode,
+      backendMode: effectiveBackendMode,
     });
+
+    if (preparedInitialExercise) {
+      await saveExercise({
+        courseId: course.id,
+        clerkId: userId,
+        lessonId: preparedInitialExercise.lessonId,
+        payload: preparedInitialExercise.payload,
+        backendMode: preparedInitialExercise.backendMode,
+      });
+    }
 
     if (uploadReservation) {
       await commitUsageReservation(uploadReservation, {

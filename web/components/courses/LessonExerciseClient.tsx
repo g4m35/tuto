@@ -2,24 +2,21 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type WheelEvent } from "react"
 import { motion } from "framer-motion"
 import {
   ArrowRight,
-  BookOpen,
   Check,
   ChevronLeft,
   Flag,
-  Layers3,
   Lightbulb,
   ListChecks,
   LoaderCircle,
-  MessageSquareText,
   MousePointer2,
+  Play,
   RotateCcw,
   SlidersHorizontal,
   Sparkles,
-  Target,
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
@@ -29,6 +26,7 @@ import { cn } from "@/lib/utils"
 interface LessonExerciseClientProps {
   courseId: string
   lessonId: string
+  courseTitle?: string
   initialExercise: ExerciseData | null
 }
 
@@ -43,16 +41,6 @@ interface CheckResult {
   nextLessonId: string | null
   courseComplete: boolean
 }
-
-const stepIconByKind = {
-  hook: Sparkles,
-  concept: BookOpen,
-  example: Layers3,
-  interactive: MousePointer2,
-  practice: Lightbulb,
-  reflection: MessageSquareText,
-  checkpoint: Target,
-} satisfies Record<LessonStepData["kind"], typeof Sparkles>
 
 function fallbackSteps(exercise: ExerciseData): LessonStepData[] {
   return [
@@ -163,9 +151,88 @@ function isLegacyTemplateExercise(exercise: ExerciseData | null) {
   )
 }
 
+interface LessonMediaSource {
+  title: string
+  imageUrl: string
+  videoUrl?: string
+  credit: string
+}
+
+const mediaSources: Array<{
+  match: RegExp
+  source: LessonMediaSource
+}> = [
+  {
+    match: /photosynthesis|chlorophyll|glucose|oxygen|plant|leaf|biology/i,
+    source: {
+      title: "Leaf structure and light capture",
+      imageUrl:
+        "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=1400&q=80",
+      videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+      credit: "Unsplash / CC0 motion clip",
+    },
+  },
+  {
+    match: /rome|roman|empire|republic|ancient|crisis|gibbon|barbarian|history/i,
+    source: {
+      title: "Ancient infrastructure as evidence",
+      imageUrl:
+        "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1400&q=80",
+      credit: "Unsplash",
+    },
+  },
+  {
+    match: /chemistry|organic|molecule|reaction|acid|base|carbon|compound/i,
+    source: {
+      title: "Molecular evidence and reaction patterns",
+      imageUrl:
+        "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1400&q=80",
+      credit: "Unsplash",
+    },
+  },
+  {
+    match: /math|algebra|calculus|linear|vector|matrix|geometry|equation/i,
+    source: {
+      title: "Structure before symbols",
+      imageUrl:
+        "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1400&q=80",
+      credit: "Unsplash",
+    },
+  },
+  {
+    match: /code|programming|computer|algorithm|data|model|ai|llm/i,
+    source: {
+      title: "System behavior in context",
+      imageUrl:
+        "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1400&q=80",
+      credit: "Unsplash",
+    },
+  },
+]
+
+const defaultMediaSource: LessonMediaSource = {
+  title: "A concrete case to inspect",
+  imageUrl:
+    "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=80",
+  credit: "Unsplash",
+}
+
+function getLessonMediaSource(
+  exercise: ExerciseData,
+  step: LessonStepData,
+  courseTitle?: string,
+): LessonMediaSource {
+  const searchable = [courseTitle, exercise.title, exercise.subtitle, exercise.objective, step.title, step.body, step.prompt]
+    .filter(Boolean)
+    .join(" ")
+
+  return mediaSources.find((item) => item.match.test(searchable))?.source ?? defaultMediaSource
+}
+
 export function LessonExerciseClient({
   courseId,
   lessonId,
+  courseTitle,
   initialExercise,
 }: LessonExerciseClientProps) {
   const router = useRouter()
@@ -182,6 +249,7 @@ export function LessonExerciseClient({
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [revealedCards, setRevealedCards] = useState<Set<string>>(() => new Set())
   const [sliderValue, setSliderValue] = useState(50)
+  const scrollRootRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (exercise) return
@@ -253,8 +321,8 @@ export function LessonExerciseClient({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
-        <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-white/92 px-4 sm:px-6">
+      <div className="t-scroll-shell fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
+        <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-[var(--bg-elev)]/92 px-4 backdrop-blur sm:px-6">
           <Link
             href={`/courses/${courseId}`}
             className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-[var(--text-dim)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--text)]"
@@ -264,14 +332,13 @@ export function LessonExerciseClient({
           </Link>
         </header>
         <main className="grid min-h-0 flex-1 place-items-center px-4 py-10">
-          <section className="w-full max-w-[720px] rounded-[var(--radius)] border border-[var(--border)] bg-white px-7 py-8 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8">
-            <p className="eyebrow">Building levels</p>
-            <h1 className="mt-4 text-[34px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[44px]">
-              Preparing a problem-first lesson.
-            </h1>
-            <div className="mt-6 flex items-center gap-3 text-sm text-[var(--text-dim)]">
-            <LoaderCircle className="size-5 animate-spin text-[var(--text)]" />
-              Creating short checks, feedback, and one final checkpoint.
+          <section className="flex w-full max-w-[520px] items-center gap-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] px-5 py-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)]">
+            <LoaderCircle className="size-5 shrink-0 animate-spin text-[var(--text)]" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--text)]">Creating lesson</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">
+                Building questions, answer choices, and feedback.
+              </p>
             </div>
           </section>
         </main>
@@ -281,8 +348,8 @@ export function LessonExerciseClient({
 
   if (!exercise || !activeStep) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
-        <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-white/92 px-4 sm:px-6">
+      <div className="t-scroll-shell fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
+        <header className="flex h-16 shrink-0 items-center border-b border-[var(--border)] bg-[var(--bg-elev)]/92 px-4 backdrop-blur sm:px-6">
           <Link
             href={`/courses/${courseId}`}
             className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-[var(--text-dim)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--text)]"
@@ -292,7 +359,7 @@ export function LessonExerciseClient({
           </Link>
         </header>
         <main className="grid min-h-0 flex-1 place-items-center px-4 py-10">
-          <section className="w-full max-w-[720px] rounded-[var(--radius)] border border-[var(--border)] bg-white px-7 py-8 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8">
+          <section className="w-full max-w-[720px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] px-7 py-8 shadow-[0_20px_60px_rgba(15,23,42,0.07)] sm:px-8">
             <p className="eyebrow">Lesson unavailable</p>
             <h1 className="mt-4 text-[34px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[44px]">
               We could not generate this lesson yet.
@@ -422,6 +489,21 @@ export function LessonExerciseClient({
     })
   }
 
+  function routeFooterWheel(event: WheelEvent<HTMLElement>) {
+    const scrollRoot = scrollRootRef.current
+
+    if (!scrollRoot || (!event.deltaY && !event.deltaX)) {
+      return
+    }
+
+    event.preventDefault()
+    scrollRoot.scrollBy({
+      top: event.deltaY,
+      left: event.deltaX,
+      behavior: "auto",
+    })
+  }
+
   const isLastStep = activeStepIndex === steps.length - 1
   const primaryDisabled = (activeHasQuestion && !checkResult && !selectedOption) || checking
   const primaryLabel = checking
@@ -437,8 +519,8 @@ export function LessonExerciseClient({
         : "Continue"
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
-      <header className="flex h-16 shrink-0 items-center gap-4 border-b border-[var(--border)] bg-white/92 px-4 backdrop-blur sm:px-6">
+    <div className="t-scroll-shell fixed inset-0 z-50 flex flex-col bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_56%,var(--info-soft)_100%)] text-[var(--text)]">
+      <header className="flex h-16 shrink-0 items-center gap-4 border-b border-[var(--border)] bg-[var(--bg-elev)]/92 px-4 backdrop-blur sm:px-6">
         <Link
           href={`/courses/${exercise.courseId}`}
           className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-[var(--text-dim)] hover:bg-[var(--bg-elev-2)] hover:text-[var(--text)]"
@@ -477,7 +559,10 @@ export function LessonExerciseClient({
         </button>
       </header>
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 pb-28 sm:px-6 sm:py-8">
+      <main
+        ref={scrollRootRef}
+        className="t-scroll-area min-h-0 flex-1 overflow-y-auto px-4 py-6 pb-8 sm:px-6 sm:py-8"
+      >
         <motion.section
           key={activeStep.id}
           initial={{ opacity: 0, y: 12 }}
@@ -490,7 +575,11 @@ export function LessonExerciseClient({
             <span>{stepLabel(activeStep.kind)}</span>
           </div>
 
-          <LessonSketch step={activeStep} index={activeStepIndex} total={steps.length} checked={checked} />
+          <LessonMediaPanel
+            exercise={exercise}
+            step={activeStep}
+            courseTitle={courseTitle}
+          />
 
           <div className="space-y-3">
             <h1 className="text-[34px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[44px]">
@@ -512,7 +601,7 @@ export function LessonExerciseClient({
           ) : null}
 
           {activeStep.prompt ? (
-            <section className="rounded-[var(--radius)] border border-[var(--border)] bg-white px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:px-6">
+            <section className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:px-6">
               <p className="text-[22px] font-semibold leading-8 tracking-normal text-[var(--text)]">
                 {activeStep.prompt}
               </p>
@@ -537,14 +626,17 @@ export function LessonExerciseClient({
           {checkResult ? <FeedbackPanel result={checkResult} /> : null}
 
           {error ? (
-            <div className="rounded-[var(--radius-sm)] border border-red-300/60 bg-red-50 px-5 py-4 text-sm leading-7 text-red-700">
+            <div className="rounded-[var(--radius-sm)] border border-red-300/60 bg-red-50 px-5 py-4 text-sm leading-7 text-red-700 dark:border-red-400/30 dark:bg-red-400/10 dark:text-red-100">
               {error}
             </div>
           ) : null}
         </motion.section>
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-10 border-t border-[var(--border)] bg-[var(--bg-elev)]/94 px-4 py-3 backdrop-blur sm:px-6">
+      <footer
+        className="shrink-0 border-t border-[var(--border)] bg-[var(--bg-elev)]/94 px-4 py-3 backdrop-blur sm:px-6"
+        onWheel={routeFooterWheel}
+      >
         <div className="mx-auto flex max-w-[860px] items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Button
@@ -584,53 +676,59 @@ export function LessonExerciseClient({
   )
 }
 
-function LessonSketch({
+function LessonMediaPanel({
+  exercise,
   step,
-  index,
-  total,
-  checked,
+  courseTitle,
 }: {
+  exercise: ExerciseData
   step: LessonStepData
-  index: number
-  total: number
-  checked: boolean
+  courseTitle?: string
 }) {
-  const Icon = stepIconByKind[step.kind]
-  const left = Math.max(0, Math.min(100, total > 1 ? (index / (total - 1)) * 100 : 0))
+  const media = getLessonMediaSource(exercise, step, courseTitle)
+  const showVideo = Boolean(media.videoUrl && (step.kind === "hook" || step.kind === "concept"))
 
   return (
-    <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] px-5 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
-      <div className="relative h-[150px] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border)] bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg-soft)_100%)]">
-        <div className="absolute inset-x-8 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--bg-soft)]" />
-        <motion.div
-          className="absolute left-8 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[var(--accent-strong)]"
-          initial={false}
-          animate={{ width: `${left * 0.76}%` }}
-          transition={{ duration: 0.2 }}
-        />
-        {[0, 0.5, 1].map((position, nodeIndex) => {
-          const complete = index / Math.max(total - 1, 1) >= position
-
-          return (
-            <div
-              key={position}
-              className={cn(
-                "absolute top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-white shadow-[0_10px_28px_rgba(15,23,42,0.08)]",
-                complete ? "border-[var(--accent-strong)] text-[var(--text)]" : "border-[var(--border)] text-[var(--text-faint)]",
-              )}
-              style={{ left: `${12 + position * 76}%` }}
-            >
-              {nodeIndex === 1 ? <Icon className="size-5" /> : complete ? <Check className="size-5" /> : <Target className="size-5" />}
-            </div>
-          )
-        })}
-        <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-xs uppercase tracking-[0.14em] text-[var(--text-faint)]">
-          <span>Guess</span>
-          <span>{checked ? "Feedback" : "Choose"}</span>
-          <span>Transfer</span>
+    <figure className="overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elev)] shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+      <div className="relative h-[210px] overflow-hidden bg-[var(--bg-soft)] sm:h-[280px]">
+        {showVideo ? (
+          <video
+            className="h-full w-full object-cover"
+            src={media.videoUrl}
+            poster={media.imageUrl}
+            muted
+            loop
+            playsInline
+            autoPlay
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={media.imageUrl}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        )}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,12,24,0.02)_0%,rgba(5,12,24,0.46)_100%)]" />
+        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3 text-white">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] opacity-80">
+              {showVideo ? "Video" : "Image"}
+            </p>
+            <p className="mt-1 text-lg font-semibold leading-6">{media.title}</p>
+          </div>
+          {showVideo ? (
+            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#102a43] shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
+              <Play className="ml-0.5 size-5 fill-current" />
+            </span>
+          ) : null}
         </div>
       </div>
-    </div>
+      <figcaption className="border-t border-[var(--border)] px-4 py-3 text-xs text-[var(--text-faint)]">
+        {media.credit}
+      </figcaption>
+    </figure>
   )
 }
 
@@ -659,10 +757,10 @@ function ProblemOptions({
             aria-pressed={selected}
             onClick={() => onSelect(option.id)}
             className={cn(
-              "group w-full rounded-[var(--radius-sm)] border bg-white px-4 py-4 text-left shadow-[0_12px_34px_rgba(15,23,42,0.05)] transition sm:px-5",
+              "group w-full rounded-[var(--radius-sm)] border bg-[var(--bg-elev)] px-4 py-4 text-left shadow-[0_12px_34px_rgba(15,23,42,0.05)] transition sm:px-5",
               selected && !checkResult && "border-[var(--border-strong)] bg-[var(--bg-elev-2)]",
-              correct && "border-emerald-300 bg-emerald-50",
-              incorrectSelection && "border-red-300 bg-red-50",
+              correct && "border-blue-300 bg-blue-50 dark:border-blue-300/40 dark:bg-blue-400/10",
+              incorrectSelection && "border-red-300 bg-red-50 dark:border-red-400/40 dark:bg-red-400/10",
               !selected && !correct && "border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-elev-2)]",
             )}
           >
@@ -693,8 +791,8 @@ function FeedbackPanel({ result }: { result: CheckResult }) {
       className={cn(
         "rounded-[var(--radius)] border px-5 py-4 text-sm leading-7 shadow-[0_16px_42px_rgba(15,23,42,0.06)]",
         result.isCorrect
-          ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-          : "border-red-300 bg-red-50 text-red-900",
+          ? "border-blue-300 bg-blue-50 text-blue-950 dark:border-blue-300/40 dark:bg-blue-400/10 dark:text-blue-50"
+          : "border-red-300 bg-red-50 text-red-900 dark:border-red-400/40 dark:bg-red-400/10 dark:text-red-50",
       )}
     >
       <div className="flex items-start gap-3">

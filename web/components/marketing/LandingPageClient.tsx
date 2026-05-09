@@ -19,7 +19,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { MarketingHeader } from "@/components/marketing/MarketingHeader";
 import { trackMarketingEvent } from "@/lib/marketing-client";
+import { getSampleCourseStats, sampleCourses } from "@/lib/sample-courses";
 import { cn } from "@/lib/utils";
 
 type SignupState = "idle" | "submitting" | "success" | "error";
@@ -181,16 +183,7 @@ const artifactOutputs = [
   },
 ];
 
-function LogoMark() {
-  return (
-    <span
-      className="[font-family:var(--font-serif)] text-[34px] font-normal italic leading-none tracking-normal text-[#102a43]"
-      aria-label="Tuto"
-    >
-      tuto.
-    </span>
-  );
-}
+const featuredSampleCourses = sampleCourses.slice(0, 3);
 
 function ProductOutputGraphic() {
   return (
@@ -432,32 +425,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
 
   return (
     <main className="min-h-screen bg-[#fbfffd] text-[#102a43]">
-      <header className="sticky top-0 z-40 border-b border-[#d9e8e4]/80 bg-[#fbfffd]/[0.88] backdrop-blur-xl">
-        <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-7">
-          <Link href="/" onClick={() => trackMarketingEvent("nav_logo_clicked", { source: copy.eventSource })}>
-            <LogoMark />
-          </Link>
-          <div className="hidden items-center gap-7 text-[14px] font-medium text-[#486581] md:flex">
-            <a href="#product" className="hover:text-[#102a43]">Product</a>
-            <a href="#use-cases" className="hover:text-[#102a43]">Use cases</a>
-            <a href="#enterprise" className="hover:text-[#102a43]">Enterprise</a>
-            <a href="#pricing" className="hover:text-[#102a43]">Pricing</a>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/dashboard" className="inline-flex h-9 items-center rounded-full px-4 text-[14px] font-semibold text-[#486581] hover:text-[#102a43]">
-              Open app
-            </Link>
-            <Link
-              href="/create"
-              onClick={() => trackMarketingEvent("hero_create_course_clicked", { source: copy.eventSource, location: "nav" })}
-              className="hidden h-9 items-center gap-2 rounded-full bg-[#102a43] px-4 text-[14px] font-semibold text-white shadow-[0_12px_24px_-18px_rgba(16,42,67,0.7)] hover:bg-[#243b53] sm:inline-flex"
-            >
-              Create course
-              <ArrowRight data-icon="inline-end" />
-            </Link>
-          </div>
-        </nav>
-      </header>
+      <MarketingHeader eventSource={copy.eventSource} />
 
       <section id="product" className="relative overflow-hidden bg-[#fbfffd]">
         <div className="absolute right-[-18%] top-[-28%] h-[520px] w-[520px] rounded-full bg-[#56c4a8]/18 blur-3xl" aria-hidden="true" />
@@ -486,6 +454,13 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
               >
                 Open existing account
               </Link>
+              <Link
+                href="/sample-courses"
+                onClick={() => trackMarketingEvent("sample_courses_clicked", { source: copy.eventSource, location: "hero" })}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[#cfe1dd] bg-white px-5 text-[14px] font-semibold text-[#102a43] shadow-[0_18px_34px_-28px_rgba(16,42,67,0.42)] hover:border-[#9fbfb7] sm:h-12 sm:px-6 sm:text-[15px]"
+              >
+                View sample courses
+              </Link>
             </div>
           </div>
           <ProductOutputGraphic />
@@ -501,6 +476,60 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
               <p className="mt-3 text-[14px] leading-6 text-[#486581]">{step.body}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section id="samples" className="bg-[#fbfffd]">
+        <div className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-7">
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div className="max-w-3xl">
+              <p className="text-[13px] font-semibold text-[#2f8f83]">Sample courses</p>
+              <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
+                See what a well-made course looks like before uploading anything.
+              </h2>
+            </div>
+            <Link
+              href="/sample-courses"
+              onClick={() => trackMarketingEvent("sample_courses_clicked", { source: copy.eventSource, location: "landing_section" })}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-[#102a43] px-5 text-[14px] font-semibold text-white hover:bg-[#243b53]"
+            >
+              Browse all samples
+              <ArrowRight data-icon="inline-end" />
+            </Link>
+          </div>
+
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            {featuredSampleCourses.map((course) => {
+              const stats = getSampleCourseStats(course);
+
+              return (
+                <Link
+                  key={course.id}
+                  href={`/sample-courses/${course.id}`}
+                  onClick={() => trackMarketingEvent("sample_course_card_clicked", { source: copy.eventSource, sample_course: course.id })}
+                  className="group min-h-[300px] rounded-[20px] border border-[#d9e8e4] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(10,37,64,0.58)] transition duration-200 hover:-translate-y-0.5 hover:border-[#9fbfb7]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-[#e6f7f2] px-3 py-1 text-[12px] font-semibold text-[#2f8f83]">
+                      {course.subject}
+                    </span>
+                    <span className="text-[12px] font-semibold text-[#829ab1]">{course.level}</span>
+                  </div>
+                  <h3 className="mt-8 text-[23px] font-semibold leading-7 tracking-[-0.025em] text-[#102a43]">
+                    {course.title}
+                  </h3>
+                  <p className="mt-4 text-[14px] leading-6 text-[#486581]">{course.description}</p>
+                  <div className="mt-7 flex items-center justify-between border-t border-[#d9e8e4] pt-4 text-[13px] font-semibold text-[#486581]">
+                    <span>{stats.moduleCount} modules / {stats.lessonCount} lessons</span>
+                    <span className="inline-flex items-center gap-2 text-[#2f8f83]">
+                      View
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </section>
 

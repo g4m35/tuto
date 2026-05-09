@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { Suspense, useEffect, useRef, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   BookOpen,
   ClipboardList,
@@ -18,6 +18,7 @@ import {
   type CourseArtifactKind,
 } from "@/lib/course-artifacts"
 import { trackMarketingEvent } from "@/lib/marketing-client"
+import { buildSampleCoursePrompt, getSampleCourseById } from "@/lib/sample-courses"
 import { cn } from "@/lib/utils"
 
 type CreateMode = "upload" | "topic"
@@ -129,9 +130,11 @@ function CourseGenerationProgress({
   )
 }
 
-export default function CreateCoursePage() {
+function CreateCourseForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const appliedSampleRef = useRef<string | null>(null)
   const [artifactKind, setArtifactKind] = useState<CourseArtifactKind>("course")
   const [mode, setMode] = useState<CreateMode>("upload")
   const [title, setTitle] = useState("")
@@ -146,10 +149,31 @@ export default function CreateCoursePage() {
   const [error, setError] = useState<string | null>(null)
 
   const selectedArtifact = getCourseArtifactOption(artifactKind)
+  const sampleCourseId = searchParams.get("sampleCourse")
 
   useEffect(() => {
     trackMarketingEvent("course_create_page_viewed")
   }, [])
+
+  useEffect(() => {
+    const sampleCourse = sampleCourseId ? getSampleCourseById(sampleCourseId) : null
+
+    if (!sampleCourse || appliedSampleRef.current === sampleCourse.id) {
+      return
+    }
+
+    appliedSampleRef.current = sampleCourse.id
+    setArtifactKind("course")
+    setMode("topic")
+    setTitle(sampleCourse.title)
+    setSubject(sampleCourse.subject)
+    setDifficulty(sampleCourse.level)
+    setTopicPrompt(buildSampleCoursePrompt(sampleCourse))
+    setSelectedFile(null)
+    setStatus(`${sampleCourse.title} is ready as a topic prompt.`)
+    setError(null)
+    trackMarketingEvent("course_create_sample_prefilled", { sample_course: sampleCourse.id })
+  }, [sampleCourseId])
 
   useEffect(() => {
     if (!submitting) {
@@ -520,5 +544,23 @@ export default function CreateCoursePage() {
         </div>
       </section>
     </div>
+  )
+}
+
+export default function CreateCoursePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-[1320px]">
+          <div className="editorial-card animate-pulse p-6">
+            <div className="h-6 w-36 rounded-full bg-[var(--bg-soft)]" />
+            <div className="mt-6 h-10 w-2/3 rounded-full bg-[var(--bg-soft)]" />
+            <div className="mt-8 h-64 rounded-[var(--radius-md)] bg-[var(--bg-soft)]" />
+          </div>
+        </div>
+      }
+    >
+      <CreateCourseForm />
+    </Suspense>
   )
 }

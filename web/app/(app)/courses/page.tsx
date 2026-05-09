@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Plus } from "lucide-react";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { buttonVariants } from "@/components/ui/Button";
 import { toCourseCardData } from "@/lib/course-data";
@@ -120,6 +120,10 @@ export default async function CoursesPage() {
           <Link href="/create" className={cn(buttonVariants({ size: "sm" }), "mt-6")}>
             Create course
             <ArrowRight data-icon="inline-end" />
+          </Link>
+          <Link href="/sample-courses" className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "ml-2 mt-6")}>
+            <BookOpenCheck className="size-3.5" />
+            View samples
           </Link>
         </div>
       )}

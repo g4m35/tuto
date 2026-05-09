@@ -6,30 +6,30 @@
   :root {
     color-scheme: light;
 
-    --bg: #fbfffd;
-    --ink-warm: #ffffff;
-    --bg-elev: #ffffff;
-    --bg-elev-2: #f5fbf8;
-    --bg-soft: #f8fcfa;
-    --border: rgba(16, 42, 67, 0.14);
-    --border-strong: rgba(16, 42, 67, 0.28);
+    --bg: #f3f8ff;
+    --ink-warm: #e7f1ff;
+    --bg-elev: #fbfdff;
+    --bg-elev-2: #eef6ff;
+    --bg-soft: #e8f2ff;
+    --border: rgba(28, 58, 104, 0.14);
+    --border-strong: rgba(28, 58, 104, 0.28);
     --text: #102a43;
-    --text-dim: #486581;
-    --text-faint: #829ab1;
+    --text-dim: #456785;
+    --text-faint: #7893b2;
     --text-mute: rgba(16, 42, 67, 0.34);
-    --accent: #102a43;
-    --accent-soft: rgba(16, 42, 67, 0.08);
-    --accent-line: rgba(16, 42, 67, 0.34);
-    --accent-strong: #243b53;
+    --accent: #2563eb;
+    --accent-soft: rgba(37, 99, 235, 0.1);
+    --accent-line: rgba(37, 99, 235, 0.32);
+    --accent-strong: #1d4ed8;
     --accent-ink: #ffffff;
     --success: #2563eb;
     --danger: #c2413a;
-    --info-soft: #eef6ff;
+    --info-soft: #eaf4ff;
     --info-strong: #2563eb;
     --warm-soft: #fff7ed;
     --warm-strong: #b45309;
-    --shadow: 0 18px 42px -34px rgba(16, 42, 67, 0.52);
-    --shadow-card-hover: 0 24px 56px -36px rgba(16, 42, 67, 0.38), 0 0 0 1px rgba(16, 42, 67, 0.1);
+    --shadow: 0 18px 42px -34px rgba(18, 60, 118, 0.5);
+    --shadow-card-hover: 0 24px 56px -36px rgba(18, 60, 118, 0.36), 0 0 0 1px rgba(37, 99, 235, 0.1);
     --ease-signature: cubic-bezier(0.2, 0.7, 0.2, 1);
     --radius: 8px;
     --radius-md: 10px;
@@ -100,7 +100,7 @@
 
   html {
     min-height: 100%;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -158,6 +158,13 @@
   [role="button"],
   summary {
     cursor: pointer;
+  }
+
+  :where(.overflow-y-auto, .overflow-auto) {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    scroll-behavior: auto;
   }
 
   button:disabled,
@@ -373,6 +380,18 @@
 
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  .t-scroll-area {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    scroll-behavior: auto;
+  }
+
+  .t-scroll-shell {
+    overscroll-behavior: none;
+    overflow: hidden;
   }
 
   .animate-rise-in {
