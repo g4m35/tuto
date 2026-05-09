@@ -6,8 +6,8 @@ export function AuthPageShell({ mode }: { mode: "sign-in" | "sign-up" }) {
   const title = mode === "sign-in" ? "Sign in to Tuto" : "Create your Tuto account";
   const subtitle =
     mode === "sign-in"
-      ? "Pick up where you left off with your courses, decks, and study materials."
-      : "Start generating courses, decks, and study materials from the sources you trust.";
+      ? "Continue your courses, decks, and study materials."
+      : "Create courses, decks, and study materials from your sources.";
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,var(--bg-elev)_0%,var(--bg)_58%,var(--info-soft)_100%)] px-4 py-8 text-[var(--text)] sm:px-8">

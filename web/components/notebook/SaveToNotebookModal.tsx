@@ -350,10 +350,8 @@ export default function SaveToNotebookModal({
             </h2>
             <p className="mt-0.5 text-sm text-[var(--muted-foreground)]">
               {hasMessageSelection
-                ? t(
-                    "Choose which messages to include, pick one or more notebooks, and a summary will be generated automatically.",
-                  )
-                : t("Select one or more notebooks. A summary will be generated automatically.")}
+                ? t("Choose messages and notebooks. We will generate a summary.")
+                : t("Select notebooks. We will generate a summary.")}
             </p>
           </div>
           <button

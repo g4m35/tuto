@@ -859,12 +859,12 @@ function BotsTab({
               <textarea
                 value={formSoul}
                 onChange={(e) => { setFormSoul(e.target.value); setFormSoulId("_custom"); }}
-                placeholder={t("Define the bot's personality, values, and communication style in markdown...")}
+                placeholder={t("Define personality, values, and style...")}
                 rows={8}
                 className="w-full rounded-lg border border-[var(--border)] bg-transparent px-3 py-2 font-mono text-[13px] leading-6 text-[var(--foreground)] outline-none focus:border-[var(--ring)] placeholder:text-[var(--muted-foreground)]/40"
               />
               <p className="mt-1 text-[11px] text-[var(--muted-foreground)]/60">
-                {t("Pick a soul from the library above, or write your own. Manage the library in the Souls tab.")}
+                {t("Pick or write a soul. Manage souls in the Souls tab.")}
               </p>
             </div>
             <div>
@@ -1355,7 +1355,7 @@ function SoulsTab({
           </div>
           <p className="text-[14px] font-medium text-[var(--foreground)]">{t("No souls yet")}</p>
           <p className="mt-1.5 max-w-xs text-[13px] text-[var(--muted-foreground)]">
-            {t("Create your first soul template. Default presets will be seeded automatically on next server restart.")}
+            {t("Create a soul template. Presets seed on server restart.")}
           </p>
         </div>
       ) : (

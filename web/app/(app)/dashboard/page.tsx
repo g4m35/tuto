@@ -141,7 +141,7 @@ export default async function DashboardPage() {
               <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">
                 {continueCourse
                   ? `${continueCourse.artifactTitle}: ${continueCourse.progress}% complete.`
-                  : "Your recent work and generated artifacts will appear here."}
+                  : "Recent work appears here."}
               </p>
             </div>
           </aside>
@@ -232,7 +232,7 @@ export default async function DashboardPage() {
                   No courses yet.
                 </h3>
                 <p className="mt-2 max-w-xl text-[14px] leading-6 text-[var(--text-dim)]">
-                  Create a course and this section will show only your real learning progress.
+                  Create a course to see progress here.
                 </p>
                 <Link href="/create" className={cn(buttonVariants({ size: "sm" }), "mt-5")}>
                   Create course

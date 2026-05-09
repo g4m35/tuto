@@ -114,7 +114,7 @@ export function CourseProjectClient({
             }}
             rows={12}
             className="mt-4 min-h-[280px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg)] px-4 py-4 text-base leading-7 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
-            placeholder="Explain the situation, apply the unit idea, show the decision or solution, then name a limitation."
+            placeholder="Explain, apply the idea, decide, and name a limit."
           />
 
           <div className="mt-5 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-elev-2)] px-4 py-4">
@@ -182,7 +182,7 @@ export function CourseProjectClient({
 
           <Button className="mt-5 w-full" onClick={() => void submit()} disabled={saving || !response.trim()}>
             {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Send data-icon="inline-start" />}
-            {complete ? "Submit complete project" : "Save project"}
+            {complete ? "Submit project" : "Save project"}
             <ArrowRight data-icon="inline-end" />
           </Button>
         </aside>

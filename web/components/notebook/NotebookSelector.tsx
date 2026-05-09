@@ -238,7 +238,7 @@ export default function NotebookSelector({
               {t("Generating...")}
             </>
           ) : (
-            (actionLabel || t("Use Selected Records ({n})")).replace(
+            (actionLabel || t("Use records ({n})")).replace(
               "{n}",
               String(selectedRecords.size),
             )

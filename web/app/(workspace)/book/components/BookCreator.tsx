@@ -430,7 +430,7 @@ export default function BookCreator({
             value={intent}
             onChange={(e) => setIntent(e.target.value)}
             rows={5}
-            placeholder="e.g. Build intuition for transformer attention with derivations and exercises."
+            placeholder="e.g. Explain transformer attention with exercises."
             className="mt-1.5 w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[var(--primary)]/50"
           />
         </label>

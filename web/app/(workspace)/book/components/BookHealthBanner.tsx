@@ -176,7 +176,7 @@ export default function BookHealthBanner({
             <button
               onClick={acknowledge}
               disabled={busy}
-              title="Mark the current KB state as the new baseline (won't recompile pages — use the recompile button above for that)."
+              title="Mark current KB state as the baseline."
               className="whitespace-nowrap rounded-md border border-current px-2 py-1 text-xs font-medium hover:bg-white/40 disabled:opacity-60"
             >
               {busy ? "…" : "Mark as seen"}

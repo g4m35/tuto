@@ -21,11 +21,10 @@ export default async function PricingPage() {
             </div>
             <div className="space-y-2">
               <h1 className="serif text-4xl font-semibold tracking-tight text-[var(--text)] sm:text-5xl">
-                Pick the plan that matches your learning load.
+                Pick a plan.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-[var(--text-dim)]">
-                Free gets you started. Paid plans unlock heavier course generation, more knowledge-base uploads, and fewer artificial limits while the product moves toward launch.
-                Existing customers can go straight to the dashboard; billing management is only for plan changes, invoices, and cancellations.
+                Free gets you started. Paid plans raise generation, upload, and export limits.
               </p>
             </div>
           </div>
@@ -43,7 +42,7 @@ export default async function PricingPage() {
         </Suspense>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-4 text-sm text-[var(--text-dim)]">
-          <span>Questions before paying?</span>
+          <span>Questions?</span>
           <Link className="underline underline-offset-4 hover:text-[var(--text)]" href="/support">
             Support
           </Link>

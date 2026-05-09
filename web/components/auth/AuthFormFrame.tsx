@@ -68,7 +68,7 @@ function AuthLoadingCard() {
       </div>
       <p className="mt-5 text-[13px] leading-5 text-[var(--text-dim)]">
         {isSlow
-          ? "Still connecting to sign-in. Refreshing this page should continue here."
+          ? "Still connecting. Refresh to continue."
           : "Opening secure sign-in..."}
       </p>
     </div>

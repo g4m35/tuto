@@ -102,12 +102,12 @@ export function DeepTutorStatusBanner({
         ? "DeepTutor course generation incomplete"
         : "Document uploads limited: embeddings not configured";
   const body = hasStubCourses
-    ? "At least one saved artifact was generated with localhost stub mode. Start the DeepTutor backend and set DEEPTUTOR_DISABLE_LOCAL_STUB_FALLBACK=true if you want local failures to match production."
+    ? "Local stub mode created some artifacts. Start DeepTutor to match production."
     : isBackendWarning
-      ? health?.reason || "The dashboard cannot reach DeepTutor right now, so live generation is unavailable."
+      ? health?.reason || "DeepTutor is offline. Live generation is unavailable."
       : isGuideWarning
-        ? "DeepTutor is reachable, but guided course generation is not configured yet."
-        : `DeepTutor is reachable${health?.version ? ` (v${health.version})` : ""} in ${health?.latency_ms ?? 0} ms, but embeddings are still disabled. Chat can keep working, while document upload and retrieval flows remain limited.`;
+        ? "DeepTutor is online, but course generation is not configured."
+        : `DeepTutor is online${health?.version ? ` (v${health.version})` : ""}; embeddings are disabled. Upload and retrieval are limited.`;
   const bodyClasses = "text-[var(--text-dim)]";
 
   return (

@@ -8,13 +8,13 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Sample Courses | Tuto",
-  description: "Explore research-informed sample courses across economics, science, philosophy, English, writing, and data.",
+  description: "Sample courses in economics, science, philosophy, English, writing, and data.",
 };
 
 const featuredPrinciples = [
-  "8-10 module arcs with applied projects",
-  "Source-inspired structure from trusted open learning materials",
-  "Designed to show lessons, review, exports, and capstone workflows",
+  "8-10 modules with projects",
+  "Source-informed arcs",
+  "Lessons, review, exports, capstone",
 ];
 
 export default function SampleCoursesPage() {
@@ -35,25 +35,24 @@ export default function SampleCoursesPage() {
               Sample course library
             </div>
             <h1 className="mt-5 max-w-4xl text-[44px] font-semibold leading-[1] tracking-[-0.035em] text-[#102a43] sm:text-[64px]">
-              In-depth examples users can inspect before they create.
+              Inspect sample courses.
             </h1>
             <p className="mt-6 max-w-2xl text-[18px] leading-8 text-[#486581]">
-              These sample courses are designed as product-quality demonstrations: rich enough to show Tuto&apos;s course depth,
-              compact enough to scan, and grounded in reputable open learning sources.
+              Six courses showing depth, structure, sources, and project arcs.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href="#courses"
                 className="inline-flex h-11 items-center gap-2 rounded-full bg-[#102a43] px-5 text-[14px] font-semibold text-white hover:bg-[#243b53]"
               >
-                Browse samples
+                Browse
                 <ArrowRight data-icon="inline-end" />
               </a>
               <Link
                 href="/create"
                 className="inline-flex h-11 items-center gap-2 rounded-full border border-[#cfe1dd] bg-white px-5 text-[14px] font-semibold text-[#102a43] hover:border-[#9fbfb7]"
               >
-                Make your own
+                Create course
               </Link>
             </div>
           </div>
@@ -96,11 +95,11 @@ export default function SampleCoursesPage() {
           <div>
             <p className="text-[13px] font-semibold text-[#2f8f83]">Course plans</p>
             <h2 className="mt-3 text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#102a43] sm:text-[46px]">
-              Six polished starting points.
+              Six samples.
             </h2>
           </div>
           <p className="max-w-xl text-[15px] leading-7 text-[#486581]">
-            Each plan includes audience, lesson arc, applied projects, and source inspiration so learners can judge quality at a glance.
+            Audience, lesson arc, projects, and sources.
           </p>
         </div>
 
@@ -159,10 +158,10 @@ export default function SampleCoursesPage() {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-5 py-12 text-white sm:px-7 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-[28px] font-semibold leading-tight tracking-[-0.025em]">
-              Ready to generate from one of these?
+              Use a sample.
             </h2>
             <p className="mt-2 max-w-2xl text-[14px] leading-6 text-white/70">
-              Open any sample, inspect the full arc, then start a topic prompt from the same research-informed structure.
+              Review, then generate.
             </p>
           </div>
           <Link href="/create" className={cn(buttonVariants({ size: "lg" }), "bg-white text-[#102a43] hover:bg-[#f5fbf8]")}>

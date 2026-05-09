@@ -3,7 +3,7 @@ import LandingPageClient from "@/components/marketing/LandingPageClient";
 
 export const metadata: Metadata = {
   title: "PDF to Course | Tuto",
-  description: "Turn a trusted PDF into a guided course with lessons, practice, and review.",
+  description: "Turn a PDF into lessons, practice, and review.",
 };
 
 export default function PdfToCoursePage() {

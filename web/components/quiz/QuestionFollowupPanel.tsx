@@ -98,7 +98,7 @@ export default function QuestionFollowupPanel({
                     {t("Ask anything about this question")}
                   </div>
                   <div>
-                    {t("Try: why this answer is correct, where your reasoning went wrong, or ask for a cleaner explanation.")}
+                    {t("Ask why, where you missed, or for a clearer explanation.")}
                   </div>
                 </div>
               ) : (

@@ -796,7 +796,7 @@ function SettingsPageContent() {
                 {t("Setup Tour")}
               </div>
               <p className="mt-1 text-[13px] text-[var(--muted-foreground)]">
-                {t("Configure your endpoints below, run tests, then launch DeepTutor.")}
+                {t("Configure endpoints, test, then launch DeepTutor.")}
               </p>
             </div>
             <button
@@ -1068,11 +1068,11 @@ function SettingsPageContent() {
                         >
                           {isSupportedSearchProvider
                             ? isPerplexityMissingKey
-                              ? t("Perplexity requires API key. It will fail hard without credentials.")
+                              ? t("Perplexity needs an API key.")
                               : t("Supported provider.")
                             : isDeprecatedSearchProvider
-                              ? t("Deprecated provider. Switch to brave/tavily/jina/searxng/duckduckgo/perplexity.")
-                              : t("Unsupported provider. Use brave/tavily/jina/searxng/duckduckgo/perplexity.")}
+                              ? t("Deprecated provider. Switch search provider.")
+                              : t("Unsupported provider. Switch search provider.")}
                         </p>
                       )}
                     </div>
@@ -1243,7 +1243,7 @@ function SettingsPageContent() {
           {diagnosticsOpen && (
             <div className="border-t border-[var(--border)] px-5 py-4">
               <p className="mb-3 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
-                {t("Streams config snapshot, request target, response summary, and service-specific validation for the active {{service}} profile.", { service: activeService })}
+                {t("Streams config, target, summary, validation: {{service}}.", { service: activeService })}
               </p>
               <pre className="max-h-[360px] overflow-y-auto rounded-lg bg-[#0f0f0f] p-4 font-mono text-[12px] leading-6 text-[#777] dark:bg-[#0a0a0a]">
                 {logs}

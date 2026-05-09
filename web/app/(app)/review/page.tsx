@@ -350,8 +350,8 @@ export default async function ReviewPage() {
           </h1>
           <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
             {hasReviewData
-              ? "This page only uses stored course progress, guide difficulty notes, and repeated topics. It stays quiet when there is not enough evidence."
-              : "Create a course and complete lessons first. Review recommendations will appear once there are real knowledge points to work from."}
+              ? "Uses stored progress, difficulty notes, and repeated topics only."
+              : "Create a course and complete lessons to unlock review."}
           </p>
           <Link href={primaryReviewHref} className={cn(buttonVariants({ size: "lg" }))}>
             <Braces data-icon="inline-start" />

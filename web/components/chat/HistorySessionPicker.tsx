@@ -105,7 +105,7 @@ export default function HistorySessionPicker({
               {t("Select History Sessions")}
             </h2>
             <p className="mt-0.5 text-sm text-[var(--muted-foreground)]">
-              {t("Choose one or more past conversations to analyze before this turn.")}
+              {t("Choose past conversations for context.")}
             </p>
           </div>
           <button
@@ -212,7 +212,7 @@ export default function HistorySessionPicker({
               disabled={!selectedIds.length}
               className="btn-primary rounded-xl bg-[var(--primary)] px-4 py-2.5 text-[13px] font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {t("Use Selected Sessions ({n})", { n: selectedIds.length })}
+              {t("Use sessions ({n})", { n: selectedIds.length })}
             </button>
           </div>
         </div>

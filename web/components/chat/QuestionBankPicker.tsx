@@ -318,7 +318,7 @@ export default function QuestionBankPicker({
               disabled={!selectedIds.length}
               className="btn-primary rounded-xl bg-[var(--primary)] px-4 py-2.5 text-[13px] font-medium text-[var(--primary-foreground)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {t("Use Selected Questions ({n})", { n: selectedIds.length })}
+              {t("Use questions ({n})", { n: selectedIds.length })}
             </button>
           </div>
         </div>

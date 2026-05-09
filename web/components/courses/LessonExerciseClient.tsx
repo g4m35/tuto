@@ -104,7 +104,7 @@ function displayStepTitle(step: LessonStepData) {
 
 function displayStepBody(step: LessonStepData, lessonTitle: string) {
   if (step.kind === "hook" && step.body.startsWith("Before naming the rule,")) {
-    return `This lesson helps you use ${lessonTitle} instead of only recognizing the words. Read the idea, try it in a small case, then answer the checkpoint.`
+    return `Use ${lessonTitle}. Read the idea, try a small case, then answer.`
   }
 
   return step.body

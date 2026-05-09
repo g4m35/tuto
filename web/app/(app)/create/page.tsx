@@ -36,13 +36,13 @@ const createModes = [
   {
     id: "upload" as const,
     title: "From material",
-    description: "PDF, notes, or a source document you already trust.",
+    description: "PDF, notes, or source document.",
     icon: Upload,
   },
   {
     id: "topic" as const,
     title: "From a topic",
-    description: "Start from a prompt and let Tuto shape the first draft.",
+    description: "Start from a topic prompt.",
     icon: WandSparkles,
   },
 ]
@@ -77,7 +77,7 @@ function fileFromDraggedSource(dataTransfer: DataTransfer) {
     "",
     sourceText,
     "",
-    "Use this as source context for the generated artifact. When a URL is present, expand the artifact with accurate, web-grounded background and examples.",
+    "Use this source for accurate background and examples.",
   ].join("\n")
 
   return new File([body], "dragged-browser-source.txt", { type: "text/plain" })
@@ -108,7 +108,7 @@ function CourseGenerationProgress({
         <div>
           <p className="text-sm font-medium text-[var(--text)]">Building {artifactTitle.toLowerCase()}</p>
           <p className="mt-1 text-sm leading-6 text-[var(--text-dim)]">
-            {stage}. This can take a moment when Tuto is researching, writing, and saving the result.
+            {stage}. This can take a moment.
           </p>
         </div>
       </div>
@@ -302,10 +302,10 @@ function CreateCourseForm() {
           <div className="space-y-2">
             <p className="text-[13px] font-medium text-[var(--text-dim)]">Create</p>
             <h1 className="text-[30px] font-semibold leading-tight tracking-normal text-[var(--text)] sm:text-[38px]">
-              Make a course artifact
+              Create
             </h1>
             <p className="max-w-2xl text-[15px] leading-7 text-[var(--text-dim)]">
-              Pick the format, add a trusted source or topic, and Tuto will save it to your library.
+              Pick a format and add a source or topic.
             </p>
           </div>
           <div className="flex items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-2 text-sm text-[var(--text-dim)]">
@@ -318,7 +318,7 @@ function CreateCourseForm() {
 
         <div className="space-y-3">
           <p className="text-[11px] uppercase leading-none tracking-[0.18em] text-[var(--text-faint)]">
-            What do you want to make?
+            Choose format
           </p>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {courseArtifactOptions.map((item, index) => {
@@ -483,7 +483,7 @@ function CreateCourseForm() {
                 id="topic-prompt"
                 value={topicPrompt}
                 onChange={(event) => setTopicPrompt(event.target.value)}
-                placeholder="Explain photosynthesis like I am new to it. Use simple examples and a quick practice question."
+                placeholder="Explain photosynthesis with simple examples and practice."
                 className="min-h-48 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--bg-soft)] px-5 py-5 text-base leading-7 text-[var(--text)] outline-none placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)]"
               />
             )}
@@ -534,7 +534,7 @@ function CreateCourseForm() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-5">
               <div className="flex items-center gap-3 text-sm text-[var(--text-faint)]">
                 <BookOpen className="size-4" />
-                Private by default. Share or export after generation.
+                Private by default. Share or export later.
               </div>
               <Button size="lg" onClick={() => void handleSubmit()} disabled={submitting}>
                 {submitting ? `Generating ${selectedArtifact.noun}` : `Generate ${selectedArtifact.noun}`}

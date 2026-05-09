@@ -40,25 +40,23 @@ const variantCopy: Record<
   }
 > = {
   default: {
-    headline: "Turn any source into study-ready outputs.",
-    supporting:
-      "Tuto can make courses, study guides, Google Docs-ready docs, slide decks, quizzes, notes, and lesson plans from PDFs, uploads, or a topic prompt.",
+    headline: "Turn sources into study tools.",
+    supporting: "Courses, guides, quizzes, notes, slides, and lesson plans from PDFs or topics.",
     eventSource: "landing_default",
   },
   pdf: {
-    headline: "Turn a dense PDF into study-ready outputs.",
-    supporting: "Upload a trusted source and Tuto turns it into courses, guides, quizzes, notes, slides, and lesson plans.",
+    headline: "Turn a PDF into study tools.",
+    supporting: "Upload a PDF. Get courses, guides, quizzes, notes, slides, and lesson plans.",
     eventSource: "landing_pdf",
   },
   notes: {
     headline: "Turn class notes into courses, quizzes, and guides.",
-    supporting: "Move from passive notes to a study system with lessons, review docs, quizzes, and Google Docs-ready exports.",
+    supporting: "Build lessons, quizzes, guides, and exports from your notes.",
     eventSource: "landing_notes",
   },
   training: {
-    headline: "Turn training docs into reusable learning assets.",
-    supporting:
-      "Convert onboarding packets, SOPs, and internal docs into courses, slides, lesson plans, quizzes, and uploadable docs for teams.",
+    headline: "Turn training docs into learning assets.",
+    supporting: "Convert SOPs and onboarding docs into courses, slides, quizzes, and lesson plans.",
     eventSource: "landing_training",
   },
 };
@@ -66,54 +64,54 @@ const variantCopy: Record<
 const steps = [
   {
     title: "Bring the source",
-    body: "Upload a PDF, notes packet, document, training deck, or start from a focused topic.",
+    body: "Upload a PDF, notes, deck, document, or topic.",
   },
   {
     title: "Choose the output",
-    body: "Make a course, study guide, quiz set, slide deck, notes packet, doc, or lesson plan.",
+    body: "Pick course, guide, quiz, slides, notes, or lesson plan.",
   },
   {
     title: "Export or keep learning",
-    body: "Use the guided course flow or download Docs/Slides-ready files you can upload to Google.",
+    body: "Study in Tuto or export Docs/Slides-ready files.",
   },
   {
     title: "Come back anytime",
-    body: "Returning users open the app directly from the dashboard and continue where they left off.",
+    body: "Open the dashboard and continue.",
   },
 ];
 
 const useCases = [
   {
     title: "Certification prep",
-    body: "Turn dense standards, exam guides, and study PDFs into a course, quiz set, and exam-ready study guide.",
+    body: "Courses, quiz sets, and guides from dense exam material.",
     icon: ClipboardCheck,
   },
   {
     title: "Class notes",
-    body: "Move from lecture notes to structured notes, practice quizzes, lesson paths, and Google Docs-ready review docs.",
+    body: "Lessons, quizzes, and review docs from lecture notes.",
     icon: GraduationCap,
   },
   {
     title: "Enterprise training",
-    body: "Schools and companies can turn internal docs into lesson plans, slide shows, quizzes, courses, and reusable handouts.",
+    body: "Training courses, slides, quizzes, and handouts from internal docs.",
     icon: BriefcaseBusiness,
   },
 ];
 
 const platformHighlights = [
   {
-    title: "Existing customers go straight in",
-    body: "Returning learners can use tuto.chat/dashboard. If they need to sign in, the app brings them back to the dashboard afterward.",
+    title: "Open the app",
+    body: "Returning learners go straight to tuto.chat/dashboard.",
     icon: DoorOpen,
   },
   {
-    title: "Enterprise access is a real tier",
-    body: "Approved schools and companies can be placed on Enterprise with expanded usage, contract billing, and room for larger rollouts.",
+    title: "Enterprise access",
+    body: "Expanded usage, contract billing, and rollout support.",
     icon: ShieldCheck,
   },
   {
-    title: "Built for institutional handoff",
-    body: "Enterprise inquiries route into the lead pipeline so a school, tutoring group, or company can move from interest to activation cleanly.",
+    title: "Enterprise requests",
+    body: "Enterprise requests go to the operator pipeline.",
     icon: Building2,
   },
 ];
@@ -121,26 +119,23 @@ const platformHighlights = [
 const faqs = [
   {
     question: "What can I upload?",
-    answer: "Tuto supports PDFs, text, Markdown, office-style source files, and topic prompts. Outputs can be downloaded as document or slide files that are ready to upload into Google Docs or Google Slides.",
+    answer: "PDFs, text, Markdown, office files, and topic prompts.",
   },
   {
     question: "Is this for schools?",
-    answer:
-      "Yes. Tuto supports individual learners today, and Enterprise access is set up for schools, tutoring groups, and companies that need contract billing or larger rollouts.",
+    answer: "Yes. Enterprise supports schools, tutoring groups, and companies.",
   },
   {
-    question: "How do existing customers get back in?",
-    answer:
-      "They can go straight to tuto.chat/dashboard. If they are signed out, the sign-in flow sends them back to the dashboard after authentication.",
+    question: "How do I get back in?",
+    answer: "Use tuto.chat/dashboard. Sign-in returns you there.",
   },
   {
-    question: "Is Enterprise actually available?",
-    answer:
-      "Yes. The Enterprise plan is wired into billing and access controls, and the Enterprise inquiry form starts the approval and onboarding flow.",
+    question: "Is Enterprise available?",
+    answer: "Yes. Use the Enterprise form on pricing.",
   },
   {
     question: "Why join the beta?",
-    answer: "Beta users help shape the activation flow, course quality, and the first workflows Tuto automates deeply.",
+    answer: "Help improve course quality and core workflows.",
   },
 ];
 
@@ -335,7 +330,7 @@ function BetaForm({ eventSource }: { eventSource: string }) {
           You are on the beta list.
         </h3>
         <p className="mt-3 text-[14px] leading-6 text-[#486581]">
-          We will use your notes to prioritize onboarding and the first automation workflows.
+          Your notes will guide onboarding.
         </p>
       </div>
     );
@@ -352,7 +347,7 @@ function BetaForm({ eventSource }: { eventSource: string }) {
         </span>
         <div>
           <h3 className="text-[20px] font-semibold leading-7 tracking-[-0.02em] text-[#102a43]">Join the beta</h3>
-          <p className="text-[13px] leading-5 text-[#486581]">Tell us what you want Tuto to create first.</p>
+          <p className="text-[13px] leading-5 text-[#486581]">Tell us what you need.</p>
         </div>
       </div>
 
@@ -388,13 +383,13 @@ function BetaForm({ eventSource }: { eventSource: string }) {
       </div>
 
       <label className="mt-3 block space-y-2">
-        <span className="text-[12px] font-medium text-[#486581]">What would you create first?</span>
+        <span className="text-[12px] font-medium text-[#486581]">First creation</span>
         <textarea name="notes" rows={4} className="w-full resize-none rounded-[12px] border border-[#d9e8e4] bg-[#f8fcfa] px-3 py-3 text-[14px] leading-6 text-[#102a43] outline-none focus:border-[#2f8f83]" />
       </label>
 
       <label className="mt-4 flex items-start gap-3 text-[13px] leading-5 text-[#486581]">
         <input name="marketingOptIn" type="checkbox" className="mt-1 size-4 rounded border-[#cfe1dd] bg-white accent-[#2f8f83]" />
-        <span>Send me beta updates, onboarding notes, and launch emails. I can unsubscribe anytime.</span>
+        <span>Send beta updates and launch emails. Unsubscribe anytime.</span>
       </label>
 
       {error ? <p className="mt-4 text-[13px] text-[#b42318]">{error}</p> : null}
@@ -485,7 +480,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
             <div className="max-w-3xl">
               <p className="text-[13px] font-semibold text-[#2f8f83]">Sample courses</p>
               <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
-                See what a well-made course looks like before uploading anything.
+                Preview course quality first.
               </h2>
             </div>
             <Link
@@ -538,10 +533,10 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
         <div className="max-w-3xl">
           <p className="text-[13px] font-semibold text-[#2f8f83]">Use cases</p>
           <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
-            Built for dense material and real study loops.
+            For dense material.
           </h2>
           <p className="mt-5 text-[18px] leading-8 text-[#486581]">
-            Start where the pain is sharp: learners with material they need to understand, remember, and apply.
+            When learners need to understand, remember, and apply.
           </p>
         </div>
 
@@ -567,10 +562,10 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
           <div className="max-w-2xl">
             <p className="text-[13px] font-semibold text-[#2f8f83]">Access paths</p>
             <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
-              One product path for learners, teams, and institutions.
+              Access for learners, teams, and institutions.
             </h2>
             <p className="mt-5 text-[18px] leading-8 text-[#486581]">
-              Existing customers do not need to rebuy or start from the marketing page. New schools and companies can start an Enterprise conversation from pricing.
+              Customers go straight to the dashboard. Schools and companies start on pricing.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -616,10 +611,10 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
           <div className="max-w-2xl">
             <p className="text-[13px] font-semibold text-[#2f8f83]">Beta access</p>
             <h2 className="mt-3 text-[38px] font-semibold leading-[1.05] tracking-[-0.035em] text-[#102a43] sm:text-[52px]">
-              Help shape the beta before the broad paid launch.
+              Join the beta.
             </h2>
             <p className="mt-5 text-[18px] leading-8 text-[#486581]">
-              We are prioritizing learners, tutors, schools, companies, and operators who have real material ready to test.
+              Best for teams with real material to test.
             </p>
           </div>
           <BetaForm eventSource={copy.eventSource} />
@@ -629,10 +624,10 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
       <section id="pricing" className="mx-auto w-full max-w-7xl px-5 py-24 sm:px-7">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Free starter", "$0", "Create your first course, guide, quiz, notes, slides, or lesson plan."],
-            ["Pro", "$20/mo", "More generation room, more document knowledge bases, exports, and guided practice."],
-            ["Team", "$65/mo", "Shared-use billing for small teams, tutors, coaches, and cohort operators."],
-            ["Enterprise", "Custom", "Contract-based access for schools and companies that need onboarding, scale, and expanded limits."],
+            ["Free starter", "$0", "Create one course, guide, quiz, notes, slides, or lesson plan."],
+            ["Pro", "$20/mo", "More generations, uploads, exports, and practice."],
+            ["Team", "$65/mo", "Shared billing for tutors, coaches, and small teams."],
+            ["Enterprise", "Custom", "Contracts, onboarding, scale, and higher limits."],
           ].map(([name, price, body]) => (
             <article key={name} className="rounded-[20px] border border-[#d9e8e4] bg-white p-6 shadow-[0_20px_50px_-42px_rgba(10,37,64,0.62)]">
               <h3 className="text-[15px] font-semibold text-[#102a43]">{name}</h3>
@@ -655,7 +650,7 @@ export default function LandingPageClient({ variant = "default" }: LandingPageCl
 
       <section className="border-t border-[#d9e8e4] bg-[#f5fbf8]">
         <div className="mx-auto w-full max-w-5xl px-5 py-16 sm:px-7">
-          <h2 className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#102a43]">Questions before you upload?</h2>
+          <h2 className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#102a43]">Questions?</h2>
           <div className="mt-8 divide-y divide-[#d9e8e4] border-y border-[#d9e8e4]">
             {faqs.map((faq) => (
               <details key={faq.question} className="group py-5">

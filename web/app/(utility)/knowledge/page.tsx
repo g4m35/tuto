@@ -914,11 +914,11 @@ function KnowledgePageContent() {
   const uploadBlockedReason = useMemo(() => {
     if (!uploadTargetKb) return null;
     if (kbNeedsReindex(uploadTargetKb)) {
-      return t("This knowledge base is in legacy index format and needs reindex before upload.");
+      return t("Reindex this legacy knowledge base before upload.");
     }
     const status = resolveKbStatus(uploadTargetKb);
     if (status !== "ready") {
-      return t("This knowledge base is currently {{status}} and cannot accept uploads yet.", { status: status.replaceAll("_", " ") });
+      return t("This knowledge base is {{status}} and cannot upload yet.", { status: status.replaceAll("_", " ") });
     }
     return null;
   }, [t, uploadTargetKb]);
@@ -1111,7 +1111,7 @@ function KnowledgePageContent() {
 
                   {!hasUploadableKb && (
                     <div className="rounded-lg border border-lime-200 bg-lime-50 px-3 py-2 text-[12px] text-lime-700 dark:border-lime-900 dark:bg-lime-950/30 dark:text-lime-300">
-                      {t("No ready knowledge base is available for upload. Create a new KB or reindex legacy KBs first.")}
+                      {t("Create a KB or reindex a legacy KB first.")}
                     </div>
                   )}
 
@@ -1905,9 +1905,7 @@ function KnowledgePageContent() {
                 </button>
               </div>
               <p className="mb-4 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
-                {t(
-                  "Skills are short markdown playbooks that shape the assistant's behavior in chat. Pick one from the composer or use Auto.",
-                )}
+                {t("Skills guide chat behavior. Pick one or use Auto.")}
               </p>
 
               {skillsError && (
@@ -2033,7 +2031,7 @@ function KnowledgePageContent() {
                         className="w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-[12px] leading-relaxed outline-none transition-colors focus:border-[var(--foreground)]/25"
                       />
                       <p className="mt-1 text-[11px] text-[var(--muted-foreground)]/70">
-                        {t("YAML frontmatter is optional and is auto-managed for name and description.")}
+                        {t("YAML frontmatter is optional and auto-managed.")}
                       </p>
                     </div>
 

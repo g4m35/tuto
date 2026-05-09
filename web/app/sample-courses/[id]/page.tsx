@@ -128,9 +128,9 @@ export default async function SampleCourseDetailPage({
 
       <section className="mx-auto grid w-full max-w-7xl gap-5 px-5 py-12 sm:px-7 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:py-16">
         <div className="space-y-4">
-          <p className="text-[13px] font-semibold text-[#2f8f83]">Why this sample works</p>
+          <p className="text-[13px] font-semibold text-[#2f8f83]">Sample fit</p>
           <h2 className="text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#102a43]">
-            Built to demonstrate real course depth.
+            Course depth.
           </h2>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
@@ -141,7 +141,7 @@ export default async function SampleCourseDetailPage({
                   {index === 0 ? <BookMarked className="size-4" /> : <Layers3 className="size-4" />}
                 </span>
                 <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#829ab1]">
-                  {index === 0 ? "Audience" : "Product demo"}
+                  {index === 0 ? "Audience" : "Demo value"}
                 </p>
               </div>
               <p className="mt-4 text-[14px] leading-7 text-[#486581]">{item}</p>
@@ -156,11 +156,11 @@ export default async function SampleCourseDetailPage({
             <div>
               <p className="text-[13px] font-semibold text-[#2f8f83]">Module arc</p>
               <h2 className="mt-3 text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#102a43]">
-                The full learning path.
+                Learning path.
               </h2>
             </div>
             <p className="max-w-xl text-[15px] leading-7 text-[#486581]">
-              Each module has three concrete lessons and an applied project checkpoint so the course reads like a real product sample.
+              Three lessons and one project per module.
             </p>
           </div>
 
@@ -200,9 +200,9 @@ export default async function SampleCourseDetailPage({
 
       <section className="mx-auto grid w-full max-w-7xl gap-6 px-5 py-14 sm:px-7 lg:grid-cols-[minmax(0,0.82fr)_minmax(420px,0.62fr)]">
         <div>
-          <p className="text-[13px] font-semibold text-[#2f8f83]">Source inspiration</p>
+          <p className="text-[13px] font-semibold text-[#2f8f83]">Sources</p>
           <h2 className="mt-3 text-[34px] font-semibold leading-tight tracking-[-0.03em] text-[#102a43]">
-            Grounded in reputable open learning material.
+            Open sources.
           </h2>
           <div className="mt-7 grid gap-3 md:grid-cols-2">
             {course.sources.map((source) => (
@@ -223,7 +223,7 @@ export default async function SampleCourseDetailPage({
         </div>
 
         <aside className="rounded-[24px] border border-[#d9e8e4] bg-[#f5fbf8] p-5">
-          <p className="text-[13px] font-semibold text-[#2f8f83]">Generation prompt preview</p>
+          <p className="text-[13px] font-semibold text-[#2f8f83]">Generation prompt</p>
           <pre className="mt-4 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-[18px] border border-[#d9e8e4] bg-white p-4 text-[12px] leading-6 text-[#486581]">
             {promptPreview}
           </pre>

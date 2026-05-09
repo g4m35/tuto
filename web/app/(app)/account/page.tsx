@@ -41,7 +41,7 @@ function formatDate(value: string | null) {
 }
 
 function formatLimit(current: number | null, limit: number | null) {
-  if (limit === null) return "Unlimited";
+  if (limit === null) return "No cap";
   if (current === null) return `0 / ${limit}`;
   return `${current} / ${limit}`;
 }
@@ -123,16 +123,16 @@ export default async function AccountPage({
           {params.billing === "success" || params.billing === "canceled" ? (
             <div className="max-w-2xl rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-soft)] px-4 py-3 text-sm leading-6 text-[var(--text-dim)]">
               {params.billing === "success"
-                ? "Checkout completed. Your plan will update here as soon as Stripe confirms it."
-                : "Checkout was canceled. Your current plan has not changed."}
+                ? "Checkout complete. Your plan will update soon."
+                : "Checkout canceled. Your plan did not change."}
             </div>
           ) : null}
           <div className="space-y-3">
             <h1 className="max-w-4xl text-[40px] font-semibold leading-[1.05] tracking-normal text-[var(--text)] sm:text-[56px]">
-              Manage your account and plan.
+              Account and plan.
             </h1>
             <p className="max-w-2xl text-[20px] leading-8 text-[var(--text-dim)]">
-              Plan, billing, and usage live here. Profile controls stay in the top-right account menu.
+              Plan, billing, and usage. Profile settings are in the account menu.
             </p>
           </div>
         </div>
@@ -204,7 +204,7 @@ export default async function AccountPage({
                   </div>
                   <p className="text-xs leading-5 text-[var(--text-faint)]">
                     {!line.available
-                      ? "Usage data will appear once the production database has counters for this account."
+                      ? "Usage appears after production counters are ready."
                       : line.resetsAt
                         ? `Resets ${formatDate(line.resetsAt)}.`
                         : hasUnlimitedAllowance(line.limit)

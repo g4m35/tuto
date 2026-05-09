@@ -55,20 +55,20 @@ function getExportActions(kind: CourseArtifactKind): ExportAction[] {
   ]
 }
 
-function getActionDescription(kind: CourseArtifactKind, title: string) {
+function getActionDescription(kind: CourseArtifactKind) {
   if (kind === "slides") {
-    return `Export this ${title.toLowerCase()} as a Google Slides-ready deck or presenter notes.`
+    return "Export a Slides-ready deck or presenter notes."
   }
 
   if (kind === "quiz-set") {
-    return `Export this ${title.toLowerCase()} as an answer guide or share a read-only link.`
+    return "Export an answer guide or share a read-only link."
   }
 
   if (kind === "study-guide" || kind === "cheat-sheet" || kind === "lesson-plan") {
-    return `Export this ${title.toLowerCase()} as a Google Docs-ready file, Markdown, HTML, or share link.`
+    return "Export Docs-ready files, Markdown, HTML, or a share link."
   }
 
-  return `Export this ${title.toLowerCase()}, download teaching files, or create a read-only public link.`
+  return "Export files or share a read-only link."
 }
 
 export function CourseArtifactActions({
@@ -158,7 +158,7 @@ export function CourseArtifactActions({
         <div className="space-y-2">
           <p className="eyebrow">Share and download</p>
           <p className="text-sm leading-6 text-[var(--text-dim)]">
-            {getActionDescription(artifact.kind, artifactTitle)}
+            {getActionDescription(artifact.kind)}
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">

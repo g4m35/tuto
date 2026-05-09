@@ -115,7 +115,7 @@ export default async function CoursesPage() {
             No courses yet.
           </h2>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--text-dim)]">
-            Your course library will stay empty until you create a course from your own topic or materials.
+            Create from a topic or material to fill your library.
           </p>
           <Link href="/create" className={cn(buttonVariants({ size: "sm" }), "mt-6")}>
             Create course

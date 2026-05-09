@@ -57,7 +57,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     kind: "course",
     title: "Full course",
     noun: "course",
-    description: "A guided lesson path with practice, review, and projects.",
+    description: "Lessons, practice, review, projects.",
     dashboardAction: "Continue course",
     previewTitle: "Learning path",
     promptDirective:
@@ -75,7 +75,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     kind: "study-guide",
     title: "Study guide",
     noun: "study guide",
-    description: "A concise review document for exams, homework, or quick catch-up.",
+    description: "Concise review for exams or catch-up.",
     dashboardAction: "Open guide",
     previewTitle: "Guide sections",
     promptDirective:
@@ -93,7 +93,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     kind: "slides",
     title: "Slide deck",
     noun: "slide deck",
-    description: "Presentation-ready slides for teaching, studying, or explaining a topic.",
+    description: "Slides for teaching or explaining.",
     dashboardAction: "Open deck",
     previewTitle: "Slide outline",
     promptDirective:
@@ -111,7 +111,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     kind: "quiz-set",
     title: "Quiz set",
     noun: "quiz set",
-    description: "Practice questions with answer focus areas for self-checking.",
+    description: "Practice questions with answer focus.",
     dashboardAction: "Open quiz",
     previewTitle: "Question set",
     promptDirective:
@@ -129,7 +129,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     kind: "cheat-sheet",
     title: "Cheat sheet",
     noun: "cheat sheet",
-    description: "A dense one-page reference with formulas, cues, and pitfalls.",
+    description: "One-page formulas, cues, pitfalls.",
     dashboardAction: "Open sheet",
     previewTitle: "Reference blocks",
     promptDirective:
@@ -147,7 +147,7 @@ export const courseArtifactOptions: CourseArtifactOption[] = [
     kind: "lesson-plan",
     title: "Lesson plan",
     noun: "lesson plan",
-    description: "A teachable plan with objectives, flow, activities, and checks.",
+    description: "Objectives, flow, activities, checks.",
     dashboardAction: "Open plan",
     previewTitle: "Teaching flow",
     promptDirective:

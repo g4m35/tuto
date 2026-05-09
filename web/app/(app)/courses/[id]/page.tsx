@@ -167,9 +167,9 @@ export default async function CourseDetailPage({
                 </h2>
               </div>
               <div className="editorial-card px-5 py-4">
-                <p className="text-sm font-medium text-[var(--text)]">Ready to inspect and export</p>
+                <p className="text-sm font-medium text-[var(--text)]">Ready to export</p>
                 <p className="mt-2 text-sm leading-6 text-[var(--text-dim)]">
-                  The preview below mirrors the generated structure. Use the export panel above for Google-ready files or a share link.
+                  Preview, then export.
                 </p>
               </div>
             </div>
@@ -209,7 +209,7 @@ export default async function CourseDetailPage({
                   {course.masteryPercent ?? 0}%
                 </p>
                 <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
-                  Based on completed lessons and checkpoint readiness.
+                  Based on lessons and checkpoints.
                 </p>
               </div>
 
@@ -238,7 +238,7 @@ export default async function CourseDetailPage({
                   {course.projectCount ?? course.learningPath.length}
                 </p>
                 <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
-                  Unit-level applications turn the lesson path into usable skill.
+                  Unit projects turn lessons into skill.
                 </p>
               </div>
             </section>
@@ -370,7 +370,7 @@ export default async function CourseDetailPage({
                       </span>
                     </div>
                     <p className="mt-4 text-sm leading-6 text-[var(--text-dim)]">
-                      Complete the unit lessons, then use the final checkpoint to explain, apply, and review the main idea without hints.
+                      Finish the unit, then apply the main idea without hints.
                     </p>
                   </Link>
                 ))}

@@ -18,7 +18,7 @@ export default function NotebookRecordPicker({
   open,
   onClose,
   onApply,
-  actionLabel = "Use Selected Records ({n})",
+  actionLabel = "Use records ({n})",
 }: NotebookRecordPickerProps) {
   const { t } = useTranslation();
   const {
@@ -56,7 +56,7 @@ export default function NotebookRecordPicker({
               {t("Select Notebook Records")}
             </h2>
             <p className="mt-0.5 text-sm text-[var(--muted-foreground)]">
-              {t("Choose records across one or more notebooks to ground the next request.")}
+              {t("Choose records to ground the request.")}
             </p>
           </div>
           <button

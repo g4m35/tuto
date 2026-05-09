@@ -146,7 +146,7 @@ export function CourseReviewClient({ courseId, courseTitle, prompts }: CourseRev
             {courseTitle}
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-[var(--text-dim)]">
-            Revisit prior lessons by choosing the answer that explains the mechanism, not just the label.
+            Choose the answer that explains why, not just the label.
           </p>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-[var(--bg-soft)]">
@@ -233,7 +233,7 @@ export function CourseReviewClient({ courseId, courseTitle, prompts }: CourseRev
                 <p>
                   {selected === "mechanism"
                     ? "Good. You chose the answer that keeps the idea usable."
-                    : "Not quite. Review should strengthen the mechanism, not reward a familiar phrase."}
+                    : "Not quite. Review the mechanism, not the phrase."}
                 </p>
               </div>
             </div>

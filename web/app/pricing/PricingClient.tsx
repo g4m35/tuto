@@ -42,11 +42,11 @@ const pricingCards: PricingCard[] = [
     plan: "pro",
     name: "Pro",
     price: "$20/mo",
-    summary: "For individual learners who want more generation room and deeper practice.",
+    summary: "More generations and practice.",
     features: [
-      "Unlimited course creation",
+      "No course cap",
       "10 document knowledge bases",
-      "Unlimited guided practice",
+      "No practice cap",
     ],
     checkoutEnabled: true,
     ctaLabel: "Choose Pro",
@@ -55,11 +55,11 @@ const pricingCards: PricingCard[] = [
     plan: "team",
     name: "Team",
     price: "$65/mo",
-    summary: "For teams that need the larger shared-use tier and direct billing through Stripe.",
+    summary: "Shared limits and Stripe billing.",
     features: [
-      "Team tier limits after Stripe checkout",
-      "Direct billing management in Stripe",
-      "Priority support for shared learning workflows",
+      "Team limits",
+      "Stripe billing",
+      "Priority support",
     ],
     checkoutEnabled: true,
     ctaLabel: "Choose Team",
@@ -147,14 +147,14 @@ function EnterpriseContactForm() {
             Schools, companies, and cohorts.
           </h2>
           <p className="max-w-xl text-sm leading-6 text-[var(--text-dim)]">
-            Enterprise is for shared learning programs that need seats, onboarding help, centralized billing, and a path toward admin controls or SSO.
+            For shared programs that need seats, billing, onboarding, or SSO.
           </p>
         </div>
         <ul className="space-y-3 text-sm leading-6 text-[var(--text-dim)]">
           {[
-            "Seat-based pricing for classes, teams, and departments",
-            "Invoice or contract billing instead of self-serve checkout",
-            "Pilot support for training docs, course templates, and rollout planning",
+            "Seats for classes, teams, and departments",
+            "Invoice or contract billing",
+            "Pilot support for docs, templates, and rollout",
           ].map((feature) => (
             <li key={feature} className="flex items-start gap-3">
               <Check className="mt-0.5 size-4 text-[var(--accent)]" />
@@ -168,10 +168,10 @@ function EnterpriseContactForm() {
         <div className="rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--bg-elev)] p-5">
           <Check className="size-5 text-[var(--accent)]" />
           <h3 className="mt-4 text-xl font-medium tracking-normal text-[var(--text)]">
-            Enterprise request received.
+            Request received.
           </h3>
           <p className="mt-3 text-sm leading-6 text-[var(--text-dim)]">
-            It is in the operator queue with your org details and rollout notes.
+            Your details are in the operator queue.
           </p>
         </div>
       ) : (
@@ -204,13 +204,13 @@ function EnterpriseContactForm() {
             <input name="seats" inputMode="numeric" placeholder="25, 100, 500..." className="h-11 w-full rounded-[10px] border border-[var(--border)] bg-white px-3 text-[14px] text-[var(--text)] outline-none placeholder:text-[var(--text-mute)] focus:border-[var(--border-strong)]" />
           </label>
           <label className="space-y-2">
-            <span className="text-[12px] text-[var(--text-dim)]">What would you roll out first?</span>
+            <span className="text-[12px] text-[var(--text-dim)]">First rollout</span>
             <textarea name="notes" rows={4} className="w-full resize-none rounded-[10px] border border-[var(--border)] bg-white px-3 py-3 text-[14px] leading-6 text-[var(--text)] outline-none placeholder:text-[var(--text-mute)] focus:border-[var(--border-strong)]" />
           </label>
           {error ? <p className="text-[13px] text-[var(--text)]">{error}</p> : null}
           <Button type="submit" size="lg" className="w-full" disabled={state === "submitting"}>
             {state === "submitting" ? <LoaderCircle className="size-4 animate-spin" /> : null}
-            {state === "submitting" ? "Sending" : "Request enterprise plan"}
+            {state === "submitting" ? "Sending" : "Request enterprise"}
             {state !== "submitting" ? <ArrowRight data-icon="inline-end" /> : null}
           </Button>
         </form>
@@ -228,10 +228,10 @@ export function PricingClient({ billingReady, billingSummary }: PricingClientPro
   const statusMessage = useMemo(() => {
     const billing = searchParams.get("billing");
     if (billing === "canceled") {
-      return "Checkout was canceled. You can pick up where you left off any time.";
+      return "Checkout canceled. Try again anytime.";
     }
     if (billing === "success") {
-      return "Checkout completed. Your billing tier should update as soon as the webhook lands.";
+      return "Checkout complete. Your tier will update soon.";
     }
     return null;
   }, [searchParams]);

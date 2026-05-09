@@ -151,7 +151,7 @@ export default function SpineEditor({ spine, onConfirm, loading = false }: Spine
                     Content type
                     <span
                       className="cursor-help text-[10px] opacity-60"
-                      title="Hint that drives the chapter's block plan (text length, whether to include diagrams / quizzes / code, etc.)."
+                      title="Guides chapter length, diagrams, quizzes, and code."
                     >
                       ⓘ
                     </span>
